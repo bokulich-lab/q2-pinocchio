@@ -8,10 +8,9 @@
 #### Step 1:
 * Create and activate a conda environment:
 ```shell
-mamba create -y -n longReadQC \   
-   -c https://packages.qiime2.org/qiime2/2024.2/shotgun/passed/ \
-   -c conda-forge -c bioconda -c defaults \
-   q2cl
+mamba create -yn longReadQC \    
+   -c conda-forge -c bioconda -c https://packages.qiime2.org/qiime2/2024.2/shotgun/passed/ -c defaults \
+   q2cli
 
 conda activate longReadQC
 
