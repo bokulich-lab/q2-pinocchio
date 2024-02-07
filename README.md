@@ -13,3 +13,11 @@ conda create -n longReadQC -c conda-forge -c bioconda -c https://packages.qiime2
 conda activate longReadQC
 
 ```
+
+#### Step 2:
+* Install necessary libraries:
+```shell
+make install_dependencies
+make all
+```
+
