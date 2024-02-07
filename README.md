@@ -1,4 +1,4 @@
-# q2-LongReadQC
+# q2-long-reads-qc
 
 ### QIIME 2 Plugin for quality control of long read sequences using the LongQC tool
 
