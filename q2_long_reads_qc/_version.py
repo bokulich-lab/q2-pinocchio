@@ -8,7 +8,9 @@
 # versioneer-0.19 (https://github.com/python-versioneer/python-versioneer)
 
 """Git implementation of _version.py."""
+
 # fmt: off
+
 import errno
 import os
 import re
@@ -41,8 +43,8 @@ def get_config():
     cfg.VCS = "git"
     cfg.style = "pep440"
     cfg.tag_prefix = ""
-    cfg.parentdir_prefix = "q2-multiqc-"
-    cfg.versionfile_source = "q2_multiqc/_version.py"
+    cfg.parentdir_prefix = "q2-plugin-name-"
+    cfg.versionfile_source = "q2_plugin_name/_version.py"
     cfg.verbose = False
     return cfg
 
