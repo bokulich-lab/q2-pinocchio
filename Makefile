@@ -16,15 +16,16 @@ LONGQC_FLAGS := arm_neon=1 aarch64=1
 PYTHON ?= python
 
 # Define targets
-.PHONY: all install_dependencies install_longqc_mac install_longqc lint test test-cov install dev clean distclean
+.PHONY: install_dependencies install_longqc_mac install_longqc lint test test-cov install dev clean distclean
 
-all: install_dependencies install_longqc_mac install_longqc
+# New 'all' target that does not include the installation of dependencies
+all: install_longqc_mac install_longqc
 
 install_dependencies:
 	# Install LongQC dependencies using conda
 	conda install numpy scipy matplotlib scikit-learn pandas jinja2 h5py
-	conda install -c bioconda pysam 
-	conda install -c bioconda edlib 
+	conda install -c bioconda pysam
+	conda install -c bioconda edlib
 	conda install -c bioconda python-edlib
 
 install_longqc_mac:
@@ -42,17 +43,18 @@ lint:
 	q2lint
 	flake8
 
-test: all
+test:
 	py.test
 
-test-cov: all
+test-cov:
 	coverage run -m pytest
 	coverage xml
 
-install: all
+install:
 	$(PYTHON) setup.py install
 
-dev: all
+dev:
+	# Only install the necessary tools for development without reinstalling dependencies
 	pip install pre-commit
 	pip install -e .
 	pre-commit install
