@@ -6,12 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from ._version import get_versions
-from .longqc import evaluate
-from .minimap2 import build_minimap2_index  # , filter_reads
+# from .filter_reads import filter_reads
+from .build_minimap2_index import minimap2_build
 
-__version__ = get_versions()["version"]
-del get_versions
-
-# __all__ = ["evaluate", "filter_reads", "build_minimap2_index"]
-__all__ = ["evaluate", "build_minimap2_index"]
+# __all__ = ["filter_reads","minimap2_build"]
+__all__ = ["minimap2_build"]

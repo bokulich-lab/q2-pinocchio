@@ -1,18 +1,17 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2022, <developer name>.
+# Copyright (c) 2024, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-# from q2_types.feature_data import FeatureData, Sequence
-from q2_types.per_sample_sequences import (
-    PairedEndSequencesWithQuality,
+from q2_types.feature_data import FeatureData, Sequence
+from q2_types.per_sample_sequences import (  # PairedEndSequencesWithQuality,
     SequencesWithQuality,
 )
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Citations, Plugin, TypeMatch
+from qiime2.plugin import Citations, Int, Plugin, Range  # , TypeMatch
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
@@ -56,7 +55,7 @@ plugin.visualizers.register_function(
     citations=[citations["Fukasawa_LongQC"]],
 )
 
-
+"""
 T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.filter_reads,
@@ -77,19 +76,18 @@ plugin.methods.register_function(
         "only keep sequences that do align to the reference."
     ),
 )
-
 """
+
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.minimap2_build,
-    inputs={'sequences': FeatureData[Sequence]},
-    parameters={'n_threads': Int % Range(1, None)},
-    outputs=[('database', Bowtie2Index)],
+    inputs={"sequences": FeatureData[Sequence]},
+    parameters={"kmer_length": Int % Range(1, 28)},
+    outputs=[("database", Minimap2Index)],
     input_descriptions={
-        'sequences': 'Reference sequences used to build Minimap2 index.'},
-    parameter_descriptions={'n_threads': 'Number of threads to launch'},
-    output_descriptions={'database': 'Minimap2 index.'},
-    name='Build Minimap2 index from reference sequences.',
-    description='Build Minimap2 index from reference sequences.',
+        "sequences": "Reference sequences used to build Minimap2 index."
+    },
+    parameter_descriptions={"kmer_length": "Minimizer k-mer length."},
+    output_descriptions={"database": "Minimap2 index."},
+    name="Build Minimap2 index from reference sequences.",
+    description="Build Minimap2 index from reference sequences.",
 )
-
-"""
