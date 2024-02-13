@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, Christos Matzoros.
+# Copyright (c) 2024, QIIME 2 development team.
 #
 # Distributed under the terms of the Modified BSD License.
 #
