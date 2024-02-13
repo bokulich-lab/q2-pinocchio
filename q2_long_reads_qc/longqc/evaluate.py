@@ -15,7 +15,7 @@ from q2_types.sample_data import SampleData
 
 def evaluate_long_reads(
     output_dir: str,
-    seqs: SampleData[SequencesWithQuality | PairedEndSequencesWithQuality],
+    sequences: SampleData[SequencesWithQuality | PairedEndSequencesWithQuality],
 ) -> None:
 
     pass
