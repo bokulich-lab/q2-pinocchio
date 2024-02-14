@@ -7,11 +7,9 @@
 # ----------------------------------------------------------------------------
 
 from q2_types.feature_data import FeatureData, Sequence
-from q2_types.per_sample_sequences import (  # PairedEndSequencesWithQuality,
-    SequencesWithQuality,
-)
+from q2_types.per_sample_sequences import SequencesWithQuality
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Citations, Int, Plugin, Range  # , TypeMatch
+from qiime2.plugin import Bool, Citations, Int, Plugin, Range  # , TypeMatch
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
@@ -55,28 +53,42 @@ plugin.visualizers.register_function(
     citations=[citations["Fukasawa_LongQC"]],
 )
 
-"""
-T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
+# T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.filter_reads,
-    inputs={"demultiplexed_sequences": SampleData[T]},
-    parameters="",
-    outputs=[("filtered_sequences", SampleData[T])],
-    input_descriptions={
-        "demultiplexed_sequences": "The sequences to be trimmed.",
+    inputs={
+        "reads": SampleData[SequencesWithQuality],
+        "minimap2_index": Minimap2Index,
     },
-    parameter_descriptions="",
-    output_descriptions={"filtered_sequences": "The resulting filtered sequences."},
-    name="Filter demultiplexed sequences by alignment to reference database.",
+    parameters={
+        "n_threads": Int % Range(1, None),
+        "exclude_mapped": Bool,
+    },
+    outputs=[("filtered_sequences", SampleData[SequencesWithQuality])],
+    input_descriptions={
+        "reads": "The sequences to be trimmed.",
+        "minimap2_index": "Minimap2 index file.",
+    },
+    parameter_descriptions={
+        "n_threads": "Number of threads to use.",
+        "exclude_mapped": "Exclude sequences that align to reference. When "
+        "set to False it excludes sequences that do not "
+        "align to the reference database.",
+    },
+    output_descriptions={
+        "filtered_sequences": "The resulting filtered sequences.",
+    },
+    name="Filter demultiplexed sequences by alignment "
+    "to reference database using Minimap2.",
     description=(
         "Filter out (or keep) demultiplexed single- or paired-end "
-        "sequences that align to a reference database, using minimap2 "
+        "sequences that align to a reference database, using Minimap2 "
         "and samtools. This method can be used to filter out long "
         "sequences or alternatively (when exclude_seqs is False) to "
         "only keep sequences that do align to the reference."
     ),
 )
-"""
+
 
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.minimap2_build,

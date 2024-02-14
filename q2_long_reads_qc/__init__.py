@@ -13,5 +13,4 @@ from .minimap2 import build_minimap2_index  # , filter_reads
 __version__ = get_versions()["version"]
 del get_versions
 
-# __all__ = ["evaluate", "filter_reads", "build_minimap2_index"]
-__all__ = ["evaluate", "build_minimap2_index"]
+__all__ = ["evaluate", "filter_reads", "build_minimap2_index"]
