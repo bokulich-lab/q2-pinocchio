@@ -7,6 +7,7 @@
 # ----------------------------------------------------------------------------
 
 import os
+import subprocess
 import tempfile
 
 # import pysam
@@ -108,7 +109,16 @@ def _minimap2_filter(
 
             minimap2_cmd += [reads]
             minimap2_cmd += ["-o", samfile_output_path]
-            run_command(minimap2_cmd)
+
+            try:
+                # Execute Minimap2
+                run_command(minimap2_cmd)
+            except subprocess.CalledProcessError as e:
+                raise Exception(
+                    "An error was encountered while using Minimap2, "
+                    f"(return code {e.returncode}), please inspect "
+                    "stdout and stderr to learn more."
+                )
 
             # Filter alignment and convert to BAM with samtools
             if exclude_mapped:
@@ -129,7 +139,16 @@ def _minimap2_filter(
                 "-@",
                 str(n_threads - 1),
             ]
-            run_command(samtools_command)
+
+            try:
+                # Execute samtools view
+                run_command(samtools_command)
+            except subprocess.CalledProcessError as e:
+                raise Exception(
+                    "An error was encountered while using samtools view, "
+                    f"(return code {e.returncode}), please inspect "
+                    "stdout and stderr to learn more."
+                )
 
             # Convert to FASTQ with samtools
             fwd = str(outdir.path / os.path.basename(reads))
@@ -148,4 +167,13 @@ def _minimap2_filter(
                 "-n",
                 bamfile_output_path,
             ]
-            run_command(convert_command)
+
+            try:
+                # Execute samtools fastq
+                run_command(convert_command)
+            except subprocess.CalledProcessError as e:
+                raise Exception(
+                    "An error was encountered while using samtools fastq, "
+                    f"(return code {e.returncode}), please inspect "
+                    "stdout and stderr to learn more."
+                )
