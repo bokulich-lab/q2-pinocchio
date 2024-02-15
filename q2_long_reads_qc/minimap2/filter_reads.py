@@ -58,6 +58,8 @@ def _minimap2_filter(f_read, outdir, database, n_threads, exclude_mapped):
                 "-x",
                 "map-ont",
                 str(database.path / "index.mmi"),
+                "-t",
+                str(n_threads),
             ]
 
             minimap2_cmd += [f_read]
