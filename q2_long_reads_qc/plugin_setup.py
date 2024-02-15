@@ -72,6 +72,10 @@ plugin.methods.register_function(
         "n_threads": Int % Range(1, None),
         "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
         "exclude_mapped": Bool,
+        "matching_score": Int,
+        "mismatching_penalty": Int,
+        "gap_open_penalty": Int % Range(1, None),
+        "gap_extension_penalty": Int % Range(1, None),
     },
     outputs=[("filtered_sequences", SampleData[SequencesWithQuality])],
     input_descriptions={
@@ -88,6 +92,10 @@ plugin.methods.register_function(
         "exclude_mapped": "Exclude sequences that align to reference. When "
         "set to False it excludes sequences that do not align to the reference "
         "database.",
+        "matching_score": "Matching score.",
+        "mismatching_penalty": "Mismatching penalty.",
+        "gap_open_penalty": "Gap open penalty.",
+        "gap_extension_penalty": "Gap extension penalty.",
     },
     output_descriptions={
         "filtered_sequences": "The resulting filtered sequences.",

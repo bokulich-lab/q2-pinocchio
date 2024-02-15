@@ -28,12 +28,30 @@ REMOVE_SECONDARY_OR_UNMAPPED_SINGLE = "260"
 REMOVE_SECONDARY_OR_UNMAPPED_PAIRED = "268"
 
 
+def set_penalties(match, mismatch, gap_o, gap_e):
+    options = []
+    if match != 2:
+        options += ["-A", str(match)]
+    if mismatch != 4:
+        options += ["-B", str(mismatch)]
+    if gap_o != 4:
+        options += ["-O", str(gap_o)]
+    if gap_e != 2:
+        options += ["-E", str(gap_e)]
+
+    return options
+
+
 def filter_reads(
     reads: CasavaOneEightSingleLanePerSampleDirFmt,
     minimap2_index: Minimap2IndexFileDirFmt,
     n_threads: int = 1,
     mapping_preset: str = "map-ont",
     exclude_mapped: str = False,
+    matching_score: int = 2,
+    mismatching_penalty: int = 4,
+    gap_open_penalty: int = 4,
+    gap_extension_penalty: int = 2,
 ) -> CasavaOneEightSingleLanePerSampleDirFmt:
 
     filtered_seqs = CasavaOneEightSingleLanePerSampleDirFmt()
@@ -48,14 +66,29 @@ def filter_reads(
             n_threads,
             mapping_preset,
             exclude_mapped,
+            matching_score,
+            mismatching_penalty,
+            gap_open_penalty,
+            gap_extension_penalty,
         )
 
     return filtered_seqs
 
 
 def _minimap2_filter(
-    f_read, outdir, database, n_threads, mapping_preset, exclude_mapped
+    f_read,
+    outdir,
+    database,
+    n_threads,
+    mapping_preset,
+    exclude_mapped,
+    match,
+    mismatch,
+    gap_o,
+    gap_e,
 ):
+    alignment_options = set_penalties(match, mismatch, gap_o, gap_e)
+
     with tempfile.NamedTemporaryFile() as sam_f:
         samfile_output_path = sam_f.name
         with tempfile.NamedTemporaryFile() as bam_f:
@@ -70,7 +103,7 @@ def _minimap2_filter(
                 str(database.path / "index.mmi"),
                 "-t",
                 str(n_threads),
-            ]
+            ] + alignment_options
 
             minimap2_cmd += [f_read]
             minimap2_cmd += ["-o", samfile_output_path]
