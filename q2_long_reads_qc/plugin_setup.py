@@ -21,11 +21,8 @@ from qiime2.plugin import (  # , TypeMatch
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
-from q2_long_reads_qc.types._format import (
-    Minimap2IndexFileDirFmt,
-    Minimap2IndexFileFormat,
-)
-from q2_long_reads_qc.types._type import Minimap2Index
+from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt, Minimap2IndexDBFmt
+from q2_long_reads_qc.types._type import Minimap2IndexDB
 
 citations = Citations.load("citations.bib", package="q2_long_reads_qc")
 
@@ -38,10 +35,10 @@ plugin = Plugin(
     short_description="",
 )
 
-plugin.register_formats(Minimap2IndexFileDirFmt, Minimap2IndexFileFormat)
-plugin.register_semantic_types(Minimap2Index)
+plugin.register_formats(Minimap2IndexDBDirFmt, Minimap2IndexDBFmt)
+plugin.register_semantic_types(Minimap2IndexDB)
 plugin.register_semantic_type_to_format(
-    Minimap2Index, artifact_format=Minimap2IndexFileDirFmt
+    Minimap2IndexDB, artifact_format=Minimap2IndexDBDirFmt
 )
 
 plugin.visualizers.register_function(
@@ -66,7 +63,7 @@ plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.filter_reads,
     inputs={
         "reads": SampleData[SequencesWithQuality],
-        "minimap2_index": Minimap2Index,
+        "minimap2_index": Minimap2IndexDB,
     },
     parameters={
         "n_threads": Int % Range(1, None),
@@ -116,7 +113,7 @@ plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.minimap2_build,
     inputs={"sequences": FeatureData[Sequence]},
     parameters={"kmer_length": Int % Range(1, 28)},
-    outputs=[("database", Minimap2Index)],
+    outputs=[("database", Minimap2IndexDB)],
     input_descriptions={
         "sequences": "Reference sequences used to build Minimap2 index."
     },

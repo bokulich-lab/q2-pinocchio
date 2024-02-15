@@ -8,4 +8,4 @@
 
 from qiime2.plugin import SemanticType
 
-Minimap2Index = SemanticType("Minimap2Index")
+Minimap2IndexDB = SemanticType("Minimap2IndexDB")

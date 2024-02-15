@@ -11,12 +11,12 @@ import subprocess
 from q2_types.feature_data import DNAFASTAFormat
 
 from q2_long_reads_qc._utils import run_command
-from q2_long_reads_qc.types._format import Minimap2IndexFileDirFmt
+from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
 
 
 def minimap2_build(
     sequences: DNAFASTAFormat, kmer_length: int = 15
-) -> Minimap2IndexFileDirFmt:
+) -> Minimap2IndexDBDirFmt:
     """
     Generates a QIIME 2 artifact representing a Minimap2 index database.
 
@@ -29,7 +29,7 @@ def minimap2_build(
     """
 
     # Initialize a directory format object to store the Minimap2 index.
-    database = Minimap2IndexFileDirFmt()
+    database = Minimap2IndexDBDirFmt()
 
     # Command to build the Minimap2 index file
     build_cmd = [

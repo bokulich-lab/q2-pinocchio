@@ -9,10 +9,11 @@
 import os
 import tempfile
 
+# import pysam
 from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
 from q2_long_reads_qc._utils import run_command
-from q2_long_reads_qc.types._format import Minimap2IndexFileDirFmt
+from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
 
 # samtools flags
 # -f 4 keeps only single alignments that are unmapped
@@ -44,7 +45,7 @@ def set_penalties(match, mismatch, gap_o, gap_e):
 
 def filter_reads(
     reads: CasavaOneEightSingleLanePerSampleDirFmt,
-    minimap2_index: Minimap2IndexFileDirFmt,
+    minimap2_index: Minimap2IndexDBDirFmt,
     n_threads: int = 1,
     mapping_preset: str = "map-ont",
     exclude_mapped: str = False,
@@ -76,7 +77,7 @@ def filter_reads(
 
 
 def _minimap2_filter(
-    f_read,
+    reads,
     outdir,
     database,
     n_threads,
@@ -105,7 +106,7 @@ def _minimap2_filter(
                 str(n_threads),
             ] + alignment_options
 
-            minimap2_cmd += [f_read]
+            minimap2_cmd += [reads]
             minimap2_cmd += ["-o", samfile_output_path]
             run_command(minimap2_cmd)
 
@@ -131,7 +132,7 @@ def _minimap2_filter(
             run_command(samtools_command)
 
             # Convert to FASTQ with samtools
-            fwd = str(outdir.path / os.path.basename(f_read))
+            fwd = str(outdir.path / os.path.basename(reads))
             _reads = ["-0", fwd]
 
             # -s /dev/null excludes singletons

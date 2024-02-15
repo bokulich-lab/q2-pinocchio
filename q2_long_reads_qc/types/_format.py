@@ -9,7 +9,7 @@
 from qiime2.plugin import model
 
 
-class Minimap2IndexFileFormat(model.BinaryFileFormat):
+class Minimap2IndexDBFmt(model.BinaryFileFormat):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -17,6 +17,6 @@ class Minimap2IndexFileFormat(model.BinaryFileFormat):
         pass
 
 
-Minimap2IndexFileDirFmt = model.SingleFileDirectoryFormat(
-    "Minimap2IndexFileDirFmt", "index.mmi", Minimap2IndexFileFormat
+Minimap2IndexDBDirFmt = model.SingleFileDirectoryFormat(
+    "Minimap2IndexDBDirFmt", "index.mmi", Minimap2IndexDBFmt
 )
