@@ -32,6 +32,7 @@ def filter_reads(
     reads: CasavaOneEightSingleLanePerSampleDirFmt,
     minimap2_index: Minimap2IndexFileDirFmt,
     n_threads: int = 1,
+    mapping_preset: str = "map-ont",
     exclude_mapped: str = False,
 ) -> CasavaOneEightSingleLanePerSampleDirFmt:
 
@@ -40,12 +41,21 @@ def filter_reads(
     fastq_paths = [record[1:] for record in df.itertuples()]
 
     for fwd, rev in fastq_paths:
-        _minimap2_filter(fwd, filtered_seqs, minimap2_index, n_threads, exclude_mapped)
+        _minimap2_filter(
+            fwd,
+            filtered_seqs,
+            minimap2_index,
+            n_threads,
+            mapping_preset,
+            exclude_mapped,
+        )
 
     return filtered_seqs
 
 
-def _minimap2_filter(f_read, outdir, database, n_threads, exclude_mapped):
+def _minimap2_filter(
+    f_read, outdir, database, n_threads, mapping_preset, exclude_mapped
+):
     with tempfile.NamedTemporaryFile() as sam_f:
         samfile_output_path = sam_f.name
         with tempfile.NamedTemporaryFile() as bam_f:
@@ -56,7 +66,7 @@ def _minimap2_filter(f_read, outdir, database, n_threads, exclude_mapped):
                 "minimap2",
                 "-a",
                 "-x",
-                "map-ont",
+                mapping_preset,
                 str(database.path / "index.mmi"),
                 "-t",
                 str(n_threads),

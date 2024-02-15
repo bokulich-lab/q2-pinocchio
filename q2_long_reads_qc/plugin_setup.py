@@ -9,7 +9,15 @@
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.per_sample_sequences import SequencesWithQuality
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Bool, Citations, Int, Plugin, Range  # , TypeMatch
+from qiime2.plugin import (  # , TypeMatch
+    Bool,
+    Choices,
+    Citations,
+    Int,
+    Plugin,
+    Range,
+    Str,
+)
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
@@ -62,6 +70,7 @@ plugin.methods.register_function(
     },
     parameters={
         "n_threads": Int % Range(1, None),
+        "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
         "exclude_mapped": Bool,
     },
     outputs=[("filtered_sequences", SampleData[SequencesWithQuality])],
@@ -71,9 +80,14 @@ plugin.methods.register_function(
     },
     parameter_descriptions={
         "n_threads": "Number of threads to use.",
+        "mapping_preset": "Specifies the type of input sequences that will be "
+        "used during the mapping process. 1) map-ont: Align noisy long reads "
+        "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
+        "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
+        "older PacBio continuous long (CLR) reads to a reference genome.",
         "exclude_mapped": "Exclude sequences that align to reference. When "
-        "set to False it excludes sequences that do not "
-        "align to the reference database.",
+        "set to False it excludes sequences that do not align to the reference "
+        "database.",
     },
     output_descriptions={
         "filtered_sequences": "The resulting filtered sequences.",
