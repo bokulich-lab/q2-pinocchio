@@ -10,24 +10,22 @@ import os
 import subprocess
 import tempfile
 
+import pandas as pd
+
 # import pysam
-from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
+import qiime2.util
+import yaml
+from q2_types.per_sample_sequences import (
+    FastqManifestFormat,
+    SingleLanePerSampleSingleEndFastqDirFmt,
+    YamlFormat,
+)
+from q2_types.per_sample_sequences._transformer import (
+    _parse_and_validate_manifest_partial,
+)
 
 from q2_long_reads_qc._utils import run_command
 from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
-
-# samtools flags
-# -f 4 keeps only single alignments that are unmapped
-# -f 12 keeps only paired alignments with both reads unmapped
-# -F 256 removes reads that are not primary alignment
-# -F 260 removes reads that are not primary alignment or unmapped
-# -F 268 removes reads that are not primary alignment or unmapped
-# or pair is unmapped.
-KEEP_UNMAPPED_SINGLE = "4"
-KEEP_UNMAPPED_PAIRED = "12"
-REMOVE_SECONDARY_ALIGNMENTS = "256"
-REMOVE_SECONDARY_OR_UNMAPPED_SINGLE = "260"
-REMOVE_SECONDARY_OR_UNMAPPED_PAIRED = "268"
 
 
 def set_penalties(match, mismatch, gap_o, gap_e):
@@ -42,39 +40,6 @@ def set_penalties(match, mismatch, gap_o, gap_e):
         options += ["-E", str(gap_e)]
 
     return options
-
-
-def filter_reads(
-    reads: CasavaOneEightSingleLanePerSampleDirFmt,
-    minimap2_index: Minimap2IndexDBDirFmt,
-    n_threads: int = 1,
-    mapping_preset: str = "map-ont",
-    exclude_mapped: str = False,
-    matching_score: int = None,
-    mismatching_penalty: int = None,
-    gap_open_penalty: int = None,
-    gap_extension_penalty: int = None,
-) -> CasavaOneEightSingleLanePerSampleDirFmt:
-
-    filtered_seqs = CasavaOneEightSingleLanePerSampleDirFmt()
-    df = reads.manifest
-    fastq_paths = [record[1:] for record in df.itertuples()]
-
-    for fwd, rev in fastq_paths:
-        _minimap2_filter(
-            fwd,
-            filtered_seqs,
-            minimap2_index,
-            n_threads,
-            mapping_preset,
-            exclude_mapped,
-            matching_score,
-            mismatching_penalty,
-            gap_open_penalty,
-            gap_extension_penalty,
-        )
-
-    return filtered_seqs
 
 
 def _minimap2_filter(
@@ -177,3 +142,68 @@ def _minimap2_filter(
                     f"(return code {e.returncode}), please inspect "
                     "stdout and stderr to learn more."
                 )
+
+
+def filter_reads(
+    reads: SingleLanePerSampleSingleEndFastqDirFmt,
+    minimap2_index: Minimap2IndexDBDirFmt,
+    n_threads: int = 1,
+    mapping_preset: str = "map-ont",
+    exclude_mapped: str = False,
+    matching_score: int = None,
+    mismatching_penalty: int = None,
+    gap_open_penalty: int = None,
+    gap_extension_penalty: int = None,
+) -> SingleLanePerSampleSingleEndFastqDirFmt:
+    # Initialize container for filtered sequences
+    filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
+
+    df = reads.manifest.view(pd.DataFrame)
+    # Iterate over each forward read in the DataFrame
+    for _, fwd in df.itertuples():
+        # Filter the read using minimap2 according to the specified parameters
+        _minimap2_filter(
+            fwd,
+            filtered_seqs,
+            minimap2_index,
+            n_threads,
+            mapping_preset,
+            exclude_mapped,
+            matching_score,
+            mismatching_penalty,
+            gap_open_penalty,
+            gap_extension_penalty,
+        )
+
+    # Parse the input manifest to get a DataFrame of reads
+    with reads.manifest.view(FastqManifestFormat).open() as fh:
+        input_manifest = _parse_and_validate_manifest_partial(
+            fh, single_end=True, absolute=False
+        )
+
+    # Filter the input manifest DataFrame for forward reads
+    output_df = input_manifest[input_manifest.direction == "forward"]
+
+    # Initialize the output manifest
+    output_manifest = FastqManifestFormat()
+    # Write the filtered manifest to the output manifest file
+    with output_manifest.open() as fh:
+        output_df.to_csv(fh, index=False)
+
+    # Initialize the result object to store filtered reads
+    result = SingleLanePerSampleSingleEndFastqDirFmt()
+    # Write the output manifest to the result object
+    result.manifest.write_data(output_manifest, FastqManifestFormat)
+    # Duplicate each filtered sequence file to the result object's directory
+    for _, _, filename, _ in output_df.itertuples():
+        qiime2.util.duplicate(
+            str(filtered_seqs.path / filename), str(result.path / filename)
+        )
+
+    # Create metadata about the phred offset
+    metadata = YamlFormat()
+    metadata.path.write_text(yaml.dump({"phred-offset": 33}))
+    # Attach metadata to the result
+    result.metadata.write_data(metadata, YamlFormat)
+
+    return result
