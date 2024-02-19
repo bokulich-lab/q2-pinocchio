@@ -32,13 +32,13 @@ REMOVE_SECONDARY_OR_UNMAPPED_PAIRED = "268"
 
 def set_penalties(match, mismatch, gap_o, gap_e):
     options = []
-    if match != 2:
+    if match is not None:
         options += ["-A", str(match)]
-    if mismatch != 4:
+    if mismatch is not None:
         options += ["-B", str(mismatch)]
-    if gap_o != 4:
+    if gap_o is not None:
         options += ["-O", str(gap_o)]
-    if gap_e != 2:
+    if gap_e is not None:
         options += ["-E", str(gap_e)]
 
     return options
@@ -50,10 +50,10 @@ def filter_reads(
     n_threads: int = 1,
     mapping_preset: str = "map-ont",
     exclude_mapped: str = False,
-    matching_score: int = 2,
-    mismatching_penalty: int = 4,
-    gap_open_penalty: int = 4,
-    gap_extension_penalty: int = 2,
+    matching_score: int = None,
+    mismatching_penalty: int = None,
+    gap_open_penalty: int = None,
+    gap_extension_penalty: int = None,
 ) -> CasavaOneEightSingleLanePerSampleDirFmt:
 
     filtered_seqs = CasavaOneEightSingleLanePerSampleDirFmt()
