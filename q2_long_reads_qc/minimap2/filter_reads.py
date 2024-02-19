@@ -144,37 +144,7 @@ def _minimap2_filter(
                 )
 
 
-def filter_reads(
-    reads: SingleLanePerSampleSingleEndFastqDirFmt,
-    minimap2_index: Minimap2IndexDBDirFmt,
-    n_threads: int = 1,
-    mapping_preset: str = "map-ont",
-    exclude_mapped: str = False,
-    matching_score: int = None,
-    mismatching_penalty: int = None,
-    gap_open_penalty: int = None,
-    gap_extension_penalty: int = None,
-) -> SingleLanePerSampleSingleEndFastqDirFmt:
-    # Initialize container for filtered sequences
-    filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
-
-    df = reads.manifest.view(pd.DataFrame)
-    # Iterate over each forward read in the DataFrame
-    for _, fwd in df.itertuples():
-        # Filter the read using minimap2 according to the specified parameters
-        _minimap2_filter(
-            fwd,
-            filtered_seqs,
-            minimap2_index,
-            n_threads,
-            mapping_preset,
-            exclude_mapped,
-            matching_score,
-            mismatching_penalty,
-            gap_open_penalty,
-            gap_extension_penalty,
-        )
-
+def build_filtered_reads_output_directory(filtered_seqs, reads):
     # Parse the input manifest to get a DataFrame of reads
     with reads.manifest.view(FastqManifestFormat).open() as fh:
         input_manifest = _parse_and_validate_manifest_partial(
@@ -205,5 +175,41 @@ def filter_reads(
     metadata.path.write_text(yaml.dump({"phred-offset": 33}))
     # Attach metadata to the result
     result.metadata.write_data(metadata, YamlFormat)
+
+    return result
+
+
+def filter_reads(
+    reads: SingleLanePerSampleSingleEndFastqDirFmt,
+    minimap2_index: Minimap2IndexDBDirFmt,
+    n_threads: int = 1,
+    mapping_preset: str = "map-ont",
+    exclude_mapped: str = False,
+    matching_score: int = None,
+    mismatching_penalty: int = None,
+    gap_open_penalty: int = None,
+    gap_extension_penalty: int = None,
+) -> SingleLanePerSampleSingleEndFastqDirFmt:
+    # Initialize directory format for filtered sequences
+    filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
+
+    df = reads.manifest.view(pd.DataFrame)
+    # Iterate over each forward read in the DataFrame
+    for _, fwd in df.itertuples():
+        # Filter the read using minimap2 according to the specified parameters
+        _minimap2_filter(
+            fwd,
+            filtered_seqs,
+            minimap2_index,
+            n_threads,
+            mapping_preset,
+            exclude_mapped,
+            matching_score,
+            mismatching_penalty,
+            gap_open_penalty,
+            gap_extension_penalty,
+        )
+
+    result = build_filtered_reads_output_directory(filtered_seqs, reads)
 
     return result
