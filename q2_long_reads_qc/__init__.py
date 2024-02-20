@@ -8,9 +8,9 @@
 
 from ._version import get_versions
 from .longqc import evaluate
-from .minimap2 import build_minimap2_index  # , filter_reads
+from .minimap2 import filter_reads, minimap2_build
 
 __version__ = get_versions()["version"]
 del get_versions
 
-__all__ = ["evaluate", "filter_reads", "build_minimap2_index"]
+__all__ = ["evaluate", "filter_reads", "minimap2_build"]

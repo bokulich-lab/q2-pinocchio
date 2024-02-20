@@ -9,10 +9,16 @@
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.per_sample_sequences import SequencesWithQuality
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Bool, Choices, Citations, Float, Int, Plugin, Range, Str
+from qiime2.plugin import Citations, Plugin
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
+from q2_long_reads_qc._action_params import (
+    filter_reads_param_descriptions,
+    filter_reads_params,
+    minimap2_build_param_descriptions,
+    minimap2_build_params,
+)
 from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt, Minimap2IndexDBFmt
 from q2_long_reads_qc.types._type import Minimap2IndexDB
 
@@ -56,39 +62,13 @@ plugin.methods.register_function(
         "reads": SampleData[SequencesWithQuality],
         "minimap2_index": Minimap2IndexDB,
     },
-    parameters={
-        "n_threads": Int % Range(1, None),
-        "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
-        "exclude_mapped": Bool,
-        "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
-        "matching_score": Int,
-        "mismatching_penalty": Int,
-        "gap_open_penalty": Int % Range(1, None),
-        "gap_extension_penalty": Int % Range(1, None),
-    },
+    parameters=filter_reads_params,
     outputs=[("filtered_sequences", SampleData[SequencesWithQuality])],
     input_descriptions={
         "reads": "The sequences to be trimmed.",
         "minimap2_index": "Minimap2 index file.",
     },
-    parameter_descriptions={
-        "n_threads": "Number of threads to use.",
-        "mapping_preset": "Specifies the type of input sequences that will be "
-        "used during the mapping process. 1) map-ont: Align noisy long reads "
-        "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
-        "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-        "older PacBio continuous long (CLR) reads to a reference genome.",
-        "exclude_mapped": "Exclude sequences that align to reference. When "
-        "set to False it excludes sequences that do not align to the reference "
-        "database.",
-        "min_per_identity": "After the alignment step, mapped reads will be "
-        "reclassified as unmapped if they identity percentages falls below this "
-        "value. If not set there is no reclassification.",
-        "matching_score": "Matching score.",
-        "mismatching_penalty": "Mismatching penalty.",
-        "gap_open_penalty": "Gap open penalty.",
-        "gap_extension_penalty": "Gap extension penalty.",
-    },
+    parameter_descriptions=filter_reads_param_descriptions,
     output_descriptions={
         "filtered_sequences": "The resulting filtered sequences.",
     },
@@ -107,12 +87,12 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.minimap2_build,
     inputs={"sequences": FeatureData[Sequence]},
-    parameters={"kmer_length": Int % Range(1, 28)},
+    parameters=minimap2_build_params,
     outputs=[("database", Minimap2IndexDB)],
     input_descriptions={
         "sequences": "Reference sequences used to build Minimap2 index."
     },
-    parameter_descriptions={"kmer_length": "Minimizer k-mer length."},
+    parameter_descriptions=minimap2_build_param_descriptions,
     output_descriptions={"database": "Minimap2 index."},
     name="Build Minimap2 index from reference sequences.",
     description="Build Minimap2 index from reference sequences.",
