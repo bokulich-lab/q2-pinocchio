@@ -9,15 +9,7 @@
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.per_sample_sequences import SequencesWithQuality
 from q2_types.sample_data import SampleData
-from qiime2.plugin import (  # , TypeMatch
-    Bool,
-    Choices,
-    Citations,
-    Int,
-    Plugin,
-    Range,
-    Str,
-)
+from qiime2.plugin import Bool, Choices, Citations, Float, Int, Plugin, Range, Str
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
@@ -58,7 +50,6 @@ plugin.visualizers.register_function(
     citations=[citations["Fukasawa_LongQC"]],
 )
 
-# T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.filter_reads,
     inputs={
@@ -69,6 +60,7 @@ plugin.methods.register_function(
         "n_threads": Int % Range(1, None),
         "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
         "exclude_mapped": Bool,
+        "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
         "matching_score": Int,
         "mismatching_penalty": Int,
         "gap_open_penalty": Int % Range(1, None),
@@ -89,6 +81,9 @@ plugin.methods.register_function(
         "exclude_mapped": "Exclude sequences that align to reference. When "
         "set to False it excludes sequences that do not align to the reference "
         "database.",
+        "min_per_identity": "After the alignment step, mapped reads will be "
+        "reclassified as unmapped if they identity percentages falls below this "
+        "value. If not set there is no reclassification.",
         "matching_score": "Matching score.",
         "mismatching_penalty": "Mismatching penalty.",
         "gap_open_penalty": "Gap open penalty.",
