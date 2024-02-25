@@ -14,8 +14,10 @@ from q2_long_reads_qc.minimap2._filtering_utils import (
     set_penalties,
 )
 
+from .test_long_reads_qc import LongReadsQCTestsBase
 
-class TestSetPenalties(unittest.TestCase):
+
+class TestSetPenalties(LongReadsQCTestsBase):
 
     # Test with all parameters provided to ensure correct option string formation
     def test_all_arguments_provided(self):
@@ -37,7 +39,7 @@ class TestSetPenalties(unittest.TestCase):
         self.assertEqual(set_penalties(None, None, None, None), [])
 
 
-class TestCalculateIdentity(unittest.TestCase):
+class TestCalculateIdentity(LongReadsQCTestsBase):
     # Test case with NM tag present
     def test_with_nm_tag(self):
         aln = "SOME\tDATA\tNM:i:5"
@@ -118,7 +120,7 @@ class TestCalculateIdentity(unittest.TestCase):
         self.assertAlmostEqual(calculate_identity(aln, total_length), expected_identity)
 
 
-class TestGetAlignmentLength(unittest.TestCase):
+class TestGetAlignmentLength(LongReadsQCTestsBase):
     # Test with the CIGAR string indicating no alignment
     def test_no_alignment(self):
         self.assertEqual(get_alignment_length("*"), 0)
