@@ -7,7 +7,21 @@
 # ----------------------------------------------------------------------------
 import re
 import shutil
+import subprocess
 import tempfile
+
+import qiime2.util
+import yaml
+from q2_types.per_sample_sequences import (
+    FastqManifestFormat,
+    SingleLanePerSampleSingleEndFastqDirFmt,
+    YamlFormat,
+)
+from q2_types.per_sample_sequences._transformer import (
+    _parse_and_validate_manifest_partial,
+)
+
+from q2_long_reads_qc._utils import run_command
 
 
 def set_penalties(match, mismatch, gap_o, gap_e):
@@ -108,3 +122,105 @@ def process_sam_file(input_sam_file, exclude_mapped, min_per_identity):
 
     # Replaces the original SAM file with the filtered temporary file.
     shutil.move(temp_file_path, input_sam_file)
+
+
+# Generate samtools fastq convert command
+def make_convert_cmd(_reads, n_threads, bamfile_filepath):
+    # -s /dev/null excludes singletons
+    # -n keeps samtools from altering header IDs!
+    convert_cmd = [
+        "samtools",
+        "fastq",
+        *_reads,
+        "-s",
+        "/dev/null",
+        "-@",
+        str(n_threads - 1),
+        "-n",
+        bamfile_filepath,
+    ]
+
+    return convert_cmd
+
+
+# Generate samtools view filtering command
+def make_samt_cmd(samfile_filepath, bamfile_filepath, n_threads):
+    samtools_cmd = [
+        "samtools",
+        "view",
+        "-bS",
+        str(samfile_filepath),
+        "-o",
+        str(bamfile_filepath),
+        "-@",
+        str(n_threads - 1),
+    ]
+
+    return samtools_cmd
+
+
+# Generate Minimap2 mapping command
+def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads, samf_fp):
+    # align to reference with Minimap2
+    minimap2_cmd = [
+        "minimap2",
+        "-a",
+        "-x",
+        mapping_preset,
+        str(index.path / "index.mmi"),
+        "-t",
+        str(n_threads),
+    ] + penalties
+
+    minimap2_cmd += [reads]
+    minimap2_cmd += ["-o", samf_fp]
+
+    return minimap2_cmd
+
+
+# helper function for command execution
+def run_cmd(cmd, str):
+    try:
+        # Execute samtools fastq
+        run_command(cmd)
+    except subprocess.CalledProcessError as e:
+        raise Exception(
+            f"An error was encountered while using {str}, "
+            f"(return code {e.returncode}), please inspect "
+            "stdout and stderr to learn more."
+        )
+
+
+def build_filtered_out_dir(filtered_seqs, reads):
+    # Parse the input manifest to get a DataFrame of reads
+    with reads.manifest.view(FastqManifestFormat).open() as fh:
+        input_manifest = _parse_and_validate_manifest_partial(
+            fh, single_end=True, absolute=False
+        )
+
+    # Filter the input manifest DataFrame for forward reads
+    output_df = input_manifest[input_manifest.direction == "forward"]
+
+    # Initialize the output manifest
+    output_manifest = FastqManifestFormat()
+    # Write the filtered manifest to the output manifest file
+    with output_manifest.open() as fh:
+        output_df.to_csv(fh, index=False)
+
+    # Initialize the result object to store filtered reads
+    result = SingleLanePerSampleSingleEndFastqDirFmt()
+    # Write the output manifest to the result object
+    result.manifest.write_data(output_manifest, FastqManifestFormat)
+    # Duplicate each filtered sequence file to the result object's directory
+    for _, _, filename, _ in output_df.itertuples():
+        qiime2.util.duplicate(
+            str(filtered_seqs.path / filename), str(result.path / filename)
+        )
+
+    # Create metadata about the phred offset
+    metadata = YamlFormat()
+    metadata.path.write_text(yaml.dump({"phred-offset": 33}))
+    # Attach metadata to the result
+    result.metadata.write_data(metadata, YamlFormat)
+
+    return result
