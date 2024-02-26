@@ -15,5 +15,5 @@ class TestMinimap2Build(LongReadsQCTestsBase):
     # This test just makes sure this runs without error, which will include
     # validating the contents.
     def test_build(self):
-        genome = Artifact.load(self.get_data_path("sars2-genome.qza"))
+        genome = Artifact.load(self.get_data_path("genome.qza"))
         self.plugin.methods["minimap2_build"](genome)
