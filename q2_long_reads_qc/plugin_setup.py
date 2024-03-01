@@ -39,22 +39,6 @@ plugin.register_semantic_type_to_format(
     Minimap2IndexDB, artifact_format=Minimap2IndexDBDirFmt
 )
 
-plugin.visualizers.register_function(
-    function=q2_long_reads_qc.longqc.evaluate.evaluate_long_reads,
-    inputs={
-        "sequences": SampleData[SequencesWithQuality],
-    },
-    parameters="",
-    input_descriptions={
-        "sequences": "Long reads to be analyzed.",
-    },
-    parameter_descriptions="",
-    name="Evaluate long sequences using LongQC.",
-    description="This method uses LongQC "
-    " to assess the quality of long reads providing"
-    " visualizations summarizing the results.",
-    citations=[citations["Fukasawa_LongQC"]],
-)
 
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.filter_reads,
