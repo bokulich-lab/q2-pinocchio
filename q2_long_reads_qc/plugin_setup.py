@@ -75,11 +75,11 @@ plugin.methods.register_function(
     name="Filter demultiplexed sequences by alignment "
     "to reference database using Minimap2.",
     description=(
-        "Filter out (or keep) demultiplexed single- or paired-end "
-        "sequences that align to a reference database, using Minimap2 "
-        "and samtools. This method can be used to filter out long "
-        "sequences or alternatively (when exclude_seqs is False) to "
-        "only keep sequences that do align to the reference."
+        "Filter demultiplexed single- or paired-end sequences based "
+        "on alignment to a reference database using Minimap2 and samtools. "
+        "This versatile command allows for the exclusion of long sequences "
+        "or, when exclude_mapped is set to False, selectively retains only "
+        "those sequences aligning to the reference."
     ),
 )
 
