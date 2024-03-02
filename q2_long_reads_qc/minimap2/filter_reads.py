@@ -74,15 +74,16 @@ def filter_reads(
 ) -> SingleLanePerSampleSingleEndFastqDirFmt:
     # Initialize directory format for filtered sequences
     filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
+
     # Import data from the manifest file to a df
-    df = sequences.manifest.view(pd.DataFrame)
+    input_df = sequences.manifest.view(pd.DataFrame)
 
     penalties = set_penalties(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
     )
 
     # Iterate over each forward read in the DataFrame
-    for _, fwd in df.itertuples():
+    for _, fwd in input_df.itertuples():
         # Filter the read using minimap2 according to the specified parameters
         _minimap2_filter(
             fwd,
@@ -95,6 +96,6 @@ def filter_reads(
             penalties,
         )
 
-    result = build_filtered_out_dir(filtered_seqs, sequences)
+    result = build_filtered_out_dir(sequences, filtered_seqs)
 
     return result

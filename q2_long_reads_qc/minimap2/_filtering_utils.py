@@ -24,6 +24,7 @@ from q2_types.per_sample_sequences._transformer import (
 from q2_long_reads_qc._utils import run_command
 
 
+# Set Minimap2 alignment penalties based on provided parameters
 def set_penalties(match, mismatch, gap_o, gap_e):
     options = []
     if match is not None:
@@ -38,16 +39,16 @@ def set_penalties(match, mismatch, gap_o, gap_e):
     return options
 
 
-# Function to calculate the identity percentage of an alignment.
+# Function to calculate the identity percentage of an alignment
 def calculate_identity(aln, total_length):
     try:
-        # Extracts the number of mismatches (NM tag) from the SAM file alignment line.
+        # Extracts the number of mismatches (NM tag) from the SAM file alignment line
         nm = int([x for x in aln.split("\t") if x.startswith("NM:i:")][0].split(":")[2])
     except IndexError:
-        # Defaults to 0 mismatches if the NM tag is not found.
+        # Defaults to 0 mismatches if the NM tag is not found
         nm = 0
 
-    # Calculates matches by subtracting mismatches from total length.
+    # Calculates matches by subtracting mismatches from total length
     matches = total_length - nm
 
     # Calculates identity percentage as the ratio of matches to total alignment length.
@@ -56,32 +57,32 @@ def calculate_identity(aln, total_length):
     return identity_percentage
 
 
-# Function to get the alignment length from a CIGAR string.
+# Function to get the alignment length from a CIGAR string
 def get_alignment_length(cigar):
     if cigar == "*":
-        # Returns 0 if the CIGAR string is '*', indicating no alignment.
+        # Returns 0 if the CIGAR string is '*', indicating no alignment
         return 0
 
-    # Extracts all match, insertion, and deletion operations from the CIGAR string.
+    # Extracts all match, insertion, and deletion operations from the CIGAR string
     matches = re.findall(r"(\d+)([MID])", cigar)
 
     # Sums the lengths of matches, insertions, and deletions to get total
-    # alignment length.
+    # alignment length
     total_length = sum(int(length) for length, op in matches if op in ["M", "D", "I"])
 
     return total_length
 
 
-# Function to process a SAM file, filter based on mappings and identity percentage.
+# Function to process a SAM file, filter based on mappings and identity percentage
 def process_sam_file(input_sam_file, exclude_mapped, min_per_identity):
-    # Creates a temporary file to write filtered alignments to.
+    # Creates a temporary file to write filtered alignments to
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file:
         temp_file_path = tmp_file.name
 
-    # Opens the input SAM file and the temporary file for writing.
+    # Opens the input SAM file and the temporary file for writing
     with open(input_sam_file, "r") as infile, open(temp_file_path, "w") as outfile:
         for line in infile:
-            # Writes header lines directly to the output file.
+            # Writes header lines directly to the output file
             if line.startswith("@"):
                 outfile.write(line)
                 continue
@@ -90,20 +91,20 @@ def process_sam_file(input_sam_file, exclude_mapped, min_per_identity):
             flag = int(parts[1])
             cigar = parts[5]
 
-            # Calculates identity percentage for alignments with a valid CIGAR string.
+            # Calculates identity percentage for alignments with a valid CIGAR string
             if min_per_identity is not None and cigar != "*":
                 total_length = get_alignment_length(cigar)
                 identity_percentage = calculate_identity(line, total_length)
             else:
                 # Defaults identity percentage to 1 (100%) if no CIGAR string or no
-                # min_per_identity is specified.
+                # min_per_identity is specified
                 identity_percentage = 1
 
             # Logic for excluding or including reads based on mappings and
-            # identity percentage.
+            # identity percentage
             if exclude_mapped:
                 # Condition for keeping unmapped reads or mapped reads below the
-                # identity threshold.
+                # identity threshold
                 keep_this_mapped = (
                     min_per_identity is not None
                     and identity_percentage < min_per_identity
@@ -112,7 +113,7 @@ def process_sam_file(input_sam_file, exclude_mapped, min_per_identity):
                     outfile.write(line)
             else:
                 # Includes reads that are not unmapped and not secondary, based on the
-                # identity threshold.
+                # identity threshold
                 if not (flag & 0x4) and not (flag & 0x100):
                     if (
                         min_per_identity is not None
@@ -120,14 +121,14 @@ def process_sam_file(input_sam_file, exclude_mapped, min_per_identity):
                     ) or (min_per_identity is None):
                         outfile.write(line)
 
-    # Replaces the original SAM file with the filtered temporary file.
+    # Replaces the original SAM file with the filtered temporary file
     shutil.move(temp_file_path, input_sam_file)
 
 
 # Generate samtools fastq convert command
 def make_convert_cmd(_reads, n_threads, bamfile_filepath):
     # -s /dev/null excludes singletons
-    # -n keeps samtools from altering header IDs!
+    # -n keeps samtools from altering header IDs
     convert_cmd = [
         "samtools",
         "fastq",
@@ -178,7 +179,7 @@ def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads, samf_fp):
     return minimap2_cmd
 
 
-# helper function for command execution
+# Helper function for command execution
 def run_cmd(cmd, str):
     try:
         # Execute samtools fastq
@@ -191,19 +192,18 @@ def run_cmd(cmd, str):
         )
 
 
-def build_filtered_out_dir(filtered_seqs, reads):
+def build_filtered_out_dir(input_reads, filtered_seqs):
     # Parse the input manifest to get a DataFrame of reads
-    with reads.manifest.view(FastqManifestFormat).open() as fh:
+    with input_reads.manifest.view(FastqManifestFormat).open() as fh:
         input_manifest = _parse_and_validate_manifest_partial(
             fh, single_end=True, absolute=False
         )
-
-    # Filter the input manifest DataFrame for forward reads
-    output_df = input_manifest[input_manifest.direction == "forward"]
+        # Filter the input manifest DataFrame for forward reads
+        output_df = input_manifest[input_manifest.direction == "forward"]
 
     # Initialize the output manifest
     output_manifest = FastqManifestFormat()
-    # Write the filtered manifest to the output manifest file
+    # Copy input manifest to output manifest
     with output_manifest.open() as fh:
         output_df.to_csv(fh, index=False)
 
