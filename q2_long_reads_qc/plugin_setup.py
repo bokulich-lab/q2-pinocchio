@@ -43,13 +43,13 @@ plugin.register_semantic_type_to_format(
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.filter_reads,
     inputs={
-        "reads": SampleData[SequencesWithQuality],
+        "sequences": SampleData[SequencesWithQuality],
         "minimap2_index": Minimap2IndexDB,
     },
     parameters=filter_reads_params,
     outputs=[("filtered_sequences", SampleData[SequencesWithQuality])],
     input_descriptions={
-        "reads": "The sequences to be trimmed.",
+        "sequences": "The sequences to be filtered.",
         "minimap2_index": "Minimap2 index file.",
     },
     parameter_descriptions=filter_reads_param_descriptions,

@@ -61,7 +61,7 @@ def _minimap2_filter(
 
 
 def filter_reads(
-    reads: SingleLanePerSampleSingleEndFastqDirFmt,
+    sequences: SingleLanePerSampleSingleEndFastqDirFmt,
     minimap2_index: Minimap2IndexDBDirFmt,
     n_threads: int = 1,
     mapping_preset: str = "map-ont",
@@ -75,7 +75,7 @@ def filter_reads(
     # Initialize directory format for filtered sequences
     filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
     # Import data from the manifest file to a df
-    df = reads.manifest.view(pd.DataFrame)
+    df = sequences.manifest.view(pd.DataFrame)
 
     penalties = set_penalties(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
@@ -95,6 +95,6 @@ def filter_reads(
             penalties,
         )
 
-    result = build_filtered_out_dir(filtered_seqs, reads)
+    result = build_filtered_out_dir(filtered_seqs, sequences)
 
     return result

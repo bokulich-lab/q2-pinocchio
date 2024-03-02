@@ -30,7 +30,7 @@ filter_reads_param_descriptions = {
     "set to False it excludes sequences that do not align to the reference "
     "database.",
     "min_per_identity": "After the alignment step, mapped reads will be "
-    "reclassified as unmapped if they identity percentages falls below this "
+    "reclassified as unmapped if their identity percentage falls below this "
     "value. If not set there is no reclassification.",
     "matching_score": "Matching score.",
     "mismatching_penalty": "Mismatching penalty.",
