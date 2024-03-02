@@ -15,6 +15,7 @@ from q2_long_reads_qc.minimap2._filtering_utils import (
     calculate_identity,
     get_alignment_length,
     make_convert_cmd,
+    make_mn2_cmd,
     make_samt_cmd,
     process_sam_file,
     set_penalties,
@@ -329,6 +330,45 @@ class TestMakeSamtCmd(unittest.TestCase):
 
         # Call the function and compare the result with the expected command
         actual_cmd = make_samt_cmd(samfile_filepath, bamfile_filepath, n_threads)
+        self.assertEqual(actual_cmd, expected_cmd)
+
+
+class TestMakeMn2Cmd(unittest.TestCase):
+    def test_make_mn2_cmd(self):
+        # Mock input parameters
+        mapping_preset = "map-preset"
+        index = "/path/to/index"
+        n_threads = 4
+        penalties = ["-A", "1", "-B", "-1", "-O", "4", "-E", "1"]
+        reads = "input.fastq"
+        samf_fp = "output.sam"
+
+        # Expected command based on the provided inputs
+        expected_cmd = [
+            "minimap2",
+            "-a",
+            "-x",
+            mapping_preset,
+            "/path/to/index/index.mmi",
+            "-t",
+            str(n_threads),
+            "-A",
+            "1",
+            "-B",
+            "-1",
+            "-O",
+            "4",
+            "-E",
+            "1",
+            "input.fastq",
+            "-o",
+            "output.sam",
+        ]
+
+        # Call the function and compare the result with the expected command
+        actual_cmd = make_mn2_cmd(
+            mapping_preset, index, n_threads, penalties, reads, samf_fp
+        )
         self.assertEqual(actual_cmd, expected_cmd)
 
 
