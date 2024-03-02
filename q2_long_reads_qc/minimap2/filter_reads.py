@@ -31,7 +31,7 @@ from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
 def _minimap2_filter(
     reads,
     outdir,
-    idx,
+    idx_path,
     n_threads,
     preset,
     exclude_mapped,
@@ -45,7 +45,9 @@ def _minimap2_filter(
             bamf_fp = bam_f.name
 
             # Use Minimap2 to find mapped and unmapped reads
-            mn2_cmd = make_mn2_cmd(preset, idx, n_threads, penalties, reads, samf_fp)
+            mn2_cmd = make_mn2_cmd(
+                preset, idx_path, n_threads, penalties, reads, samf_fp
+            )
             run_cmd(mn2_cmd, "Minimap2")
 
             # Filter sam file using samtools view
@@ -77,6 +79,7 @@ def filter_reads(
 
     # Import data from the manifest file to a df
     input_df = sequences.manifest.view(pd.DataFrame)
+    idx_path = minimap2_index.path
 
     penalties = set_penalties(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
@@ -88,7 +91,7 @@ def filter_reads(
         _minimap2_filter(
             fwd,
             filtered_seqs,
-            minimap2_index,
+            idx_path,
             n_threads,
             mapping_preset,
             exclude_mapped,
