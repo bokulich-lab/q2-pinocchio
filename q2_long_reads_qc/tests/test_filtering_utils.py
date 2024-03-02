@@ -6,11 +6,15 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import os
+import shutil
+import tempfile
 import unittest
 
 from q2_long_reads_qc.minimap2._filtering_utils import (
     calculate_identity,
     get_alignment_length,
+    process_sam_file,
     set_penalties,
 )
 
@@ -190,6 +194,91 @@ class TestGetAlignmentLength(LongReadsQCTestsBase):
         self.assertEqual(
             get_alignment_length("10M3S2H"), 10
         )  # Assuming 'S' and 'H' are ignored for alignment length
+
+
+class TestProcessSamFile(LongReadsQCTestsBase):
+    def setUp(self):
+        super().setUp()
+
+        self.samfile = self.get_data_path("initial.sam")
+        self.only_primary = self.get_data_path("mapped.sam")
+        self.only_unmapped = self.get_data_path("unmapped.sam")
+
+    def test_keep_primary_mapped(self):
+        # Create a temporary directory
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Concatenate the temporary directory path and the original file name
+            tmpfile = os.path.join(tmpdir, "initial_tmp.sam")
+
+            # Copy the SAM file to the temporary location
+            shutil.copy(self.samfile, tmpfile)
+
+            process_sam_file(tmpfile, False, None)
+
+            # Check each line for equality using splitlines()
+            with open(tmpfile, "r") as tmpfile_content, open(
+                self.only_primary, "r"
+            ) as primary_content:
+                tmp_lines = tmpfile_content.read().splitlines()
+                primary_lines = primary_content.read().splitlines()
+
+                tmp_index = 0
+                primary_index = 0
+
+                while tmp_index < len(tmp_lines) and primary_index < len(primary_lines):
+                    tmp_line = tmp_lines[tmp_index]
+                    primary_line = primary_lines[primary_index]
+
+                    if tmp_line.startswith("@PG"):
+                        # Skip the line starting with '@PG' in tmp_lines
+                        tmp_index += 1
+                        primary_index += 1
+                        continue
+
+                    # Explicitly print the line
+                    self.assertEqual(tmp_line, primary_line)
+
+                    tmp_index += 1
+                    primary_index += 1
+
+    def test_keep_unmapped(self):
+        # Create a temporary directory
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Concatenate the temporary directory path and the original file name
+            tmpfile = os.path.join(tmpdir, "initial_tmp.sam")
+
+            # Copy the SAM file to the temporary location
+            shutil.copy(self.samfile, tmpfile)
+
+            process_sam_file(tmpfile, True, None)
+
+            # Check each line for equality using splitlines()
+            with open(tmpfile, "r") as tmpfile_content, open(
+                self.only_unmapped, "r"
+            ) as unmapped_content:
+                tmp_lines = tmpfile_content.read().splitlines()
+                unmapped_lines = unmapped_content.read().splitlines()
+
+                tmp_index = 0
+                unmapped_index = 0
+
+                while tmp_index < len(tmp_lines) and unmapped_index < len(
+                    unmapped_lines
+                ):
+                    tmp_line = tmp_lines[tmp_index]
+                    unmapped_line = unmapped_lines[unmapped_index]
+
+                    if tmp_line.startswith("@PG"):
+                        # Skip the line starting with '@PG' in tmp_lines
+                        tmp_index += 1
+                        unmapped_index += 1
+                        continue
+
+                    # Explicitly print the line
+                    self.assertEqual(tmp_line, unmapped_line)
+
+                    tmp_index += 1
+                    unmapped_index += 1
 
 
 if __name__ == "__main__":
