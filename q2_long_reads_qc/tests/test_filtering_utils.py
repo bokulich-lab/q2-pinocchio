@@ -14,6 +14,7 @@ import unittest
 from q2_long_reads_qc.minimap2._filtering_utils import (
     calculate_identity,
     get_alignment_length,
+    make_convert_cmd,
     process_sam_file,
     set_penalties,
 )
@@ -279,6 +280,31 @@ class TestProcessSamFile(LongReadsQCTestsBase):
 
                     tmp_index += 1
                     unmapped_index += 1
+
+
+class TestMakeConvertCmd(unittest.TestCase):
+    def test_make_convert_cmd(self):
+        # Mock input parameters
+        _reads = ["read1.bam", "read2.bam"]
+        n_threads = 4
+        bamfile_filepath = "output.bam"
+
+        # Expected command based on the provided inputs
+        expected_cmd = [
+            "samtools",
+            "fastq",
+            *(_reads),
+            "-s",
+            "/dev/null",
+            "-@",
+            str(n_threads - 1),
+            "-n",
+            bamfile_filepath,
+        ]
+
+        # Call the function and compare the result with the expected command
+        actual_cmd = make_convert_cmd(_reads, n_threads, bamfile_filepath)
+        self.assertEqual(actual_cmd, expected_cmd)
 
 
 if __name__ == "__main__":
