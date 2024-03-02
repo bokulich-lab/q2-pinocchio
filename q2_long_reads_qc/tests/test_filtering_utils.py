@@ -15,6 +15,7 @@ from q2_long_reads_qc.minimap2._filtering_utils import (
     calculate_identity,
     get_alignment_length,
     make_convert_cmd,
+    make_samt_cmd,
     process_sam_file,
     set_penalties,
 )
@@ -304,6 +305,30 @@ class TestMakeConvertCmd(unittest.TestCase):
 
         # Call the function and compare the result with the expected command
         actual_cmd = make_convert_cmd(_reads, n_threads, bamfile_filepath)
+        self.assertEqual(actual_cmd, expected_cmd)
+
+
+class TestMakeSamtCmd(unittest.TestCase):
+    def test_make_samt_cmd(self):
+        # Mock input parameters
+        samfile_filepath = "input.sam"
+        bamfile_filepath = "output.bam"
+        n_threads = 4
+
+        # Expected command based on the provided inputs
+        expected_cmd = [
+            "samtools",
+            "view",
+            "-bS",
+            str(samfile_filepath),
+            "-o",
+            str(bamfile_filepath),
+            "-@",
+            str(n_threads - 1),
+        ]
+
+        # Call the function and compare the result with the expected command
+        actual_cmd = make_samt_cmd(samfile_filepath, bamfile_filepath, n_threads)
         self.assertEqual(actual_cmd, expected_cmd)
 
 
