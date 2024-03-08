@@ -41,7 +41,7 @@ plugin.register_semantic_type_to_format(
 
 
 plugin.methods.register_function(
-    function=q2_long_reads_qc.minimap2.filter_reads,
+    function=q2_long_reads_qc.filtering.filter_reads,
     inputs={
         "query_reads": SampleData[SequencesWithQuality],
         "minimap2_index": Minimap2IndexDB,
@@ -58,8 +58,7 @@ plugin.methods.register_function(
     output_descriptions={
         "filtered_query_reads": "The resulting filtered sequences.",
     },
-    name="Filter demultiplexed sequences by alignment "
-    "to reference database using Minimap2.",
+    name="Filter long sequences using Minimap2.",
     description=(
         "Filter demultiplexed single- or paired-end sequences based "
         "on alignment to a reference database using Minimap2 and samtools. "

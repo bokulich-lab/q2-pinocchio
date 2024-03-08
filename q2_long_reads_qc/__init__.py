@@ -7,7 +7,8 @@
 # ----------------------------------------------------------------------------
 
 from ._version import get_versions
-from .minimap2 import filter_reads, minimap2_build
+from .filtering import filter_reads
+from .minimap2 import minimap2_build
 
 __version__ = get_versions()["version"]
 del get_versions
