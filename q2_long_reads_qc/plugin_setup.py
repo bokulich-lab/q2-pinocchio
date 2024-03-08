@@ -9,7 +9,7 @@
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.per_sample_sequences import SequencesWithQuality
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Citations, Plugin
+from qiime2.plugin import Citations, Collection, Plugin
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
@@ -91,7 +91,7 @@ plugin.methods.register_function(
     description="Build Minimap2 index from reference sequences.",
 )
 
-"""
+
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.minimap2_search,
     inputs={
@@ -99,14 +99,14 @@ plugin.methods.register_function(
         "minimap2_index": Minimap2IndexDB,
         "reference_reads": FeatureData[Sequence],
     },
-    parameters=filter_reads_params,
-    outputs=[("search_results", SampleData[SequencesWithQuality])],
+    parameters={},
+    outputs=[("search_results", Collection[PAF])],
     input_descriptions={
         "query_reads": "Query sequences.",
         "minimap2_index": "Minimap2 index file. Incompatible with reference_reads.",
         "reference_reads": "Reference sequences. Incompatible with minimap2_index.",
     },
-    parameter_descriptions=filter_reads_param_descriptions,
+    parameter_descriptions={},
     output_descriptions={
         "search_results": "Top hits for each query..",
     },
@@ -114,6 +114,6 @@ plugin.methods.register_function(
     description=(
         "Search for top hits in a reference database using alignment between the "
         "query sequences and reference database sequences using Minimap2. Returns a "
-        "report of the top M hits for each query (where M=maxaccepts).")
+        "report of the top M hits for each query (where M=maxaccepts)."
+    ),
 )
-"""
