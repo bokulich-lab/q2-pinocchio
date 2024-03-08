@@ -349,7 +349,7 @@ class TestMakeMn2Cmd(unittest.TestCase):
             "-a",
             "-x",
             mapping_preset,
-            "/path/to/index/index.mmi",
+            "/path/to/index",
             "-t",
             str(n_threads),
             "-A",

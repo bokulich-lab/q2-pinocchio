@@ -168,7 +168,7 @@ def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads, samf_fp):
         "-a",
         "-x",
         mapping_preset,
-        str(index) + "/index.mmi",
+        str(index),
         "-t",
         str(n_threads),
     ] + penalties

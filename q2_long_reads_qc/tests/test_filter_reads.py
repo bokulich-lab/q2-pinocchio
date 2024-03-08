@@ -41,13 +41,13 @@ class TestFilterReads(LongReadsQCTestsBase):
     def setUp(self):
         super().setUp()
 
-        self.reads = Artifact.load(self.get_data_path("single-end.qza"))
-        self.indexed_genome = Artifact.load(self.get_data_path("index.qza"))
+        self.query_reads = Artifact.load(self.get_data_path("single-end.qza"))
+        self.minimap2_index = Artifact.load(self.get_data_path("index.qza"))
 
     # Exclude mapped
     def test_filter_exclude_mapped(self):
         (obs_art,) = self.plugin.methods["filter_reads"](
-            self.reads, self.indexed_genome, exclude_mapped=True
+            self.query_reads, self.minimap2_index, exclude_mapped=True
         )
 
         obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
@@ -68,7 +68,7 @@ class TestFilterReads(LongReadsQCTestsBase):
     # Keep mapped
     def test_filter_keep_mapped(self):
         (obs_art,) = self.plugin.methods["filter_reads"](
-            self.reads, self.indexed_genome
+            self.query_reads, self.minimap2_index
         )
 
         obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
@@ -88,7 +88,10 @@ class TestFilterReads(LongReadsQCTestsBase):
 
     def test_exclude_mapped_with_perc_id(self):
         (obs_art,) = self.plugin.methods["filter_reads"](
-            self.reads, self.indexed_genome, exclude_mapped=True, min_per_identity=0.99
+            self.query_reads,
+            self.minimap2_index,
+            exclude_mapped=True,
+            min_per_identity=0.99,
         )
 
         obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
@@ -108,7 +111,10 @@ class TestFilterReads(LongReadsQCTestsBase):
 
     def test_include_unmapped_with_perc_id(self):
         (obs_art,) = self.plugin.methods["filter_reads"](
-            self.reads, self.indexed_genome, exclude_mapped=False, min_per_identity=0.99
+            self.query_reads,
+            self.minimap2_index,
+            exclude_mapped=False,
+            min_per_identity=0.99,
         )
 
         obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)

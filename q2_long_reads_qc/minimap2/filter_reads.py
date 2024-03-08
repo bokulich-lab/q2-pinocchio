@@ -10,6 +10,7 @@ import os
 import tempfile
 
 import pandas as pd
+from q2_types.feature_data import DNAFASTAFormat
 from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFmt
 
 from q2_long_reads_qc.minimap2._filtering_utils import (
@@ -63,8 +64,9 @@ def _minimap2_filter(
 
 
 def filter_reads(
-    sequences: SingleLanePerSampleSingleEndFastqDirFmt,
-    minimap2_index: Minimap2IndexDBDirFmt,
+    query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
+    minimap2_index: Minimap2IndexDBDirFmt = None,
+    reference_reads: DNAFASTAFormat = None,
     n_threads: int = 1,
     mapping_preset: str = "map-ont",
     exclude_mapped: str = False,
@@ -74,12 +76,29 @@ def filter_reads(
     gap_open_penalty: int = None,
     gap_extension_penalty: int = None,
 ) -> SingleLanePerSampleSingleEndFastqDirFmt:
+
+    if reference_reads and minimap2_index:
+        raise ValueError(
+            "Only one reference_reads or minimap2_index artifact "
+            "can be provided as input. Choose one and try again."
+        )
+
     # Initialize directory format for filtered sequences
     filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
 
     # Import data from the manifest file to a df
-    input_df = sequences.manifest.view(pd.DataFrame)
-    idx_path = minimap2_index.path
+    input_df = query_reads.manifest.view(pd.DataFrame)
+
+    # Get the path of index database or reference
+    if minimap2_index:
+        idx_ref_path = str(minimap2_index.path) + "/index.mmi"
+    elif reference_reads:
+        idx_ref_path = str(reference_reads.path)
+        print(idx_ref_path)
+    else:
+        raise ValueError(
+            "Either reference_reads or a minimap2_index must be " "provided as input."
+        )
 
     penalties = set_penalties(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
@@ -91,7 +110,7 @@ def filter_reads(
         _minimap2_filter(
             fwd,
             filtered_seqs,
-            idx_path,
+            idx_ref_path,
             n_threads,
             mapping_preset,
             exclude_mapped,
@@ -99,6 +118,6 @@ def filter_reads(
             penalties,
         )
 
-    result = build_filtered_out_dir(sequences, filtered_seqs)
+    result = build_filtered_out_dir(query_reads, filtered_seqs)
 
     return result

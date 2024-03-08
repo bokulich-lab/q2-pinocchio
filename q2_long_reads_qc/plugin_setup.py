@@ -43,18 +43,20 @@ plugin.register_semantic_type_to_format(
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.filter_reads,
     inputs={
-        "sequences": SampleData[SequencesWithQuality],
+        "query_reads": SampleData[SequencesWithQuality],
         "minimap2_index": Minimap2IndexDB,
+        "reference_reads": FeatureData[Sequence],
     },
     parameters=filter_reads_params,
-    outputs=[("filtered_sequences", SampleData[SequencesWithQuality])],
+    outputs=[("filtered_query_reads", SampleData[SequencesWithQuality])],
     input_descriptions={
-        "sequences": "The sequences to be filtered.",
-        "minimap2_index": "Minimap2 index file.",
+        "query_reads": "The sequences to be filtered.",
+        "minimap2_index": "Minimap2 index file. Incompatible with reference_reads.",
+        "reference_reads": "Reference sequences. Incompatible with minimap2_index.",
     },
     parameter_descriptions=filter_reads_param_descriptions,
     output_descriptions={
-        "filtered_sequences": "The resulting filtered sequences.",
+        "filtered_query_reads": "The resulting filtered sequences.",
     },
     name="Filter demultiplexed sequences by alignment "
     "to reference database using Minimap2.",
