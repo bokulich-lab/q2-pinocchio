@@ -7,5 +7,6 @@
 # ----------------------------------------------------------------------------
 
 from .minimap2_build import minimap2_build
+from .minimap2_search import minimap2_search
 
-__all__ = ["minimap2_build"]
+__all__ = ["minimap2_build", "minimap2_search"]

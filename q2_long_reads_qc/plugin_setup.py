@@ -19,8 +19,13 @@ from q2_long_reads_qc._action_params import (
     minimap2_build_param_descriptions,
     minimap2_build_params,
 )
-from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt, Minimap2IndexDBFmt
-from q2_long_reads_qc.types._type import Minimap2IndexDB
+from q2_long_reads_qc.types._format import (
+    Minimap2IndexDBDirFmt,
+    Minimap2IndexDBFmt,
+    PAFDirectoryFormat,
+    PAFFormat,
+)
+from q2_long_reads_qc.types._type import PAF, Minimap2IndexDB
 
 citations = Citations.load("citations.bib", package="q2_long_reads_qc")
 
@@ -33,11 +38,14 @@ plugin = Plugin(
     short_description="",
 )
 
-plugin.register_formats(Minimap2IndexDBDirFmt, Minimap2IndexDBFmt)
-plugin.register_semantic_types(Minimap2IndexDB)
+plugin.register_formats(
+    Minimap2IndexDBDirFmt, Minimap2IndexDBFmt, PAFFormat, PAFDirectoryFormat
+)
+plugin.register_semantic_types(Minimap2IndexDB, PAF)
 plugin.register_semantic_type_to_format(
     Minimap2IndexDB, artifact_format=Minimap2IndexDBDirFmt
 )
+plugin.register_semantic_type_to_format(PAF, artifact_format=PAFDirectoryFormat)
 
 
 plugin.methods.register_function(
@@ -82,3 +90,30 @@ plugin.methods.register_function(
     name="Build Minimap2 index from reference sequences.",
     description="Build Minimap2 index from reference sequences.",
 )
+
+"""
+plugin.methods.register_function(
+    function=q2_long_reads_qc.minimap2.minimap2_search,
+    inputs={
+        "query_reads": SampleData[SequencesWithQuality],
+        "minimap2_index": Minimap2IndexDB,
+        "reference_reads": FeatureData[Sequence],
+    },
+    parameters=filter_reads_params,
+    outputs=[("search_results", SampleData[SequencesWithQuality])],
+    input_descriptions={
+        "query_reads": "Query sequences.",
+        "minimap2_index": "Minimap2 index file. Incompatible with reference_reads.",
+        "reference_reads": "Reference sequences. Incompatible with minimap2_index.",
+    },
+    parameter_descriptions=filter_reads_param_descriptions,
+    output_descriptions={
+        "search_results": "Top hits for each query..",
+    },
+    name="Minimap2 alignment search.",
+    description=(
+        "Search for top hits in a reference database using alignment between the "
+        "query sequences and reference database sequences using Minimap2. Returns a "
+        "report of the top M hits for each query (where M=maxaccepts).")
+)
+"""

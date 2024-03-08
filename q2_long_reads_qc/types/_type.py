@@ -9,3 +9,4 @@
 from qiime2.plugin import SemanticType
 
 Minimap2IndexDB = SemanticType("Minimap2IndexDB")
+PAF = SemanticType("PAF")
