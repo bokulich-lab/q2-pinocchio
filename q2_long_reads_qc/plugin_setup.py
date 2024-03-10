@@ -9,7 +9,7 @@
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.per_sample_sequences import SequencesWithQuality
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Citations, Collection, Plugin
+from qiime2.plugin import Citations, Collection, Float, Int, Plugin, Range
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
@@ -99,16 +99,26 @@ plugin.methods.register_function(
         "minimap2_index": Minimap2IndexDB,
         "reference_reads": FeatureData[Sequence],
     },
-    parameters={},
+    parameters={
+        "maxaccepts": Int % Range(1, None),
+        "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),
+    },
     outputs=[("search_results", Collection[PAF])],
     input_descriptions={
         "query_reads": "Query sequences.",
         "minimap2_index": "Minimap2 index file. Incompatible with reference_reads.",
         "reference_reads": "Reference sequences. Incompatible with minimap2_index.",
     },
-    parameter_descriptions={},
+    parameter_descriptions={
+        "maxaccepts": "Maximum number of hits to keep for each query. Minimap2 will "
+        "choose the first N hits in the reference database. NOTE: the database "
+        "is not sorted by similarity to query, so these are the "
+        "first N hits that pass the threshold, not necessarily the top N hits.",
+        "perc_identity": "Optionally reject match if percent identity to query is "
+        "lower.",
+    },
     output_descriptions={
-        "search_results": "Top hits for each query..",
+        "search_results": "Top hits for each query.",
     },
     name="Minimap2 alignment search.",
     description=(
