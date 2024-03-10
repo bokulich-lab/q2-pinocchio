@@ -31,6 +31,24 @@ def filter_by_maxaccepts(input_paf_path, maxaccepts):
         outfile.writelines(filtered_lines)
 
 
+# Filter PAF entries by percentage identity.
+def filter_by_perc_identity(paf_path, perc_identity):
+    with open(paf_path, "r") as file:
+        lines = file.readlines()
+
+    filtered_lines = []
+    for line in lines:
+        parts = line.strip().split("\t")
+        identity_score = int(parts[9]) / int(
+            parts[10]
+        )  # Calculate the BLAST-like alignment identity
+        if identity_score >= perc_identity:
+            filtered_lines.append(line)
+
+    with open(paf_path, "w") as file:
+        file.writelines(filtered_lines)
+
+
 # Performs sequence alignment using Minimap2 and outputs results in PAF format.
 def minimap2_search(
     query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
@@ -84,6 +102,10 @@ def minimap2_search(
 
             # Filter the PAF file by maxaccepts
             filter_by_maxaccepts(str(output_path), maxaccepts)
+
+            # Optionally filter by perc_identity
+            if perc_identity is not None:
+                filter_by_perc_identity(str(output_path), perc_identity)
 
             # Store the result with the sample name as key
             result[sample_name] = output_path
