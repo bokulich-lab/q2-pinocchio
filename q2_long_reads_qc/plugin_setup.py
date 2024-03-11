@@ -77,6 +77,7 @@ plugin.methods.register_function(
         "or, when exclude_mapped is set to False, selectively retains only "
         "those sequences aligning to the reference."
     ),
+    citations=[citations["Minimap2"]],
 )
 
 
@@ -92,6 +93,7 @@ plugin.methods.register_function(
     output_descriptions={"database": "Minimap2 index."},
     name="Build Minimap2 index from reference sequences.",
     description="Build Minimap2 index from reference sequences.",
+    citations=[citations["Minimap2"]],
 )
 
 
@@ -119,4 +121,5 @@ plugin.methods.register_function(
         "query sequences and reference database sequences using Minimap2. Returns a "
         "report of the top M hits for each query (where M=maxaccepts)."
     ),
+    citations=[citations["Minimap2"], citations["li2009sequence"]],
 )
