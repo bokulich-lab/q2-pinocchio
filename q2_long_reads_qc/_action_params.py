@@ -39,4 +39,19 @@ filter_reads_param_descriptions = {
 }
 
 minimap2_build_params = {"kmer_length": Int % Range(1, 28)}
+
 minimap2_build_param_descriptions = {"kmer_length": "Minimizer k-mer length."}
+
+minimap2_search_param_descriptions = {
+    "maxaccepts": "Maximum number of hits to keep for each query. Minimap2 will "
+    "choose the first N hits in the reference database. NOTE: the database "
+    "is not sorted by similarity to query, so these are the "
+    "first N hits that pass the threshold, not necessarily the top N hits.",
+    "perc_identity": "Optionally reject match if percent identity to query is "
+    "lower.",
+}
+
+minimap2_search_params = {
+    "maxaccepts": Int % Range(1, None),
+    "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),
+}
