@@ -6,14 +6,20 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import os
 import re
+import shutil
 
 import pandas as pd
 from q2_types.feature_data import DNAFASTAFormat
 from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFmt
 
 from q2_long_reads_qc.filtering._filtering_utils import run_cmd
-from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt, PAFFormat
+from q2_long_reads_qc.types._format import (
+    Minimap2IndexDBDirFmt,
+    PAFDirectoryFormat,
+    PAFFormat,
+)
 
 
 # Filter a PAF file to keep up to maxaccepts entries for each read.
@@ -56,7 +62,7 @@ def minimap2_search(
     reference_reads: DNAFASTAFormat = None,
     maxaccepts: int = 1,
     perc_identity: float = None,
-) -> PAFFormat:
+) -> PAFDirectoryFormat:
 
     # Ensure that only one of reference_reads or minimap2_index is provided
     if reference_reads and minimap2_index:
@@ -82,7 +88,8 @@ def minimap2_search(
     input_df = query_reads.manifest.view(pd.DataFrame)
 
     # Initialize result dictionary to store output paths
-    result = {}
+    result = PAFDirectoryFormat()
+    print("result:", result)
 
     # Iterate over each sample to perform alignment
     for _, fwd in input_df.itertuples():
@@ -107,7 +114,13 @@ def minimap2_search(
             if perc_identity is not None:
                 filter_by_perc_identity(str(output_path), perc_identity)
 
+            # Copy the PAF file to the destination
+            # Assuming result.path gives the directory path where you want to store
+            # the PAF files
+            destination_path = os.path.join(result.path, f"{sample_name}.paf")
+            shutil.copy(str(output_path), destination_path)
+
             # Store the result with the sample name as key
-            result[sample_name] = output_path
+            # result[sample_name] = output_path
 
     return result

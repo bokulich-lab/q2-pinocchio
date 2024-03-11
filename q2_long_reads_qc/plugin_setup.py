@@ -9,7 +9,7 @@
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.per_sample_sequences import SequencesWithQuality
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Citations, Collection, Float, Int, Plugin, Range
+from qiime2.plugin import Citations, Float, Int, Plugin, Range
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
@@ -45,8 +45,9 @@ plugin.register_semantic_types(Minimap2IndexDB, PAF)
 plugin.register_semantic_type_to_format(
     Minimap2IndexDB, artifact_format=Minimap2IndexDBDirFmt
 )
-plugin.register_semantic_type_to_format(PAF, artifact_format=PAFDirectoryFormat)
+# plugin.register_semantic_type_to_format(PAF, artifact_format=PAFDirectoryFormat)
 
+plugin.register_semantic_type_to_format(SampleData[PAF], PAFDirectoryFormat)
 
 plugin.methods.register_function(
     function=q2_long_reads_qc.filtering.filter_reads,
@@ -103,7 +104,7 @@ plugin.methods.register_function(
         "maxaccepts": Int % Range(1, None),
         "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     },
-    outputs=[("search_results", Collection[PAF])],
+    outputs=[("search_results", SampleData[PAF])],
     input_descriptions={
         "query_reads": "Query sequences.",
         "minimap2_index": "Minimap2 index file. Incompatible with reference_reads.",

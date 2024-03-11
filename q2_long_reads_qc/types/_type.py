@@ -6,7 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+from q2_types.sample_data import SampleData
 from qiime2.plugin import SemanticType
 
 Minimap2IndexDB = SemanticType("Minimap2IndexDB")
-PAF = SemanticType("PAF")
+PAF = SemanticType("PAF", variant_of=SampleData.field["type"])

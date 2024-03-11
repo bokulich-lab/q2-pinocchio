@@ -11,7 +11,7 @@ import shutil
 import tempfile
 import unittest
 
-from q2_long_reads_qc.minimap2._filtering_utils import (
+from q2_long_reads_qc.filtering._filtering_utils import (
     calculate_identity,
     get_alignment_length,
     make_convert_cmd,

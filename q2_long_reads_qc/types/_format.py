@@ -87,6 +87,14 @@ class PAFFormat(model.TextFileFormat):
         self._validate()
 
 
-PAFDirectoryFormat = model.SingleFileDirectoryFormat(
-    "PAFDirectoryFormat", "mappings.paf", PAFFormat
-)
+# A directory format for PAF files where each file ends with .paf and
+# is named according to the sample it represents.
+class PAFDirectoryFormat(model.DirectoryFormat):
+    paf_files = model.FileCollection(r".+\.paf$", format=PAFFormat)
+
+    @paf_files.set_path_maker
+    def paf_path_maker(self, sample_id):
+        """
+        Constructs a path for a PAF file using the provided sample_id.
+        """
+        return f"{sample_id}.paf"
