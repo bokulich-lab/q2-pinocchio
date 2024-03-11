@@ -60,6 +60,7 @@ def minimap2_search(
     query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
     minimap2_index: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,
+    n_threads: int = 3,
     maxaccepts: int = 1,
     perc_identity: float = None,
 ) -> PAFDirectoryFormat:
@@ -102,7 +103,16 @@ def minimap2_search(
             output_path = PAFFormat()
 
             # Build the Minimap2 command
-            cmd = ["minimap2", "-c", idx_ref_path, fwd, "-o", str(output_path)]
+            cmd = [
+                "minimap2",
+                "-c",
+                idx_ref_path,
+                fwd,
+                "-t",
+                str(n_threads),
+                "-o",
+                str(output_path),
+            ]
 
             # Execute the Minimap2 alignment command
             run_cmd(cmd, "Minimap2")
@@ -115,12 +125,7 @@ def minimap2_search(
                 filter_by_perc_identity(str(output_path), perc_identity)
 
             # Copy the PAF file to the destination
-            # Assuming result.path gives the directory path where you want to store
-            # the PAF files
             destination_path = os.path.join(result.path, f"{sample_name}.paf")
             shutil.copy(str(output_path), destination_path)
-
-            # Store the result with the sample name as key
-            # result[sample_name] = output_path
 
     return result
