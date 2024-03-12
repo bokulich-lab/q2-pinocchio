@@ -11,7 +11,10 @@ import shutil
 import tempfile
 import unittest
 
-from q2_long_reads_qc.minimap2.minimap2_search import filter_by_maxaccepts
+from q2_long_reads_qc.minimap2.minimap2_search import (
+    filter_by_maxaccepts,
+    filter_by_perc_identity,
+)
 
 from .test_long_reads_qc import LongReadsQCTestsBase
 
@@ -61,6 +64,46 @@ class TestFilterByMaxAccepts(LongReadsQCTestsBase):
             )
 
         # Clean up the temporary file
+        os.remove(temp_file_path)
+
+
+class TestFilterByPercIdentity(LongReadsQCTestsBase):
+    def setUp(self):
+        super().setUp()
+        self.paf_file = self.get_data_path("initial_paf_file.paf")
+        self.expected_paf_file_perc_85 = self.get_data_path(
+            "expected_paf_file_perc_85.paf"
+        )
+        self.expected_paf_file_perc_80 = self.get_data_path(
+            "expected_paf_file_perc_80.paf"
+        )
+
+    def test_filter_by_perc_identity_85(self):
+        self._test_filter_by_perc_identity(0.85, self.expected_paf_file_perc_85)
+
+    def test_filter_by_perc_identity_80(self):
+        self._test_filter_by_perc_identity(0.8, self.expected_paf_file_perc_80)
+
+    def _test_filter_by_perc_identity(self, perc_identity, expected_file_path):
+        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as tmp_file:
+            temp_file_path = tmp_file.name
+
+        shutil.copy(self.paf_file, temp_file_path)
+
+        filter_by_perc_identity(temp_file_path, perc_identity)
+
+        with open(temp_file_path, "r") as temp_file, open(
+            expected_file_path, "r"
+        ) as expected_file:
+            temp_content = temp_file.read()
+            expected_content = expected_file.read()
+            self.assertEqual(
+                temp_content,
+                expected_content,
+                "Filtered PAF file content does not match expected "
+                f"output for perc_identity {perc_identity}",
+            )
+
         os.remove(temp_file_path)
 
 
