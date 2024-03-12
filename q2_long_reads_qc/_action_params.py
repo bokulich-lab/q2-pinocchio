@@ -50,10 +50,19 @@ minimap2_search_param_descriptions = {
     "first N hits that pass the threshold, not necessarily the top N hits.",
     "perc_identity": "Optionally reject match if percent identity to query is "
     "lower.",
+    "output_no_hits": "Report both matching and non-matching queries. "
+    "WARNING: always use the default setting for this "
+    "option unless if you know what you are doing! If "
+    "you set this option to False, your sequences and "
+    "feature table will need to be filtered to exclude "
+    "unclassified sequences, otherwise you may run into "
+    "errors downstream from missing feature IDs. Set to "
+    "FALSE to mirror default Minimap2 search.",
 }
 
 minimap2_search_params = {
     "n_threads": Int % Range(1, None),
     "maxaccepts": Int % Range(1, None),
     "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),
+    "output_no_hits": Bool,
 }

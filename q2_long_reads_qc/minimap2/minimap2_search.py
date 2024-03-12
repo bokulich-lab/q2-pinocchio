@@ -45,6 +45,9 @@ def filter_by_perc_identity(paf_path, perc_identity):
     filtered_lines = []
     for line in lines:
         parts = line.strip().split("\t")
+        if int(parts[10]) == 0:
+            filtered_lines.append(line)
+            continue
         identity_score = int(parts[9]) / int(
             parts[10]
         )  # Calculate the BLAST-like alignment identity
@@ -63,6 +66,7 @@ def minimap2_search(
     n_threads: int = 3,
     maxaccepts: int = 1,
     perc_identity: float = None,
+    output_no_hits: bool = True,
 ) -> PAFDirectoryFormat:
 
     # Ensure that only one of reference_reads or minimap2_index is provided
@@ -113,6 +117,9 @@ def minimap2_search(
                 "-o",
                 str(output_path),
             ]
+
+            if output_no_hits:
+                cmd += ["--paf-no-hit"]
 
             # Execute the Minimap2 alignment command
             run_cmd(cmd, "Minimap2")
