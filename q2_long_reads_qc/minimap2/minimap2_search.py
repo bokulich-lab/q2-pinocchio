@@ -7,12 +7,10 @@
 # ----------------------------------------------------------------------------
 
 import os
-import re
 import shutil
 
 import pandas as pd
 from q2_types.feature_data import DNAFASTAFormat
-from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFmt
 
 from q2_long_reads_qc.filtering._filtering_utils import run_cmd
 from q2_long_reads_qc.types._format import (
@@ -60,14 +58,14 @@ def filter_by_perc_identity(paf_path, perc_identity):
 
 # Performs sequence alignment using Minimap2 and outputs results in PAF format.
 def minimap2_search(
-    query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
+    query_reads: DNAFASTAFormat,
     minimap2_index: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,
     n_threads: int = 3,
     maxaccepts: int = 1,
     perc_identity: float = None,
     output_no_hits: bool = True,
-) -> PAFDirectoryFormat:
+) -> pd.DataFrame:
 
     # Ensure that only one of reference_reads or minimap2_index is provided
     if reference_reads and minimap2_index:
@@ -89,50 +87,38 @@ def minimap2_search(
         else str(reference_reads.path)
     )
 
-    # Prepare a DataFrame from the query reads manifest for iteration
-    input_df = query_reads.manifest.view(pd.DataFrame)
+    # Construct output file
+    paf_file_fp = PAFFormat()
 
-    # Initialize result dictionary to store output paths
+    # Build the Minimap2 command
+    cmd = [
+        "minimap2",
+        "-c",
+        idx_ref_path,
+        str(query_reads),
+        "-t",
+        str(n_threads),
+        "-o",
+        str(paf_file_fp),
+    ]
+
+    if output_no_hits:
+        cmd += ["--paf-no-hit"]
+
+    # Execute the Minimap2 alignment command
+    run_cmd(cmd, "Minimap2")
+
+    # Filter the PAF file by maxaccepts
+    filter_by_maxaccepts(str(paf_file_fp), maxaccepts)
+
+    # Optionally filter by perc_identity
+    if perc_identity is not None:
+        filter_by_perc_identity(str(paf_file_fp), perc_identity)
+
+    # Initialize result dictionary to store the output paf file
     result = PAFDirectoryFormat()
-    print("result:", result)
+    destination_path = os.path.join(result.path, "output.paf")
+    shutil.copy(str(paf_file_fp), destination_path)
+    df = pd.read_csv(destination_path, sep="\t", header=None)
 
-    # Iterate over each sample to perform alignment
-    for _, fwd in input_df.itertuples():
-        # Extract sample name from the file path
-        sample_name_match = re.search(r"/([^/]+)\.fastq", fwd)
-        if sample_name_match:
-            sample_name = sample_name_match.group(1)
-
-            # Construct output file
-            output_path = PAFFormat()
-
-            # Build the Minimap2 command
-            cmd = [
-                "minimap2",
-                "-c",
-                idx_ref_path,
-                fwd,
-                "-t",
-                str(n_threads),
-                "-o",
-                str(output_path),
-            ]
-
-            if output_no_hits:
-                cmd += ["--paf-no-hit"]
-
-            # Execute the Minimap2 alignment command
-            run_cmd(cmd, "Minimap2")
-
-            # Filter the PAF file by maxaccepts
-            filter_by_maxaccepts(str(output_path), maxaccepts)
-
-            # Optionally filter by perc_identity
-            if perc_identity is not None:
-                filter_by_perc_identity(str(output_path), perc_identity)
-
-            # Copy the PAF file to the destination
-            destination_path = os.path.join(result.path, f"{sample_name}.paf")
-            shutil.copy(str(output_path), destination_path)
-
-    return result
+    return df

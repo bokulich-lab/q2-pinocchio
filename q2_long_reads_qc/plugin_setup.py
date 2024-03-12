@@ -6,6 +6,8 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
+import importlib
+
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.per_sample_sequences import SequencesWithQuality
 from q2_types.sample_data import SampleData
@@ -49,7 +51,7 @@ plugin.register_semantic_type_to_format(
 )
 # plugin.register_semantic_type_to_format(PAF, artifact_format=PAFDirectoryFormat)
 
-plugin.register_semantic_type_to_format(SampleData[PAF], PAFDirectoryFormat)
+plugin.register_semantic_type_to_format(FeatureData[PAF], PAFDirectoryFormat)
 
 plugin.methods.register_function(
     function=q2_long_reads_qc.filtering.filter_reads,
@@ -100,12 +102,12 @@ plugin.methods.register_function(
 plugin.methods.register_function(
     function=q2_long_reads_qc.minimap2.minimap2_search,
     inputs={
-        "query_reads": SampleData[SequencesWithQuality],
+        "query_reads": FeatureData[Sequence],
         "minimap2_index": Minimap2IndexDB,
         "reference_reads": FeatureData[Sequence],
     },
     parameters=minimap2_search_params,
-    outputs=[("search_results", SampleData[PAF])],
+    outputs=[("search_results", FeatureData[PAF])],
     input_descriptions={
         "query_reads": "Query sequences.",
         "minimap2_index": "Minimap2 index file. Incompatible with reference_reads.",
@@ -123,3 +125,5 @@ plugin.methods.register_function(
     ),
     citations=[citations["Minimap2"], citations["li2009sequence"]],
 )
+
+importlib.import_module("q2_long_reads_qc.types._transformer")

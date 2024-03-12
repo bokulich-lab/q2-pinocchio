@@ -80,7 +80,7 @@ class PAFFormat(model.TextFileFormat):
                 if fields[4] not in ["+", "-", "*"]:
                     raise ValidationError(
                         f'Line {line_number}: Strand field (5th column) must be "+" , '
-                        '"-" or "*".'
+                        f'"-" or "*" but is {fields[4]}.'
                     )
 
     def _validate_(self, level):
