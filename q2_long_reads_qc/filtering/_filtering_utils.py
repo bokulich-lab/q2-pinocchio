@@ -131,14 +131,15 @@ def make_convert_cmd(_reads, n_threads, bamfile_filepath):
     # -n keeps samtools from altering header IDs
     convert_cmd = [
         "samtools",
-        "fastq",
-        *_reads,
+        "fasta",
+        "-0",
+        str(_reads),
         "-s",
         "/dev/null",
         "-@",
         str(n_threads - 1),
         "-n",
-        bamfile_filepath,
+        str(bamfile_filepath),
     ]
 
     return convert_cmd

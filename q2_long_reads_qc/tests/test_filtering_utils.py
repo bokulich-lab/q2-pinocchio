@@ -287,21 +287,22 @@ class TestProcessSamFile(LongReadsQCTestsBase):
 class TestMakeConvertCmd(unittest.TestCase):
     def test_make_convert_cmd(self):
         # Mock input parameters
-        _reads = ["read1.bam", "read2.bam"]
+        _reads = "read1.bam"
         n_threads = 4
         bamfile_filepath = "output.bam"
 
         # Expected command based on the provided inputs
         expected_cmd = [
             "samtools",
-            "fastq",
-            *(_reads),
+            "fasta",
+            "-0",
+            str(_reads),
             "-s",
             "/dev/null",
             "-@",
             str(n_threads - 1),
             "-n",
-            bamfile_filepath,
+            str(bamfile_filepath),
         ]
 
         # Call the function and compare the result with the expected command

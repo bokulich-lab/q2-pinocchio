@@ -6,15 +6,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os
 import tempfile
 
-import pandas as pd
 from q2_types.feature_data import DNAFASTAFormat
-from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFmt
 
-from q2_long_reads_qc.filtering._filtering_utils import (
-    build_filtered_out_dir,
+from q2_long_reads_qc.filtering._filtering_utils import (  # build_filtered_out_dir,
     make_convert_cmd,
     make_mn2_cmd,
     make_samt_cmd,
@@ -23,6 +19,8 @@ from q2_long_reads_qc.filtering._filtering_utils import (
     set_penalties,
 )
 from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
+
+# from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFmt
 
 
 # This function uses Minimap2 to align reads to a reference, filters the
@@ -56,15 +54,13 @@ def _minimap2_filter(
             samtools_view_cmd = make_samt_cmd(samf_fp, bamf_fp, n_threads)
             run_cmd(samtools_view_cmd, "samtools view")
 
-            # Convert to FASTQ with samtools
-            fwd = str(outdir.path / os.path.basename(reads))
-            _reads = ["-0", fwd]
-            convert_to_fastq_cmd = make_convert_cmd(_reads, n_threads, bamf_fp)
-            run_cmd(convert_to_fastq_cmd, "samtools fastq")
+            # Convert to FASTA with samtools
+            convert_to_fasta_cmd = make_convert_cmd(outdir.path, n_threads, bamf_fp)
+            run_cmd(convert_to_fasta_cmd, "samtools fasta")
 
 
 def filter_reads(
-    query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
+    query_reads: DNAFASTAFormat,
     minimap2_index: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,
     n_threads: int = 1,
@@ -75,7 +71,7 @@ def filter_reads(
     mismatching_penalty: int = None,
     gap_open_penalty: int = None,
     gap_extension_penalty: int = None,
-) -> SingleLanePerSampleSingleEndFastqDirFmt:
+) -> DNAFASTAFormat:
 
     if reference_reads and minimap2_index:
         raise ValueError(
@@ -84,10 +80,10 @@ def filter_reads(
         )
 
     # Initialize directory format for filtered sequences
-    filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
+    filtered_seqs = DNAFASTAFormat()
 
     # Import data from the manifest file to a df
-    input_df = query_reads.manifest.view(pd.DataFrame)
+    # input_df = query_reads.manifest.view(pd.DataFrame)
 
     # Get the path of index database or reference
     if minimap2_index:
@@ -105,19 +101,19 @@ def filter_reads(
     )
 
     # Iterate over each forward read in the DataFrame
-    for _, fwd in input_df.itertuples():
-        # Filter the read using minimap2 according to the specified parameters
-        _minimap2_filter(
-            fwd,
-            filtered_seqs,
-            idx_ref_path,
-            n_threads,
-            mapping_preset,
-            exclude_mapped,
-            min_per_identity,
-            penalties,
-        )
+    # for _, fwd in input_df.itertuples():
+    # Filter the read using minimap2 according to the specified parameters
+    _minimap2_filter(
+        str(query_reads),
+        filtered_seqs,
+        idx_ref_path,
+        n_threads,
+        mapping_preset,
+        exclude_mapped,
+        min_per_identity,
+        penalties,
+    )
 
-    result = build_filtered_out_dir(query_reads, filtered_seqs)
+    # result = build_filtered_out_dir(query_reads, filtered_seqs)
 
-    return result
+    return filtered_seqs

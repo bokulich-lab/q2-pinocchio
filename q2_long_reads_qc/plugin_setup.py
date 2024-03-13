@@ -9,8 +9,9 @@
 import importlib
 
 from q2_types.feature_data import FeatureData, Sequence
-from q2_types.per_sample_sequences import SequencesWithQuality
-from q2_types.sample_data import SampleData
+
+# from q2_types.per_sample_sequences import SequencesWithQuality
+# from q2_types.sample_data import SampleData
 from qiime2.plugin import Citations, Plugin
 
 import q2_long_reads_qc
@@ -56,12 +57,12 @@ plugin.register_semantic_type_to_format(FeatureData[PAF], PAFDirectoryFormat)
 plugin.methods.register_function(
     function=q2_long_reads_qc.filtering.filter_reads,
     inputs={
-        "query_reads": SampleData[SequencesWithQuality],
+        "query_reads": FeatureData[Sequence],
         "minimap2_index": Minimap2IndexDB,
         "reference_reads": FeatureData[Sequence],
     },
     parameters=filter_reads_params,
-    outputs=[("filtered_query_reads", SampleData[SequencesWithQuality])],
+    outputs=[("filtered_query_reads", FeatureData[Sequence])],
     input_descriptions={
         "query_reads": "The sequences to be filtered.",
         "minimap2_index": "Minimap2 index file. Incompatible with reference_reads.",
