@@ -10,7 +10,7 @@ import tempfile
 
 from q2_types.feature_data import DNAFASTAFormat
 
-from q2_long_reads_qc.filtering._filtering_utils import (  # build_filtered_out_dir,
+from q2_long_reads_qc.filtering._filtering_utils import (
     make_convert_cmd,
     make_mn2_cmd,
     make_samt_cmd,
@@ -20,12 +20,10 @@ from q2_long_reads_qc.filtering._filtering_utils import (  # build_filtered_out_
 )
 from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
 
-# from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFmt
-
 
 # This function uses Minimap2 to align reads to a reference, filters the
 # resulting SAM file based on mapping criteria using samtools view, and
-# finally converts the filtered BAM file to FASTQ format using samtools fastq,
+# finally converts the filtered BAM file to FASTA format using samtools fasta,
 # saving the output in the specified directory.
 def _minimap2_filter(
     reads,
@@ -82,9 +80,6 @@ def filter_reads(
     # Initialize directory format for filtered sequences
     filtered_seqs = DNAFASTAFormat()
 
-    # Import data from the manifest file to a df
-    # input_df = query_reads.manifest.view(pd.DataFrame)
-
     # Get the path of index database or reference
     if minimap2_index:
         idx_ref_path = str(minimap2_index.path) + "/index.mmi"
@@ -100,8 +95,6 @@ def filter_reads(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
     )
 
-    # Iterate over each forward read in the DataFrame
-    # for _, fwd in input_df.itertuples():
     # Filter the read using minimap2 according to the specified parameters
     _minimap2_filter(
         str(query_reads),
@@ -113,7 +106,5 @@ def filter_reads(
         min_per_identity,
         penalties,
     )
-
-    # result = build_filtered_out_dir(query_reads, filtered_seqs)
 
     return filtered_seqs
