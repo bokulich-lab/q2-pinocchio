@@ -24,16 +24,16 @@ class TestFilterByMaxAccepts(LongReadsQCTestsBase):
         super().setUp()
         # Retrieve the paths to test data files
         self.initial_PairwiseAlignmentMN2_file = self.get_data_path(
-            "initial_PairwiseAlignmentMN2_file.PairwiseAlignmentMN2"
+            "initial_paf_file.paf"
         )
         self.exp_PairwiseAlignmentMN2_f_max1 = self.get_data_path(
-            "expected_PairwiseAlignmentMN2_file_max1.PairwiseAlignmentMN2"
+            "expected_paf_file_max1.paf"
         )
         self.exp_PairwiseAlignmentMN2_f_max2 = self.get_data_path(
-            "expected_PairwiseAlignmentMN2_file_max2.PairwiseAlignmentMN2"
+            "expected_paf_file_max2.paf"
         )
         self.exp_PairwiseAlignmentMN2_f_max3 = self.get_data_path(
-            "expected_PairwiseAlignmentMN2_file_max3.PairwiseAlignmentMN2"
+            "expected_paf_file_max3.paf"
         )
 
     def test_filter_by_maxaccepts_max1(self):
@@ -78,14 +78,12 @@ class TestFilterByMaxAccepts(LongReadsQCTestsBase):
 class TestFilterByPercIdentity(LongReadsQCTestsBase):
     def setUp(self):
         super().setUp()
-        self.PairwiseAlignmentMN2_file = self.get_data_path(
-            "initial_PairwiseAlignmentMN2_file.PairwiseAlignmentMN2"
-        )
+        self.PairwiseAlignmentMN2_file = self.get_data_path("initial_paf_file.paf")
         self.expected_PairwiseAlignmentMN2_file_perc_85 = self.get_data_path(
-            "expected_PairwiseAlignmentMN2_file_perc_85.PairwiseAlignmentMN2"
+            "expected_paf_file_perc_85.paf"
         )
         self.expected_PairwiseAlignmentMN2_file_perc_80 = self.get_data_path(
-            "expected_PairwiseAlignmentMN2_file_perc_80.PairwiseAlignmentMN2"
+            "expected_paf_file_perc_80.paf"
         )
 
     def test_filter_by_perc_identity_85(self):
