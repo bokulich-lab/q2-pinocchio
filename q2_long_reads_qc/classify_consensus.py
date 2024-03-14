@@ -96,7 +96,7 @@ def find_consensus_annotation(
     return search_results
 
 
-def classify_consensus_minimap2(
+def classify_consensus(
     ctx,
     query,
     reference_taxonomy,

@@ -14,7 +14,7 @@ from q2_long_reads_qc._utils import run_command
 from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
 
 
-def minimap2_build(
+def build_index(
     sequences: DNAFASTAFormat, kmer_length: int = 15
 ) -> Minimap2IndexDBDirFmt:
     """

@@ -7,16 +7,17 @@
 # ----------------------------------------------------------------------------
 
 from ._version import get_versions
-from .classification import classify_consensus_minimap2
-from .filtering import filter_reads
-from .minimap2 import minimap2_build, minimap2_search
+from .build_index import build_index
+from .classify_consensus import classify_consensus
+from .filter_reads import filter_reads
+from .minimap2 import minimap2
 
 __version__ = get_versions()["version"]
 del get_versions
 
 __all__ = [
     "filter_reads",
-    "minimap2_build",
-    "minimap2_search",
-    "classify_consensus_minimap2",
+    "build_index",
+    "minimap2",
+    "classify_consensus",
 ]

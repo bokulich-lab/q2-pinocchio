@@ -10,7 +10,7 @@ import tempfile
 
 from q2_types.feature_data import DNAFASTAFormat
 
-from q2_long_reads_qc.filtering._filtering_utils import (
+from q2_long_reads_qc._filtering_utils import (
     make_convert_cmd,
     make_mn2_cmd,
     make_samt_cmd,
@@ -59,7 +59,7 @@ def _minimap2_filter(
 
 def filter_reads(
     query_reads: DNAFASTAFormat,
-    minimap2_index: Minimap2IndexDBDirFmt = None,
+    index_database: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,
     n_threads: int = 1,
     mapping_preset: str = "map-ont",
@@ -71,9 +71,9 @@ def filter_reads(
     gap_extension_penalty: int = None,
 ) -> DNAFASTAFormat:
 
-    if reference_reads and minimap2_index:
+    if reference_reads and index_database:
         raise ValueError(
-            "Only one reference_reads or minimap2_index artifact "
+            "Only one reference_reads or index_database artifact "
             "can be provided as input. Choose one and try again."
         )
 
@@ -81,8 +81,8 @@ def filter_reads(
     filtered_seqs = DNAFASTAFormat()
 
     # Get the path of index database or reference
-    if minimap2_index:
-        idx_ref_path = str(minimap2_index.path) + "/index.mmi"
+    if index_database:
+        idx_ref_path = str(index_database.path) + "/index.mmi"
     elif reference_reads:
         idx_ref_path = str(reference_reads.path)
         print(idx_ref_path)

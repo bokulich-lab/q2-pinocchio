@@ -20,12 +20,12 @@ from qiime2.plugin import (  # Bool,; Choices,; Float,; Int,; Range,; Str,; Thre
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
 from q2_long_reads_qc._action_params import (
+    build_index_param_descriptions,
+    build_index_params,
     filter_reads_param_descriptions,
     filter_reads_params,
-    minimap2_build_param_descriptions,
-    minimap2_build_params,
-    minimap2_search_param_descriptions,
-    minimap2_search_params,
+    minimap2_param_descriptions,
+    minimap2_params,
 )
 from q2_long_reads_qc.types._format import (
     Minimap2IndexDBDirFmt,
@@ -62,17 +62,17 @@ plugin.register_semantic_type_to_format(
 )
 
 plugin.methods.register_function(
-    function=q2_long_reads_qc.filtering.filter_reads,
+    function=q2_long_reads_qc.filter_reads,
     inputs={
         "query_reads": FeatureData[Sequence],
-        "minimap2_index": Minimap2IndexDB,
+        "index_database": Minimap2IndexDB,
         "reference_reads": FeatureData[Sequence],
     },
     parameters=filter_reads_params,
     outputs=[("filtered_query_reads", FeatureData[Sequence])],
     input_descriptions={
         "query_reads": "The sequences to be filtered.",
-        "minimap2_index": "Minimap2 index file. Incompatible with reference_reads.",
+        "index_database": "Minimap2 index database. Incompatible with reference_reads.",
         "reference_reads": "Reference sequences. Incompatible with minimap2_index.",
     },
     parameter_descriptions=filter_reads_param_descriptions,
@@ -92,36 +92,36 @@ plugin.methods.register_function(
 
 
 plugin.methods.register_function(
-    function=q2_long_reads_qc.minimap2.minimap2_build,
+    function=q2_long_reads_qc.build_index,
     inputs={"sequences": FeatureData[Sequence]},
-    parameters=minimap2_build_params,
+    parameters=build_index_params,
     outputs=[("database", Minimap2IndexDB)],
     input_descriptions={
-        "sequences": "Reference sequences used to build Minimap2 index."
+        "sequences": "Reference sequences used to build Minimap2 index database."
     },
-    parameter_descriptions=minimap2_build_param_descriptions,
+    parameter_descriptions=build_index_param_descriptions,
     output_descriptions={"database": "Minimap2 index."},
-    name="Build Minimap2 index from reference sequences.",
-    description="Build Minimap2 index from reference sequences.",
+    name="Build Minimap2 index database from reference sequences.",
+    description="Build Minimap2 index database from reference sequences.",
     citations=[citations["Minimap2"]],
 )
 
 
 plugin.methods.register_function(
-    function=q2_long_reads_qc.minimap2.minimap2_search,
+    function=q2_long_reads_qc.minimap2,
     inputs={
         "query_reads": FeatureData[Sequence],
-        "minimap2_index": Minimap2IndexDB,
+        "index_database": Minimap2IndexDB,
         "reference_reads": FeatureData[Sequence],
     },
-    parameters=minimap2_search_params,
+    parameters=minimap2_params,
     outputs=[("search_results", FeatureData[PairwiseAlignmentMN2])],
     input_descriptions={
         "query_reads": "Query sequences.",
-        "minimap2_index": "Minimap2 index file. Incompatible with reference_reads.",
+        "index_database": "Minimap2 index database. Incompatible with reference_reads.",
         "reference_reads": "Reference sequences. Incompatible with minimap2_index.",
     },
-    parameter_descriptions=minimap2_search_param_descriptions,
+    parameter_descriptions=minimap2_param_descriptions,
     output_descriptions={
         "search_results": "Top hits for each query.",
     },
@@ -137,7 +137,7 @@ plugin.methods.register_function(
 
 """
 plugin.pipelines.register_function(
-    function=q2_long_reads_qc.classification.classify_consensus_minimap2,
+    function=q2_long_reads_qc.classification.classify_consensus,
     inputs={'query': FeatureData[Sequence],
             'minimap2_index': Minimap2IndexDB,
             'reference_reads': FeatureData[Sequence],

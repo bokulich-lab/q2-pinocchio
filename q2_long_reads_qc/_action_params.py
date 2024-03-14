@@ -38,11 +38,11 @@ filter_reads_param_descriptions = {
     "gap_extension_penalty": "Gap extension penalty.",
 }
 
-minimap2_build_params = {"kmer_length": Int % Range(1, 28)}
+build_index_params = {"kmer_length": Int % Range(1, 28)}
 
-minimap2_build_param_descriptions = {"kmer_length": "Minimizer k-mer length."}
+build_index_param_descriptions = {"kmer_length": "Minimizer k-mer length."}
 
-minimap2_search_param_descriptions = {
+minimap2_param_descriptions = {
     "n_threads": "Number of threads to use.",
     "maxaccepts": "Maximum number of hits to keep for each query. Minimap2 will "
     "choose the first N hits in the reference database. NOTE: the database "
@@ -60,7 +60,7 @@ minimap2_search_param_descriptions = {
     "FALSE to mirror default Minimap2 search.",
 }
 
-minimap2_search_params = {
+minimap2_params = {
     "n_threads": Int % Range(1, None),
     "maxaccepts": Int % Range(1, None),
     "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),

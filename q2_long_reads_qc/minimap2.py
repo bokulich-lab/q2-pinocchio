@@ -12,7 +12,7 @@ import shutil
 import pandas as pd
 from q2_types.feature_data import DNAFASTAFormat
 
-from q2_long_reads_qc.filtering._filtering_utils import run_cmd
+from q2_long_reads_qc._filtering_utils import run_cmd
 from q2_long_reads_qc.types._format import (
     Minimap2IndexDBDirFmt,
     PairwiseAlignmentMN2DirectoryFormat,
@@ -58,9 +58,9 @@ def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity):
 
 # Performs sequence alignment using Minimap2 and outputs results in
 # PairwiseAlignmentMN2 format.
-def minimap2_search(
+def minimap2(
     query_reads: DNAFASTAFormat,
-    minimap2_index: Minimap2IndexDBDirFmt = None,
+    index_database: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,
     n_threads: int = 3,
     maxaccepts: int = 1,
@@ -68,23 +68,23 @@ def minimap2_search(
     output_no_hits: bool = True,
 ) -> pd.DataFrame:
 
-    # Ensure that only one of reference_reads or minimap2_index is provided
-    if reference_reads and minimap2_index:
+    # Ensure that only one of reference_reads or index_database is provided
+    if reference_reads and index_database:
         raise ValueError(
-            "Only one of reference_reads or minimap2_index can be provided as input. "
+            "Only one of reference_reads or index_database can be provided as input. "
             "Choose one and try again."
         )
 
     # Ensure that at least one reference type is provided
-    if not reference_reads and not minimap2_index:
+    if not reference_reads and not index_database:
         raise ValueError(
-            "Either reference_reads or minimap2_index must be provided as input."
+            "Either reference_reads or index_database must be provided as input."
         )
 
     # Determine the reference or index path based on input
     idx_ref_path = (
-        str(minimap2_index.path / "index.mmi")
-        if minimap2_index
+        str(index_database.path / "index.mmi")
+        if index_database
         else str(reference_reads.path)
     )
 
