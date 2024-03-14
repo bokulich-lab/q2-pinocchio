@@ -21,7 +21,7 @@ Minimap2IndexDBDirFmt = model.SingleFileDirectoryFormat(
 )
 
 
-class PAFFormat(model.TextFileFormat):
+class PairwiseAlignmentMN2Format(model.TextFileFormat):
     def _validate(self, n_records=None):
         with open(str(self), "r") as file:
             line_number = 0
@@ -89,11 +89,13 @@ class PAFFormat(model.TextFileFormat):
 
 # A directory format for PAF files where each file ends with .paf and
 # is named according to the sample it represents.
-class PAFDirectoryFormat(model.DirectoryFormat):
-    paf_files = model.FileCollection(r".+\.paf$", format=PAFFormat)
+class PairwiseAlignmentMN2DirectoryFormat(model.DirectoryFormat):
+    PairwiseAlignmentMN2_files = model.FileCollection(
+        r".+\.paf$", format=PairwiseAlignmentMN2Format
+    )
 
-    @paf_files.set_path_maker
-    def paf_path_maker(self, sample_id):
+    @PairwiseAlignmentMN2_files.set_path_maker
+    def PairwiseAlignmentMN2_path_maker(self, sample_id):
         """
         Constructs a path for a PAF file using the provided sample_id.
         """

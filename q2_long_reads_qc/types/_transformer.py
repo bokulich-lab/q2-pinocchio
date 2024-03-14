@@ -11,19 +11,19 @@ import os
 import pandas as pd
 
 from ..plugin_setup import plugin
-from ._format import PAFDirectoryFormat, PAFFormat
+from ._format import PairwiseAlignmentMN2DirectoryFormat, PairwiseAlignmentMN2Format
 
 
 @plugin.register_transformer
-def _1(data: pd.DataFrame) -> PAFDirectoryFormat:
-    # Create a new PAFDirectoryFormat object
-    ff = PAFDirectoryFormat()
-    paf_file_path = os.path.join(str(ff), "output.paf")
-    data.to_csv(paf_file_path, sep="\t", index=False, header=False)
+def _1(data: pd.DataFrame) -> PairwiseAlignmentMN2DirectoryFormat:
+    # Create a new PairwiseAlignmentMN2DirectoryFormat object
+    ff = PairwiseAlignmentMN2DirectoryFormat()
+    PairwiseAlignmentMN2_file_path = os.path.join(str(ff), "output.paf")
+    data.to_csv(PairwiseAlignmentMN2_file_path, sep="\t", index=False, header=False)
     return ff
 
 
 @plugin.register_transformer
-def _2(data: PAFFormat) -> pd.DataFrame:
+def _2(data: PairwiseAlignmentMN2Format) -> pd.DataFrame:
     file = pd.read_csv(str(data), sep="\t", header=None)
     return file

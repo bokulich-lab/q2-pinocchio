@@ -9,16 +9,16 @@
 from ._format import (
     Minimap2IndexDBDirFmt,
     Minimap2IndexDBFmt,
-    PAFDirectoryFormat,
-    PAFFormat,
+    PairwiseAlignmentMN2DirectoryFormat,
+    PairwiseAlignmentMN2Format,
 )
-from ._type import PAF, Minimap2IndexDB
+from ._type import Minimap2IndexDB, PairwiseAlignmentMN2
 
 __all__ = [
     "Minimap2IndexDBFmt",
     "Minimap2IndexDBDirFmt",
     "Minimap2IndexDB",
-    "PAFFormat",
-    "PAFDirectoryFormat",
-    "PAF",
+    "PairwiseAlignmentMN2Format",
+    "PairwiseAlignmentMN2DirectoryFormat",
+    "PairwiseAlignmentMN2",
 ]

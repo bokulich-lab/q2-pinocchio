@@ -15,29 +15,29 @@ from q2_types.feature_data import DNAFASTAFormat
 from q2_long_reads_qc.filtering._filtering_utils import run_cmd
 from q2_long_reads_qc.types._format import (
     Minimap2IndexDBDirFmt,
-    PAFDirectoryFormat,
-    PAFFormat,
+    PairwiseAlignmentMN2DirectoryFormat,
+    PairwiseAlignmentMN2Format,
 )
 
 
-# Filter a PAF file to keep up to maxaccepts entries for each read.
-def filter_by_maxaccepts(input_paf_path, maxaccepts):
+# Filter a PairwiseAlignmentMN2 file to keep up to maxaccepts entries for each read.
+def filter_by_maxaccepts(input_PairwiseAlignmentMN2_path, maxaccepts):
     counts = {}
     filtered_lines = []
-    with open(input_paf_path, "r") as infile:
+    with open(input_PairwiseAlignmentMN2_path, "r") as infile:
         for line in infile:
             read_id = line.split("\t")[0]
             if counts.get(read_id, 0) < maxaccepts:
                 counts[read_id] = counts.get(read_id, 0) + 1
                 filtered_lines.append(line)
     # Write the filtered lines back to the file
-    with open(input_paf_path, "w") as outfile:
+    with open(input_PairwiseAlignmentMN2_path, "w") as outfile:
         outfile.writelines(filtered_lines)
 
 
-# Filter PAF entries by percentage identity.
-def filter_by_perc_identity(paf_path, perc_identity):
-    with open(paf_path, "r") as file:
+# Filter PairwiseAlignmentMN2 entries by percentage identity.
+def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity):
+    with open(PairwiseAlignmentMN2_path, "r") as file:
         lines = file.readlines()
 
     filtered_lines = []
@@ -52,11 +52,12 @@ def filter_by_perc_identity(paf_path, perc_identity):
         if identity_score >= perc_identity:
             filtered_lines.append(line)
 
-    with open(paf_path, "w") as file:
+    with open(PairwiseAlignmentMN2_path, "w") as file:
         file.writelines(filtered_lines)
 
 
-# Performs sequence alignment using Minimap2 and outputs results in PAF format.
+# Performs sequence alignment using Minimap2 and outputs results in
+# PairwiseAlignmentMN2 format.
 def minimap2_search(
     query_reads: DNAFASTAFormat,
     minimap2_index: Minimap2IndexDBDirFmt = None,
@@ -88,7 +89,7 @@ def minimap2_search(
     )
 
     # Construct output file
-    paf_file_fp = PAFFormat()
+    paf_file_fp = PairwiseAlignmentMN2Format()
 
     # Build the Minimap2 command
     cmd = [
@@ -108,7 +109,7 @@ def minimap2_search(
     # Execute the Minimap2 alignment command
     run_cmd(cmd, "Minimap2")
 
-    # Filter the PAF file by maxaccepts
+    # Filter the PairwiseAlignmentMN2 file by maxaccepts
     filter_by_maxaccepts(str(paf_file_fp), maxaccepts)
 
     # Optionally filter by perc_identity
@@ -116,7 +117,7 @@ def minimap2_search(
         filter_by_perc_identity(str(paf_file_fp), perc_identity)
 
     # Initialize result dictionary to store the output paf file
-    result = PAFDirectoryFormat()
+    result = PairwiseAlignmentMN2DirectoryFormat()
     destination_path = os.path.join(result.path, "output.paf")
     shutil.copy(str(paf_file_fp), destination_path)
     df = pd.read_csv(destination_path, sep="\t", header=None)

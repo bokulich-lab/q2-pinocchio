@@ -6,10 +6,9 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-from q2_types.feature_data import FeatureData
-from qiime2.plugin import SemanticType
-
-Minimap2IndexDB = SemanticType("Minimap2IndexDB")
-PairwiseAlignmentMN2 = SemanticType(
-    "PairwiseAlignmentMN2", variant_of=FeatureData.field["type"]
+from .classify_consensus_minimap2 import (
+    classify_consensus_minimap2,
+    find_consensus_annotation,
 )
+
+__all__ = ["classify_consensus_minimap2", "find_consensus_annotation"]
