@@ -6,50 +6,17 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import time
-
 import pandas as pd
-from qiime2.plugin import (  # Bool,; Choices,; Float,; Int,; Range,; Str,; Threads,
-    get_available_cores,
-)
-
-# Specify default settings for various functions
-DEFAULTMAXACCEPTS = 10
-DEFAULTPERCENTID = 0.8
-DEFAULTQUERYCOV = 0.8
-DEFAULTSTRAND = "both"
-DEFAULTEVALUE = 0.001
-DEFAULTMINCONSENSUS = 0.51
-DEFAULTOUTPUTNOHITS = True
-DEFAULTNUMTHREADS = 1
-DEFAULTUNASSIGNABLELABEL = "Unassigned"
+from q2_feature_classifier._consensus_assignment import _compute_consensus_annotations
 
 
 def _PairwiseAlignmentMN2_format_df_to_series_of_lists(
     assignments: pd.DataFrame,
     ref_taxa: pd.Series,
-    unassignable_label: str = DEFAULTUNASSIGNABLELABEL,
+    unassignable_label: str = "Unassigned",
 ) -> pd.Series:
-    """import observed assignments in blast6 format to series of lists.
 
-    assignments: pd.DataFrame
-        Taxonomy observation map in blast format 6. Each line consists of
-        taxonomy assignments of a query sequence in tab-delimited format:
-            <query_id>    <subject-seq-id>   <...other columns are ignored>
-
-    ref_taxa: pd.Series
-        Reference taxonomies in tab-delimited format:
-            <accession ID>  Annotation
-        The accession IDs in this taxonomy should match the subject-seq-ids in
-        the "assignment" input.
-    """
-    # validate that assignments are present in reference taxonomy
-    # (i.e., that the correct reference taxonomy was used).
-    # Note that we drop unassigned labels from this set.
-
-    print(assignments["sseqid"].values)
-    time.sleep(1000)
-    missing_ids = set(assignments["sseqid"].values) - set(ref_taxa.index) - {"*", ""}
+    missing_ids = set(assignments[5].values) - set(ref_taxa.index) - {"*", ""}
     if len(missing_ids) > 0:
         raise KeyError(
             "Reference taxonomy and search results do not match. "
@@ -63,10 +30,10 @@ def _PairwiseAlignmentMN2_format_df_to_series_of_lists(
     ref_taxa["*"] = unassignable_label
     assignments_copy = assignments.copy(deep=True)
     for index, value in assignments_copy.iterrows():
-        sseqid = assignments_copy.iloc[index]["sseqid"]
-        assignments_copy.at[index, "sseqid"] = ref_taxa.at[sseqid]
+        sseqid = assignments_copy.iloc[index][5]
+        assignments_copy.at[index, 5] = ref_taxa.at[sseqid]
     # convert to dict of {accession_id: [annotations]}
-    taxa_hits: pd.Series = assignments_copy.set_index("qseqid")["sseqid"]
+    taxa_hits: pd.Series = assignments_copy.set_index(0)[5]
     taxa_hits = taxa_hits.groupby(taxa_hits.index).apply(list)
 
     return taxa_hits
@@ -76,50 +43,44 @@ def find_consensus_annotation(
     search_results: pd.DataFrame,
     reference_taxonomy: pd.Series,
     min_consensus: int = 0.51,
-    unassignable_label: str = DEFAULTUNASSIGNABLELABEL,
-) -> pd.Series:
+    unassignable_label: str = "Unassigned",
+) -> pd.DataFrame:
 
-    # load and convert blast6format results to dict of taxa hits
-    # obs_taxa = _PairwiseAlignmentMN2_format_df_to_series_of_lists(
-    #    search_results, reference_taxonomy, unassignable_label=unassignable_label
-    # )
+    # load and convert PairwiseAlignmentFormat (PAF) results to dict of taxa hits
+    obs_taxa = _PairwiseAlignmentMN2_format_df_to_series_of_lists(
+        search_results, reference_taxonomy, unassignable_label=unassignable_label
+    )
 
     # compute consensus annotations
-
-    """
     result = _compute_consensus_annotations(
-        obs_taxa, min_consensus=min_consensus,
-        unassignable_label=unassignable_label)
-    result.index.name = 'Feature ID'
-    """
+        obs_taxa, min_consensus=min_consensus, unassignable_label=unassignable_label
+    )
+    result.index.name = "Feature ID"
 
-    return search_results
+    return result
 
 
 def classify_consensus(
     ctx,
     query,
     reference_taxonomy,
-    minimap2_index=None,
+    index_database=None,
     reference_reads=None,
-    maxaccepts=DEFAULTMAXACCEPTS,
-    perc_identity=DEFAULTPERCENTID,
-    query_cov=DEFAULTQUERYCOV,
-    strand=DEFAULTSTRAND,
-    evalue=DEFAULTEVALUE,
-    output_no_hits=DEFAULTOUTPUTNOHITS,
-    min_consensus=DEFAULTMINCONSENSUS,
-    unassignable_label=DEFAULTUNASSIGNABLELABEL,
-    num_threads=DEFAULTNUMTHREADS,
+    maxaccepts=10,
+    perc_identity=0.7,
+    output_no_hits=True,
+    min_consensus=0.51,
+    unassignable_label="Unassigned",
+    num_threads=1,
 ):
-    if num_threads == 0:
-        num_threads = get_available_cores()
+    # Retrieve the actions for mapping and consensus annotation
+    search_db = ctx.get_action("long_reads_qc", "minimap2")
+    lca = ctx.get_action("long_reads_qc", "find_consensus_annotation")
 
-    search_db = ctx.get_action("long_reads_qc", "minimap2_search")
-    # lca = ctx.get_action('long_reads_qc', 'find_consensus_annotation')
+    # Search for top hits in a reference database
     (result,) = search_db(
         query_reads=query,
-        minimap2_index=minimap2_index,
+        index_database=index_database,
         reference_reads=reference_reads,
         maxaccepts=maxaccepts,
         perc_identity=perc_identity,
@@ -127,12 +88,13 @@ def classify_consensus(
         n_threads=num_threads,
     )
 
-    # consensus, = lca(search_results=result,
-    #                 reference_taxonomy=reference_taxonomy,
-    #                 min_consensus=min_consensus,
-    #                 unassignable_label=unassignable_label)
+    # Find consensus annotation for each query searched against a
+    # reference database
+    (consensus,) = lca(
+        search_results=result,
+        reference_taxonomy=reference_taxonomy,
+        min_consensus=min_consensus,
+        unassignable_label=unassignable_label,
+    )
 
-    # New: add BLAST6Format result as an output. This could just as well be a
-    # visualizer generated from these results (using q2-metadata tabulate).
-    # Would that be more useful to the user that the QZA?
-    return result  # , consensus
+    return result, consensus

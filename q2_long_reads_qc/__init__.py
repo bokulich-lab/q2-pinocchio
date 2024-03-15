@@ -8,7 +8,7 @@
 
 from ._version import get_versions
 from .build_index import build_index
-from .classify_consensus import classify_consensus
+from .classify_consensus import classify_consensus, find_consensus_annotation
 from .filter_reads import filter_reads
 from .minimap2 import minimap2
 
@@ -20,4 +20,5 @@ __all__ = [
     "build_index",
     "minimap2",
     "classify_consensus",
+    "find_consensus_annotation",
 ]

@@ -88,7 +88,7 @@ def filter_reads(
         print(idx_ref_path)
     else:
         raise ValueError(
-            "Either reference_reads or a minimap2_index must be " "provided as input."
+            "Either reference_reads or a minimap2_index must be provided as input."
         )
 
     penalties = set_penalties(
