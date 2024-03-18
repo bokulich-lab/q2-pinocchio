@@ -8,11 +8,14 @@
 
 import importlib
 
+import qiime2
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
-
-# from q2_types.per_sample_sequences import SequencesWithQuality
-# from q2_types.sample_data import SampleData
-from qiime2.plugin import Bool, Citations, Float, Int, Plugin, Range, Str
+from q2_types.per_sample_sequences import (
+    PairedEndSequencesWithQuality,
+    SequencesWithQuality,
+)
+from q2_types.sample_data import SampleData
+from qiime2.plugin import Bool, Citations, Float, Int, Plugin, Range, Str, TypeMatch
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
@@ -58,15 +61,51 @@ plugin.register_semantic_type_to_format(
     FeatureData[PairwiseAlignmentMN2], PairwiseAlignmentMN2DirectoryFormat
 )
 
+InputMap, InputMap = qiime2.plugin.TypeMap(
+    {
+        FeatureData[Sequence]: FeatureData[Sequence],
+        SampleData[SequencesWithQuality]: SampleData[SequencesWithQuality],
+    }
+)
+
 plugin.methods.register_function(
-    function=q2_long_reads_qc.filter_reads,
+    function=q2_long_reads_qc.extract_seqs,
     inputs={
         "query_reads": FeatureData[Sequence],
         "index_database": Minimap2IndexDB,
         "reference_reads": FeatureData[Sequence],
     },
     parameters=filter_reads_params,
-    outputs=[("filtered_query_reads", FeatureData[Sequence])],
+    outputs=[("extracted_seqs", FeatureData[Sequence])],
+    input_descriptions={
+        "query_reads": "Feature sequences to be filtered.",
+        "index_database": "Minimap2 index database. Incompatible with reference_reads.",
+        "reference_reads": "Reference sequences. Incompatible with minimap2_index.",
+    },
+    parameter_descriptions=filter_reads_param_descriptions,
+    output_descriptions={
+        "extracted_seqs": "Subset of initial feature sequences that we keep.",
+    },
+    name="Extract feature sequences using Minimap2.",
+    description=(
+        "This method aligns feature sequences to a set of reference sequences to "
+        "identify sequences that hit/miss the reference within a specified "
+        "perc_identity. This method could be used to define a positive filter "
+        "or a negative filter."
+    ),
+    citations=[citations["Minimap2"]],
+)
+
+T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
+plugin.methods.register_function(
+    function=q2_long_reads_qc.filter_reads,
+    inputs={
+        "query_reads": SampleData[T],
+        "index_database": Minimap2IndexDB,
+        "reference_reads": FeatureData[Sequence],
+    },
+    parameters=filter_reads_params,
+    outputs=[("filtered_query_reads", SampleData[T])],
     input_descriptions={
         "query_reads": "The sequences to be filtered.",
         "index_database": "Minimap2 index database. Incompatible with reference_reads.",
@@ -76,7 +115,8 @@ plugin.methods.register_function(
     output_descriptions={
         "filtered_query_reads": "The resulting filtered sequences.",
     },
-    name="Filter long sequences using Minimap2.",
+    name="Filter demultiplexed single- or paired-end sequences long sequences "
+    "using Minimap2.",
     description=(
         "Filter demultiplexed single- or paired-end sequences based "
         "on alignment to a reference database using Minimap2 and samtools. "
@@ -188,7 +228,7 @@ plugin.pipelines.register_function(
         "search_results": "Top hits for each query.",
         "classification": "Taxonomy classifications of query sequences.",
     },
-    name="Minimap2 consensus taxonomy classifier",
+    name="Minimap2 consensus taxonomy classifier.",
     description=(
         "Assign taxonomy to query sequences using Minimap2. Performs "
         "alignment between query and reference_reads, then "

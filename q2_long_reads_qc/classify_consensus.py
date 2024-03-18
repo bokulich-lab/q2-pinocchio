@@ -67,7 +67,7 @@ def classify_consensus(
     index_database=None,
     reference_reads=None,
     maxaccepts=10,
-    perc_identity=0.7,
+    perc_identity=0.8,
     output_no_hits=True,
     min_consensus=0.51,
     unassignable_label="Unassigned",
