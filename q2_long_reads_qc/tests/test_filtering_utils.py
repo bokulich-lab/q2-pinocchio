@@ -13,8 +13,9 @@ import unittest
 
 from q2_long_reads_qc._filtering_utils import (
     calculate_identity,
+    convert_to_fasta,
+    convert_to_fastq,
     get_alignment_length,
-    make_convert_cmd,
     make_mn2_cmd,
     make_samt_cmd,
     process_sam_file,
@@ -284,8 +285,8 @@ class TestProcessSamFile(LongReadsQCTestsBase):
                     unmapped_index += 1
 
 
-class TestMakeConvertCmd(unittest.TestCase):
-    def test_make_convert_cmd(self):
+class TestConvertToFasta(unittest.TestCase):
+    def test_convert_to_fasta(self):
         # Mock input parameters
         _reads = "read1.bam"
         n_threads = 4
@@ -306,7 +307,32 @@ class TestMakeConvertCmd(unittest.TestCase):
         ]
 
         # Call the function and compare the result with the expected command
-        actual_cmd = make_convert_cmd(_reads, n_threads, bamfile_filepath)
+        actual_cmd = convert_to_fasta(_reads, n_threads, bamfile_filepath)
+        self.assertEqual(actual_cmd, expected_cmd)
+
+
+class TestConvertToFastq(unittest.TestCase):
+    def test_convert_to_fasta(self):
+        # Mock input parameters
+        _reads = "read1.bam"
+        n_threads = 4
+        bamfile_filepath = "output.bam"
+
+        # Expected command based on the provided inputs
+        expected_cmd = [
+            "samtools",
+            "fastq",
+            *_reads,
+            "-s",
+            "/dev/null",
+            "-@",
+            str(n_threads - 1),
+            "-n",
+            str(bamfile_filepath),
+        ]
+
+        # Call the function and compare the result with the expected command
+        actual_cmd = convert_to_fastq(_reads, n_threads, bamfile_filepath)
         self.assertEqual(actual_cmd, expected_cmd)
 
 
