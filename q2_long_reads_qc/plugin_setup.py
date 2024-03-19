@@ -163,7 +163,7 @@ plugin.methods.register_function(
 
 
 plugin.pipelines.register_function(
-    function=q2_long_reads_qc.classify_consensus,
+    function=q2_long_reads_qc.classify_consensus_minimap2,
     inputs={
         "query": FeatureData[Sequence],
         "index_database": Minimap2IndexDB,

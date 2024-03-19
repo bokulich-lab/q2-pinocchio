@@ -25,7 +25,7 @@ from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
 # resulting SAM file based on mapping criteria using samtools view, and
 # finally converts the filtered BAM file to FASTA format using samtools fasta,
 # saving the output in the specified directory.
-def _minimap2_filter(
+def _minimap2_extract_seqs(
     reads,
     outdir,
     idx_path,
@@ -100,7 +100,7 @@ def extract_seqs(
         exclude_mapped = True
 
     # Filter the read using minimap2 according to the specified parameters
-    _minimap2_filter(
+    _minimap2_extract_seqs(
         str(query_reads),
         filtered_seqs,
         idx_ref_path,

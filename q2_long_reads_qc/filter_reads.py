@@ -29,7 +29,7 @@ from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
 # resulting SAM file based on mapping criteria using samtools view, and
 # finally converts the filtered BAM file to FASTA format using samtools fasta,
 # saving the output in the specified directory.
-def _minimap2_fastq_filter(
+def _minimap2_filter_reads(
     reads,
     outdir,
     idx_path,
@@ -106,7 +106,7 @@ def filter_reads(
     # Iterate over each forward read in the DataFrame
     for _, fwd in input_df.itertuples():
         # Filter the read using minimap2 according to the specified parameters
-        _minimap2_fastq_filter(
+        _minimap2_filter_reads(
             fwd,
             filtered_seqs,
             idx_ref_path,
