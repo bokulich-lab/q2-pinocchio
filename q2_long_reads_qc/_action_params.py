@@ -58,7 +58,7 @@ extract_seqs_param_descriptions = {
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
     "older PacBio continuous long (CLR) reads to a reference genome.",
     "extract": "Extract sequences that map to reference. When "
-    "set to False it extracts sequences that do not map to the reference "
+    "set to unmapped it extracts sequences that do not map to the reference "
     "database.",
     "min_per_identity": "After the alignment step, mapped reads will be "
     "reclassified as unmapped if their identity percentage falls below this "
