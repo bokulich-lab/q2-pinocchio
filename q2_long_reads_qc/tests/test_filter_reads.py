@@ -109,7 +109,7 @@ class TestFilterReads(LongReadsQCTestsBase):
                     self.assertTrue(obs_id in perc_id_unmapped)
                     self.assertTrue(obs_id not in perc_id_mapped)
 
-    def test_include_unmapped_with_perc_id(self):
+    def test_exclude_unmapped_with_perc_id(self):
         (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads,
             self.minimap2_index,
