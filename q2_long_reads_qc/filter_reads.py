@@ -88,7 +88,6 @@ def filter_reads(
         idx_ref_path = str(index_database.path) + "/index.mmi"
     elif reference_reads:
         idx_ref_path = str(reference_reads.path)
-        print(idx_ref_path)
     else:
         raise ValueError(
             "Either reference_reads or a minimap2_index must be provided " "as input."

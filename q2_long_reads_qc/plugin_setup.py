@@ -8,20 +8,18 @@
 
 import importlib
 
-import qiime2
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
-from q2_types.per_sample_sequences import (
-    PairedEndSequencesWithQuality,
-    SequencesWithQuality,
-)
+from q2_types.per_sample_sequences import SequencesWithQuality
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Bool, Citations, Float, Int, Plugin, Range, Str, TypeMatch
+from qiime2.plugin import Bool, Citations, Float, Int, Plugin, Range, Str
 
 import q2_long_reads_qc
 from q2_long_reads_qc import __version__
 from q2_long_reads_qc._action_params import (
     build_index_param_descriptions,
     build_index_params,
+    extract_seqs_param_descriptions,
+    extract_seqs_params,
     filter_reads_param_descriptions,
     filter_reads_params,
     minimap2_param_descriptions,
@@ -61,13 +59,6 @@ plugin.register_semantic_type_to_format(
     FeatureData[PairwiseAlignmentMN2], PairwiseAlignmentMN2DirectoryFormat
 )
 
-InputMap, InputMap = qiime2.plugin.TypeMap(
-    {
-        FeatureData[Sequence]: FeatureData[Sequence],
-        SampleData[SequencesWithQuality]: SampleData[SequencesWithQuality],
-    }
-)
-
 plugin.methods.register_function(
     function=q2_long_reads_qc.extract_seqs,
     inputs={
@@ -75,14 +66,14 @@ plugin.methods.register_function(
         "index_database": Minimap2IndexDB,
         "reference_reads": FeatureData[Sequence],
     },
-    parameters=filter_reads_params,
+    parameters=extract_seqs_params,
     outputs=[("extracted_seqs", FeatureData[Sequence])],
     input_descriptions={
         "query_reads": "Feature sequences to be filtered.",
         "index_database": "Minimap2 index database. Incompatible with reference_reads.",
         "reference_reads": "Reference sequences. Incompatible with minimap2_index.",
     },
-    parameter_descriptions=filter_reads_param_descriptions,
+    parameter_descriptions=extract_seqs_param_descriptions,
     output_descriptions={
         "extracted_seqs": "Subset of initial feature sequences that we keep.",
     },
@@ -96,16 +87,15 @@ plugin.methods.register_function(
     citations=[citations["Minimap2"]],
 )
 
-T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
 plugin.methods.register_function(
     function=q2_long_reads_qc.filter_reads,
     inputs={
-        "query_reads": SampleData[T],
+        "query_reads": SampleData[SequencesWithQuality],
         "index_database": Minimap2IndexDB,
         "reference_reads": FeatureData[Sequence],
     },
     parameters=filter_reads_params,
-    outputs=[("filtered_query_reads", SampleData[T])],
+    outputs=[("filtered_query_reads", SampleData[SequencesWithQuality])],
     input_descriptions={
         "query_reads": "The sequences to be filtered.",
         "index_database": "Minimap2 index database. Incompatible with reference_reads.",

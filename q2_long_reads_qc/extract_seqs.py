@@ -63,7 +63,7 @@ def extract_seqs(
     reference_reads: DNAFASTAFormat = None,
     n_threads: int = 1,
     mapping_preset: str = "map-ont",
-    exclude_mapped: str = False,
+    extract: str = "mapped",
     min_per_identity: float = None,
     matching_score: int = None,
     mismatching_penalty: int = None,
@@ -85,7 +85,6 @@ def extract_seqs(
         idx_ref_path = str(index_database.path) + "/index.mmi"
     elif reference_reads:
         idx_ref_path = str(reference_reads.path)
-        print(idx_ref_path)
     else:
         raise ValueError(
             "Either reference_reads or a minimap2_index must be provided as input."
@@ -94,6 +93,11 @@ def extract_seqs(
     penalties = set_penalties(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
     )
+
+    if extract == "mapped":
+        exclude_mapped = False
+    else:
+        exclude_mapped = True
 
     # Filter the read using minimap2 according to the specified parameters
     _minimap2_filter(
