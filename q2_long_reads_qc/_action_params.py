@@ -38,7 +38,7 @@ filter_reads_params = {
     "gap_open_penalty": Int % Range(1, None),
     "gap_extension_penalty": Int % Range(1, None),
 }
-filter_reads_param_descriptions = {
+filter_reads_param_dsc = {
     "n_threads": "Number of threads to use.",
     "mapping_preset": "Specifies the type of input sequences that will be "
     "used during the mapping process. 1) map-ont: Align noisy long reads "
@@ -56,7 +56,7 @@ filter_reads_param_descriptions = {
     "gap_open_penalty": "Gap open penalty.",
     "gap_extension_penalty": "Gap extension penalty.",
 }
-filter_reads_description = (
+filter_reads_dsc = (
     "Filter demultiplexed single- or paired-end sequences based "
     "on alignment to a reference database using Minimap2 and samtools. "
     "This versatile command allows for the exclusion of long sequences "
@@ -89,7 +89,7 @@ extract_seqs_params = {
     "gap_open_penalty": Int % Range(1, None),
     "gap_extension_penalty": Int % Range(1, None),
 }
-extract_seqs_param_descriptions = {
+extract_seqs_param_dsc = {
     "n_threads": "Number of threads to use.",
     "mapping_preset": "Specifies the type of input sequences that will be "
     "used during the mapping process. 1) map-ont: Align noisy long reads "
@@ -107,7 +107,7 @@ extract_seqs_param_descriptions = {
     "gap_open_penalty": "Gap open penalty.",
     "gap_extension_penalty": "Gap extension penalty.",
 }
-extract_seqs_description = (
+extract_seqs_dsc = (
     "This method aligns feature sequences to a set of reference sequences to "
     "identify sequences that hit/miss the reference within a specified "
     "perc_identity. This method could be used to define a positive filter "
@@ -122,8 +122,8 @@ build_index_inputs_dsc = {
 }
 build_index_outputs_dsc = {"database": "Minimap2 index."}
 build_index_params = {"kmer_length": Int % Range(1, 28)}
-build_index_param_descriptions = {"kmer_length": "Minimizer k-mer length."}
-build_index_description = "Build Minimap2 index database from reference sequences."
+build_index_param_dsc = {"kmer_length": "Minimizer k-mer length."}
+build_index_dsc = "Build Minimap2 index database from reference sequences."
 
 
 # minimap2
@@ -141,7 +141,7 @@ minimap2_inputs_dsc = {
 minimap2_outputs_dsc = {
     "search_results": "Top hits for each query.",
 }
-minimap2_param_descriptions = {
+minimap2_param_dsc = {
     "n_threads": "Number of threads to use.",
     "maxaccepts": "Maximum number of hits to keep for each query. Minimap2 will "
     "choose the first N hits in the reference database.",
@@ -162,7 +162,7 @@ minimap2_params = {
     "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "output_no_hits": Bool,
 }
-minimap2_description = (
+minimap2_dsc = (
     "Search for top hits in a reference database using alignment between the "
     "query sequences and reference database sequences using Minimap2. Returns a "
     "report of the top M hits for each query (where M=maxaccepts)."
@@ -199,7 +199,7 @@ classify_consensus_minimap2_params = {
     "min_consensus": Float % Range(0.5, 1.0, inclusive_end=True, inclusive_start=False),
     "unassignable_label": Str,
 }
-classify_consensus_minimap2_param_descriptions = {
+classify_consensus_minimap2_param_dsc = {
     "maxaccepts": (
         "Maximum number of hits to keep for each query. Minimap2 will "
         "choose the first N hits in the reference database that "
@@ -213,7 +213,7 @@ classify_consensus_minimap2_param_descriptions = {
     "hit to be accepted as consensus assignment.",
     "unassignable_label": "Annotation given to sequences without any hits.",
 }
-classify_consensus_minimap2_description = (
+classify_consensus_minimap2_dsc = (
     "Assign taxonomy to query sequences using Minimap2. Performs "
     "alignment between query and reference_reads, then "
     "assigns consensus taxonomy to each query sequence from "
@@ -243,7 +243,7 @@ find_consensus_annotation_inputs_dsc = {
 find_consensus_annotation_outputs_dsc = {
     "consensus_taxonomy": "Consensus taxonomy and scores."
 }
-find_consensus_annotation_description = (
+find_consensus_annotation_dsc = (
     "Find consensus annotation for each query searched against "
     "a reference database, by finding the least common ancestor "
     "among one or more semicolon-delimited hierarchical "
