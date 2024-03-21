@@ -9,7 +9,7 @@
 mamba create -n q2-minimap2 -c conda-forge -c bioconda -c https://packages.qiime2.org/qiime2/2024.2/shotgun/passed/ -c defaults q2cli q2-types q2-feature-classifier minimap2 bs4 samtools
 ```
 
-##### Step 2: Activate q2-long-reads-qc environment
+##### Step 2: Activate q2-minimap2 environment
 ```shell
 conda activate q2-minimap2
 ```
