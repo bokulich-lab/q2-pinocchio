@@ -11,9 +11,9 @@ import importlib
 from q2_types.feature_data import FeatureData
 from qiime2.plugin import Citations, Plugin
 
-import q2_long_reads_qc
-from q2_long_reads_qc import __version__
-from q2_long_reads_qc._action_params import (
+import q2_minimap2
+from q2_minimap2 import __version__
+from q2_minimap2._action_params import (
     build_index_dsc,
     build_index_inputs,
     build_index_inputs_dsc,
@@ -57,22 +57,23 @@ from q2_long_reads_qc._action_params import (
     minimap2_param_dsc,
     minimap2_params,
 )
-from q2_long_reads_qc.types._format import (
+from q2_minimap2.types._format import (
     Minimap2IndexDBDirFmt,
     Minimap2IndexDBFmt,
     PairwiseAlignmentMN2DirectoryFormat,
     PairwiseAlignmentMN2Format,
 )
-from q2_long_reads_qc.types._type import Minimap2IndexDB, PairwiseAlignmentMN2
+from q2_minimap2.types._type import Minimap2IndexDB, PairwiseAlignmentMN2
 
-citations = Citations.load("citations.bib", package="q2_long_reads_qc")
+citations = Citations.load("citations.bib", package="q2_minimap2")
 
 plugin = Plugin(
-    name="long-reads-qc",
+    name="minimap2",
     version=__version__,
     website="https://github.com/bokulich-lab/q2-plugin-name",
-    package="q2_long_reads_qc",
-    description="QIIME 2 Plugin for quality control of long read sequences.",
+    package="q2_minimap2",
+    description="QIIME 2 Plugin for quality control and taxonomic "
+    "classification of long read sequences using Minimap2",
     short_description="",
 )
 
@@ -92,7 +93,7 @@ plugin.register_semantic_type_to_format(
 )
 
 plugin.methods.register_function(
-    function=q2_long_reads_qc.extract_seqs,
+    function=q2_minimap2.extract_seqs,
     inputs=extract_seqs_inputs,
     parameters=extract_seqs_params,
     outputs=extract_seqs_outputs,
@@ -105,7 +106,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_long_reads_qc.filter_reads,
+    function=q2_minimap2.filter_reads,
     inputs=filter_reads_inputs,
     parameters=filter_reads_params,
     outputs=filter_reads_outputs,
@@ -119,7 +120,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_long_reads_qc.build_index,
+    function=q2_minimap2.build_index,
     inputs=build_index_inputs,
     parameters=build_index_params,
     outputs=build_index_outputs,
@@ -132,7 +133,7 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_long_reads_qc.minimap2,
+    function=q2_minimap2.minimap2,
     inputs=minimap2_inputs,
     parameters=minimap2_params,
     outputs=minimap2_outputs,
@@ -145,7 +146,7 @@ plugin.methods.register_function(
 )
 
 plugin.pipelines.register_function(
-    function=q2_long_reads_qc.classify_consensus_minimap2,
+    function=q2_minimap2.classify_consensus_minimap2,
     inputs=classify_consensus_minimap2_inputs,
     parameters=classify_consensus_minimap2_params,
     outputs=classify_consensus_minimap2_outputs,
@@ -158,7 +159,7 @@ plugin.pipelines.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_long_reads_qc.find_consensus_annotation,
+    function=q2_minimap2.find_consensus_annotation,
     inputs=find_consensus_annotation_inputs,
     parameters=find_consensus_annotation_params,
     outputs=find_consensus_annotation_outputs,
@@ -169,4 +170,4 @@ plugin.methods.register_function(
     description=find_consensus_annotation_dsc,
 )
 
-importlib.import_module("q2_long_reads_qc.types._transformer")
+importlib.import_module("q2_minimap2.types._transformer")

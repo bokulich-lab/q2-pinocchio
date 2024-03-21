@@ -7,10 +7,10 @@
 # ----------------------------------------------------------------------------
 from qiime2 import Artifact
 
-from .test_long_reads_qc import LongReadsQCTestsBase
+from .test_minimap2 import Minimap2TestsBase
 
 
-class TestMinimap2Build(LongReadsQCTestsBase):
+class TestMinimap2Build(Minimap2TestsBase):
 
     # This test just makes sure this runs without error, which will include
     # validating the contents.

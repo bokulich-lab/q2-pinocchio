@@ -12,8 +12,8 @@ import shutil
 import pandas as pd
 from q2_types.feature_data import DNAFASTAFormat
 
-from q2_long_reads_qc._filtering_utils import run_cmd
-from q2_long_reads_qc.types._format import (
+from q2_minimap2._filtering_utils import run_cmd
+from q2_minimap2.types._format import (
     Minimap2IndexDBDirFmt,
     PairwiseAlignmentMN2DirectoryFormat,
     PairwiseAlignmentMN2Format,

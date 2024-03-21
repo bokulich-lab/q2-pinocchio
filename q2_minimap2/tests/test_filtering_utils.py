@@ -11,7 +11,7 @@ import shutil
 import tempfile
 import unittest
 
-from q2_long_reads_qc._filtering_utils import (
+from q2_minimap2._filtering_utils import (
     calculate_identity,
     convert_to_fasta,
     convert_to_fastq,
@@ -22,10 +22,10 @@ from q2_long_reads_qc._filtering_utils import (
     set_penalties,
 )
 
-from .test_long_reads_qc import LongReadsQCTestsBase
+from .test_minimap2 import Minimap2TestsBase
 
 
-class TestSetPenalties(LongReadsQCTestsBase):
+class TestSetPenalties(Minimap2TestsBase):
 
     # Test with all parameters provided to ensure correct option string formation
     def test_all_arguments_provided(self):
@@ -47,7 +47,7 @@ class TestSetPenalties(LongReadsQCTestsBase):
         self.assertEqual(set_penalties(None, None, None, None), [])
 
 
-class TestCalculateIdentity(LongReadsQCTestsBase):
+class TestCalculateIdentity(Minimap2TestsBase):
     # Test case with NM tag present
     def test_with_nm_tag(self):
         aln = "SOME\tDATA\tNM:i:5"
@@ -128,7 +128,7 @@ class TestCalculateIdentity(LongReadsQCTestsBase):
         self.assertAlmostEqual(calculate_identity(aln, total_length), expected_identity)
 
 
-class TestGetAlignmentLength(LongReadsQCTestsBase):
+class TestGetAlignmentLength(Minimap2TestsBase):
     # Test with the CIGAR string indicating no alignment
     def test_no_alignment(self):
         self.assertEqual(get_alignment_length("*"), 0)
@@ -200,7 +200,7 @@ class TestGetAlignmentLength(LongReadsQCTestsBase):
         )  # Assuming 'S' and 'H' are ignored for alignment length
 
 
-class TestProcessSamFile(LongReadsQCTestsBase):
+class TestProcessSamFile(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 

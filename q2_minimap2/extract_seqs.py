@@ -6,30 +6,26 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os
 import tempfile
 
-import pandas as pd
 from q2_types.feature_data import DNAFASTAFormat
-from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFmt
 
-from q2_long_reads_qc._filtering_utils import (
-    build_filtered_out_dir,
-    convert_to_fastq,
+from q2_minimap2._filtering_utils import (
+    convert_to_fasta,
     make_mn2_cmd,
     make_samt_cmd,
     process_sam_file,
     run_cmd,
     set_penalties,
 )
-from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
+from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 
 
 # This function uses Minimap2 to align reads to a reference, filters the
 # resulting SAM file based on mapping criteria using samtools view, and
 # finally converts the filtered BAM file to FASTA format using samtools fasta,
 # saving the output in the specified directory.
-def _minimap2_filter_reads(
+def _minimap2_extract_seqs(
     reads,
     outdir,
     idx_path,
@@ -56,32 +52,33 @@ def _minimap2_filter_reads(
             samtools_view_cmd = make_samt_cmd(samf_fp, bamf_fp, n_threads)
             run_cmd(samtools_view_cmd, "samtools view")
 
-            # Convert to FASTQ with samtools
-            fwd = str(outdir.path / os.path.basename(reads))
-            _reads = ["-0", fwd]
-            convert_to_fastq_cmd = convert_to_fastq(_reads, n_threads, bamf_fp)
-            run_cmd(convert_to_fastq_cmd, "samtools fastq")
+            # Convert to FASTA with samtools
+            convert_to_fasta_cmd = convert_to_fasta(outdir.path, n_threads, bamf_fp)
+            run_cmd(convert_to_fasta_cmd, "samtools fasta")
 
 
-def filter_reads(
-    query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
+def extract_seqs(
+    query_reads: DNAFASTAFormat,
     index_database: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,
     n_threads: int = 1,
     mapping_preset: str = "map-ont",
-    exclude_mapped: str = False,
+    extract: str = "mapped",
     min_per_identity: float = None,
     matching_score: int = None,
     mismatching_penalty: int = None,
     gap_open_penalty: int = None,
     gap_extension_penalty: int = None,
-) -> SingleLanePerSampleSingleEndFastqDirFmt:
+) -> DNAFASTAFormat:
 
     if reference_reads and index_database:
         raise ValueError(
             "Only one reference_reads or index_database artifact "
             "can be provided as input. Choose one and try again."
         )
+
+    # Initialize directory format for filtered sequences
+    filtered_seqs = DNAFASTAFormat()
 
     # Get the path of index database or reference
     if index_database:
@@ -90,33 +87,28 @@ def filter_reads(
         idx_ref_path = str(reference_reads.path)
     else:
         raise ValueError(
-            "Either reference_reads or a minimap2_index must be provided " "as input."
+            "Either reference_reads or a minimap2_index must be provided as input."
         )
-
-    # Initialize directory format for filtered sequences
-    filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
-
-    # Import data from the manifest file to a df
-    input_df = query_reads.manifest.view(pd.DataFrame)
 
     penalties = set_penalties(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
     )
 
-    # Iterate over each forward read in the DataFrame
-    for _, fwd in input_df.itertuples():
-        # Filter the read using minimap2 according to the specified parameters
-        _minimap2_filter_reads(
-            fwd,
-            filtered_seqs,
-            idx_ref_path,
-            n_threads,
-            mapping_preset,
-            exclude_mapped,
-            min_per_identity,
-            penalties,
-        )
+    if extract == "mapped":
+        exclude_mapped = False
+    else:
+        exclude_mapped = True
 
-    result = build_filtered_out_dir(query_reads, filtered_seqs)
+    # Filter the read using minimap2 according to the specified parameters
+    _minimap2_extract_seqs(
+        str(query_reads),
+        filtered_seqs,
+        idx_ref_path,
+        n_threads,
+        mapping_preset,
+        exclude_mapped,
+        min_per_identity,
+        penalties,
+    )
 
-    return result
+    return filtered_seqs

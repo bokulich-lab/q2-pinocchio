@@ -15,16 +15,12 @@ import pandas as pd
 import pandas.testing as pdt
 from qiime2 import Artifact
 
-from q2_long_reads_qc.minimap2 import (
-    filter_by_maxaccepts,
-    filter_by_perc_identity,
-    minimap2,
-)
+from q2_minimap2.minimap2 import filter_by_maxaccepts, filter_by_perc_identity, minimap2
 
-from .test_long_reads_qc import LongReadsQCTestsBase
+from .test_minimap2 import Minimap2TestsBase
 
 
-class TestFilterByMaxAccepts(LongReadsQCTestsBase):
+class TestFilterByMaxAccepts(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
         # Retrieve the paths to test data files
@@ -80,7 +76,7 @@ class TestFilterByMaxAccepts(LongReadsQCTestsBase):
         os.remove(temp_file_path)
 
 
-class TestFilterByPercIdentity(LongReadsQCTestsBase):
+class TestFilterByPercIdentity(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
         self.PairwiseAlignmentMN2_file = self.get_data_path("initial_paf_file.paf")
@@ -124,7 +120,7 @@ class TestFilterByPercIdentity(LongReadsQCTestsBase):
         os.remove(temp_file_path)
 
 
-class TestMinimap2(LongReadsQCTestsBase):
+class TestMinimap2(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 

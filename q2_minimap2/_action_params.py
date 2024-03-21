@@ -11,7 +11,7 @@ from q2_types.per_sample_sequences import SequencesWithQuality
 from q2_types.sample_data import SampleData
 from qiime2.plugin import Bool, Choices, Float, Int, Range, Str
 
-from q2_long_reads_qc.types._type import Minimap2IndexDB, PairwiseAlignmentMN2
+from q2_minimap2.types._type import Minimap2IndexDB, PairwiseAlignmentMN2
 
 # filter-reads
 filter_reads_inputs = {

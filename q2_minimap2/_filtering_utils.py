@@ -21,7 +21,7 @@ from q2_types.per_sample_sequences._transformer import (
     _parse_and_validate_manifest_partial,
 )
 
-from q2_long_reads_qc._utils import run_command
+from q2_minimap2._utils import run_command
 
 
 # Set Minimap2 alignment penalties based on provided parameters

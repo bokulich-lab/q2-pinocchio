@@ -10,8 +10,8 @@ import subprocess
 
 from q2_types.feature_data import DNAFASTAFormat
 
-from q2_long_reads_qc._utils import run_command
-from q2_long_reads_qc.types._format import Minimap2IndexDBDirFmt
+from q2_minimap2._utils import run_command
+from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 
 
 def build_index(

@@ -75,8 +75,8 @@ def classify_consensus_minimap2(
     num_threads=1,
 ):
     # Retrieve the actions for mapping and consensus annotation
-    search_db = ctx.get_action("long_reads_qc", "minimap2")
-    lca = ctx.get_action("long_reads_qc", "find_consensus_annotation")
+    search_db = ctx.get_action("minimap2", "minimap2")
+    lca = ctx.get_action("minimap2", "find_consensus_annotation")
 
     # Search for top hits in a reference database
     (result,) = search_db(

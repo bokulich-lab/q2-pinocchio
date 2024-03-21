@@ -11,11 +11,11 @@ import pandas as pd
 import pandas.testing as pdt
 from qiime2 import Artifact
 
-from q2_long_reads_qc.classify_consensus import (
+from q2_minimap2.classify_consensus import (
     _PairwiseAlignmentMN2_format_df_to_series_of_lists,
 )
 
-from .test_long_reads_qc import LongReadsQCTestsBase
+from .test_minimap2 import Minimap2TestsBase
 
 
 def series_is_subset(expected, observed):
@@ -24,7 +24,7 @@ def series_is_subset(expected, observed):
     return len(compared[compared]) >= len(compared[~compared])
 
 
-class TestConsensusAssignment(LongReadsQCTestsBase):
+class TestConsensusAssignment(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
         self.taxonomy = Artifact.load(self.get_data_path("taxonomy.qza"))

@@ -16,7 +16,7 @@ from q2_types.per_sample_sequences import (
 )
 from qiime2 import Artifact
 
-from .test_long_reads_qc import LongReadsQCTestsBase
+from .test_minimap2 import Minimap2TestsBase
 
 seq_ids_mapped = [
     "SARS2:6:73:941:1973#",
@@ -37,7 +37,7 @@ perc_id_mapped = [
 perc_id_unmapped = ["SARS2:6:73:941:1973#", "SARS2:6:73:356:9806#"]
 
 
-class TestFilterReads(LongReadsQCTestsBase):
+class TestFilterReads(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 

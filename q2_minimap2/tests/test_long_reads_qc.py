@@ -8,8 +8,8 @@
 from qiime2.plugin.testing import TestPluginBase
 
 
-class LongReadsQCTestsBase(TestPluginBase):
-    package = "q2_long_reads_qc.tests"
+class Minimap2TestsBase(TestPluginBase):
+    package = "q2_minimap2.tests"
 
     def setUp(self):
         super().setUp()

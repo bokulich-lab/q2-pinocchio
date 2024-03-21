@@ -24,6 +24,8 @@ make dev
 
 ##### Step 5: Execution
 
+<!--
+
 * minimap2-build
 ```shell
 qiime minimap2 minimap2-build --i-sequences reference.qza --o-database database.qza --verbose
@@ -42,3 +44,4 @@ qiime minimap2 minimap2-build --i-sequences reference.qza --o-database database.
   ```shell
   qiime minimap2 filter-reads --i-minimap2-index database.qza --i-sequences reads.qza --p-min-per-identity 0.85 --o-filtered-sequences mapped_over_85.qza --verbose
   ```
+-->
