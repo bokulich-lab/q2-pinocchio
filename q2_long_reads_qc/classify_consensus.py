@@ -16,6 +16,7 @@ def _PairwiseAlignmentMN2_format_df_to_series_of_lists(
     unassignable_label: str = "Unassigned",
 ) -> pd.Series:
 
+    assignments = assignments.astype(str)
     missing_ids = set(assignments[5].values) - set(ref_taxa.index) - {"*", ""}
     if len(missing_ids) > 0:
         raise KeyError(
