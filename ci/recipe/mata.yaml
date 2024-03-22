@@ -1,0 +1,43 @@
+{% set data = load_setup_py_data() %}
+{% set version = data.get('version') or 'placehold' %}
+
+package:
+  name: q2-minimap2
+  version: {{ version }}
+
+source:
+  path: ../..
+
+build:
+  script: make install
+
+requirements:
+  host:
+    - python {{ python }}
+    - setuptools
+
+  run:
+    - python {{ python }}
+    - qiime2 {{ qiime2_epoch }}.*
+    - q2-types {{ qiime2_epoch }}.*
+    - q2templates {{ qiime2_epoch }}.*
+    - q2cli {{ qiime2_epoch }}.*
+    - minimap2
+    - bs4
+    - samtools
+
+
+test:
+  requires:
+    - coverage
+    - pytest-cov
+  imports:
+    - q2_minimap2
+    - qiime2.plugins.minimap2
+  commands:
+    - pytest --cov q2_minimap2 --cov-report xml:coverage.xml --pyargs q2_minimap2
+
+about:
+  home: https://github.com/bokulich-lab/q2-minimap2
+  license: BSD-3-Clause
+  license_family: BSD
