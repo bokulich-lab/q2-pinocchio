@@ -15,9 +15,13 @@ import pandas as pd
 import pandas.testing as pdt
 from qiime2 import Artifact
 
-from q2_minimap2.minimap2 import filter_by_maxaccepts, filter_by_perc_identity, minimap2
+from q2_minimap2.minimap2_search import (
+    filter_by_maxaccepts,
+    filter_by_perc_identity,
+    minimap2_search,
+)
 
-from .test_minimap2 import Minimap2TestsBase
+from .test_long_reads import Minimap2TestsBase
 
 
 class TestFilterByMaxAccepts(Minimap2TestsBase):
@@ -120,7 +124,7 @@ class TestFilterByPercIdentity(Minimap2TestsBase):
         os.remove(temp_file_path)
 
 
-class TestMinimap2(Minimap2TestsBase):
+class Testminimap2_search(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 
@@ -134,8 +138,8 @@ class TestMinimap2(Minimap2TestsBase):
             self.get_data_path("minimap2_only_hits_test_paf.qza")
         )
 
-    def test_minimap2(self):
-        (output_artifact,) = self.plugin.methods["minimap2"](
+    def test_minimap2_search(self):
+        (output_artifact,) = self.plugin.methods["minimap2_search"](
             self.query_reads, self.index_database
         )
 
@@ -156,8 +160,8 @@ class TestMinimap2(Minimap2TestsBase):
 
                     self.assertEqual(true_paf_content, output_paf_content)
 
-    def test_minimap2_only_hits(self):
-        (output_artifact,) = self.plugin.methods["minimap2"](
+    def test_minimap2_search_only_hits(self):
+        (output_artifact,) = self.plugin.methods["minimap2_search"](
             self.query_reads,
             self.index_database,
             output_no_hits=False,
@@ -180,25 +184,25 @@ class TestMinimap2(Minimap2TestsBase):
 
                     self.assertEqual(true_paf_content, output_paf_content)
 
-    def test_minimap2_output_consistency(self):
-        (result1,) = self.plugin.methods["minimap2"](
+    def test_minimap2_search_output_consistency(self):
+        (result1,) = self.plugin.methods["minimap2_search"](
             self.query_reads, index_database=self.index_database
         )
 
-        (result2,) = self.plugin.methods["minimap2"](
+        (result2,) = self.plugin.methods["minimap2_search"](
             self.query_reads, reference_reads=self.ref
         )
         pdt.assert_frame_equal(result1.view(pd.DataFrame), result2.view(pd.DataFrame))
 
     def test_minimap2_both_ref_and_index(self):
         with self.assertRaisesRegex(ValueError, "Only one.*can be provided.*"):
-            minimap2(
+            minimap2_search(
                 self.query_reads,
                 reference_reads=self.ref,
                 index_database=self.index_database,
             )
         with self.assertRaisesRegex(ValueError, "Either.*must be provided.*"):
-            minimap2(self.query_reads)
+            minimap2_search(self.query_reads)
 
 
 if __name__ == "__main__":

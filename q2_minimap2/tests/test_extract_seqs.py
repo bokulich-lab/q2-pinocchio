@@ -15,7 +15,7 @@ from qiime2 import Artifact
 
 from q2_minimap2.extract_seqs import extract_seqs
 
-from .test_minimap2 import Minimap2TestsBase
+from .test_long_reads import Minimap2TestsBase
 
 seq_ids_mapped = [
     "SARS2:6:73:941:1973#",

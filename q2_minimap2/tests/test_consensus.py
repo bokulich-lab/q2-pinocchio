@@ -15,7 +15,7 @@ from q2_minimap2.classify_consensus import (
     _PairwiseAlignmentMN2_format_df_to_series_of_lists,
 )
 
-from .test_minimap2 import Minimap2TestsBase
+from .test_long_reads import Minimap2TestsBase
 
 
 def series_is_subset(expected, observed):
@@ -76,7 +76,7 @@ class TestConsensusAssignment(Minimap2TestsBase):
             _PairwiseAlignmentMN2_format_df_to_series_of_lists(paf, taxonomy)
 
     def test_find_consensus_annotation(self):
-        (consensus,) = self.plugin.methods["find_consensus_annotation"](
+        (consensus,) = self.plugin.methods["_find_consensus_annotation"](
             search_results=self.paf, reference_taxonomy=self.taxonomy
         )
         obs = consensus.view(pd.DataFrame)

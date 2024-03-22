@@ -16,7 +16,7 @@ from q2_types.per_sample_sequences import (
 )
 from qiime2 import Artifact
 
-from .test_minimap2 import Minimap2TestsBase
+from .test_long_reads import Minimap2TestsBase
 
 seq_ids_mapped = [
     "SARS2:6:73:941:1973#",
@@ -47,7 +47,7 @@ class TestFilterReads(Minimap2TestsBase):
     # Exclude mapped
     def test_filter_exclude_mapped(self):
         (obs_art,) = self.plugin.methods["filter_reads"](
-            self.query_reads, self.minimap2_index, exclude_mapped=True
+            self.query_reads, self.minimap2_index, keep="unmapped"
         )
 
         obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
@@ -90,7 +90,7 @@ class TestFilterReads(Minimap2TestsBase):
         (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads,
             self.minimap2_index,
-            exclude_mapped=True,
+            keep="unmapped",
             min_per_identity=0.99,
         )
 
@@ -113,7 +113,7 @@ class TestFilterReads(Minimap2TestsBase):
         (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads,
             self.minimap2_index,
-            exclude_mapped=False,
+            keep="mapped",
             min_per_identity=0.99,
         )
 

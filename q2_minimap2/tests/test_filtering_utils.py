@@ -22,7 +22,7 @@ from q2_minimap2._filtering_utils import (
     set_penalties,
 )
 
-from .test_minimap2 import Minimap2TestsBase
+from .test_long_reads import Minimap2TestsBase
 
 
 class TestSetPenalties(Minimap2TestsBase):
