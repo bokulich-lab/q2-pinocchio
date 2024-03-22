@@ -40,7 +40,7 @@ def _PairwiseAlignmentMN2_format_df_to_series_of_lists(
     return taxa_hits
 
 
-def find_consensus_annotation(
+def _find_consensus_annotation(
     search_results: pd.DataFrame,
     reference_taxonomy: pd.Series,
     min_consensus: int = 0.51,
@@ -76,7 +76,7 @@ def classify_consensus_minimap2(
 ):
     # Retrieve the actions for mapping and consensus annotation
     search_db = ctx.get_action("minimap2", "minimap2_search")
-    lca = ctx.get_action("minimap2", "find_consensus_annotation")
+    lca = ctx.get_action("minimap2", "_find_consensus_annotation")
 
     # Search for top hits in a reference database
     (result,) = search_db(

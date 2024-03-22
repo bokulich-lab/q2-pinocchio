@@ -159,7 +159,7 @@ plugin.pipelines.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_minimap2.find_consensus_annotation,
+    function=q2_minimap2._find_consensus_annotation,
     inputs=find_consensus_annotation_inputs,
     parameters=find_consensus_annotation_params,
     outputs=find_consensus_annotation_outputs,
