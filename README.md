@@ -69,6 +69,12 @@ make dev
   qiime minimap2 filter-reads --i-query-reads reads.qza --i-reference-reads reference.qza --o-filtered-query-reads mapped.qza --verbose
   ```
 
+<br>
 
+* classify-consensus-minimap2
+  - Assign taxonomy to query sequences using Minimap2
+  ```shell
+  qiime minimap2 classify-consensus-minimap2 --i-index-database classification_input/index.qza --i-query classification_input/n1K_initial_reads_SILVA132.fna.qza --i-reference-taxonomy classification_input/raw_taxonomy.qza --p-num-threads 6 --output-dir outDir --verbose
+  ```
 
 
