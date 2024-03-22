@@ -69,7 +69,7 @@ def filter_reads(
     reference_reads: DNAFASTAFormat = None,
     n_threads: int = 1,
     mapping_preset: str = "map-ont",
-    exclude_mapped: str = False,
+    keep: str = "mapped",
     min_per_identity: float = None,
     matching_score: int = None,
     mismatching_penalty: int = None,
@@ -102,6 +102,11 @@ def filter_reads(
     penalties = set_penalties(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
     )
+
+    if keep == "mapped":
+        exclude_mapped = False
+    else:
+        exclude_mapped = True
 
     # Iterate over each forward read in the DataFrame
     for _, fwd in input_df.itertuples():

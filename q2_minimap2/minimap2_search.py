@@ -58,7 +58,7 @@ def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity):
 
 # Performs sequence alignment using Minimap2 and outputs results in
 # PairwiseAlignmentMN2 format.
-def minimap2(
+def minimap2_search(
     query_reads: DNAFASTAFormat,
     index_database: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,

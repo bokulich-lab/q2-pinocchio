@@ -11,7 +11,7 @@ from .build_index import build_index
 from .classify_consensus import classify_consensus_minimap2, find_consensus_annotation
 from .extract_seqs import extract_seqs
 from .filter_reads import filter_reads
-from .minimap2 import minimap2
+from .minimap2_search import minimap2_search
 
 __version__ = get_versions()["version"]
 del get_versions
@@ -19,7 +19,7 @@ del get_versions
 __all__ = [
     "filter_reads",
     "build_index",
-    "minimap2",
+    "minimap2_search",
     "classify_consensus_minimap2",
     "find_consensus_annotation",
     "extract_seqs",

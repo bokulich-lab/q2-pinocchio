@@ -49,13 +49,13 @@ from q2_minimap2._action_params import (
     find_consensus_annotation_outputs_dsc,
     find_consensus_annotation_params,
     find_consensus_annotation_params_dsc,
-    minimap2_dsc,
-    minimap2_inputs,
-    minimap2_inputs_dsc,
-    minimap2_outputs,
-    minimap2_outputs_dsc,
-    minimap2_param_dsc,
-    minimap2_params,
+    minimap2_search_dsc,
+    minimap2_search_inputs,
+    minimap2_search_inputs_dsc,
+    minimap2_search_outputs,
+    minimap2_search_outputs_dsc,
+    minimap2_search_param_dsc,
+    minimap2_search_params,
 )
 from q2_minimap2.types._format import (
     Minimap2IndexDBDirFmt,
@@ -133,15 +133,15 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_minimap2.minimap2,
-    inputs=minimap2_inputs,
-    parameters=minimap2_params,
-    outputs=minimap2_outputs,
-    input_descriptions=minimap2_inputs_dsc,
-    parameter_descriptions=minimap2_param_dsc,
-    output_descriptions=minimap2_outputs_dsc,
+    function=q2_minimap2.minimap2_search,
+    inputs=minimap2_search_inputs,
+    parameters=minimap2_search_params,
+    outputs=minimap2_search_outputs,
+    input_descriptions=minimap2_search_inputs_dsc,
+    parameter_descriptions=minimap2_search_param_dsc,
+    output_descriptions=minimap2_search_outputs_dsc,
     name="Minimap2 alignment search.",
-    description=minimap2_dsc,
+    description=minimap2_search_dsc,
     citations=[citations["Minimap2"], citations["li2009sequence"]],
 )
 

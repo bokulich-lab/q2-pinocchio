@@ -31,7 +31,7 @@ filter_reads_outputs_dsc = {
 filter_reads_params = {
     "n_threads": Int % Range(1, None),
     "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
-    "exclude_mapped": Bool,
+    "keep": Str % Choices(["mapped", "unmapped"]),
     "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "matching_score": Int,
     "mismatching_penalty": Int,
@@ -45,8 +45,8 @@ filter_reads_param_dsc = {
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
     "older PacBio continuous long (CLR) reads to a reference genome.",
-    "exclude_mapped": "Exclude sequences that align to reference. When "
-    "set to False it excludes sequences that do not align to the reference "
+    "keep": "Keep the sequences that align to reference. When "
+    "set to unmapped it keeps sequences that do not align to the reference "
     "database.",
     "min_per_identity": "After the alignment step, mapped reads will be "
     "reclassified as unmapped if their identity percentage falls below this "
@@ -127,21 +127,21 @@ build_index_dsc = "Build Minimap2 index database from reference sequences."
 
 
 # minimap2
-minimap2_inputs = {
+minimap2_search_inputs = {
     "query_reads": FeatureData[Sequence],
     "index_database": Minimap2IndexDB,
     "reference_reads": FeatureData[Sequence],
 }
-minimap2_outputs = [("search_results", FeatureData[PairwiseAlignmentMN2])]
-minimap2_inputs_dsc = {
+minimap2_search_outputs = [("search_results", FeatureData[PairwiseAlignmentMN2])]
+minimap2_search_inputs_dsc = {
     "query_reads": "Query sequences.",
     "index_database": "Minimap2 index database. Incompatible with reference-reads.",
     "reference_reads": "Reference sequences. Incompatible with index-database.",
 }
-minimap2_outputs_dsc = {
+minimap2_search_outputs_dsc = {
     "search_results": "Top hits for each query.",
 }
-minimap2_param_dsc = {
+minimap2_search_param_dsc = {
     "n_threads": "Number of threads to use.",
     "maxaccepts": "Maximum number of hits to keep for each query. Minimap2 will "
     "choose the first N hits in the reference database.",
@@ -156,13 +156,13 @@ minimap2_param_dsc = {
     "errors downstream from missing feature IDs. Set to "
     "FALSE to mirror default Minimap2 search.",
 }
-minimap2_params = {
+minimap2_search_params = {
     "n_threads": Int % Range(1, None),
     "maxaccepts": Int % Range(1, None),
     "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "output_no_hits": Bool,
 }
-minimap2_dsc = (
+minimap2_search_dsc = (
     "Search for top hits in a reference database using alignment between the "
     "query sequences and reference database sequences using Minimap2. Returns a "
     "report of the top M hits for each query (where M=maxaccepts)."
