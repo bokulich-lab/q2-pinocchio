@@ -4,7 +4,7 @@ branch = True
 omit =
     */tests*
     */__init__.py
-    q2_minimap2y/_version.py
+    q2_minimap2/_version.py
     versioneer.py
 
 [report]
