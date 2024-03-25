@@ -27,7 +27,6 @@ requirements:
     - beautifulsoup4
     - samtools
 
-
 test:
   requires:
     - coverage
@@ -36,7 +35,7 @@ test:
     - q2_minimap2
     - qiime2.plugins.minimap2
   commands:
-    - pytest --cov q2_minimap2 --pyargs q2_minimap2
+    - pytest --cov q2_minimap2 --cov-report xml:coverage.xml --pyargs q2_minimap2
 
 about:
   home: https://github.com/bokulich-lab/q2-minimap2
