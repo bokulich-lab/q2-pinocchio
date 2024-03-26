@@ -19,8 +19,8 @@ setup(
     author="Christos Matzoros",
     author_email="christosmatzoros@gmail.com",
     description="QIIME 2 Plugin for quality control and taxonomic "
-    "classification of long read sequences using Minimap2",
+    "classification of long read sequences using Minimap2.",
     url="https://github.com/bokulich-lab/q2-minimap2",
-    entry_points={"qiime2.plugins": ["q2-lminimap2=q2_minimap2.plugin_setup:plugin"]},
+    entry_points={"qiime2.plugins": ["q2-minimap2=q2_minimap2.plugin_setup:plugin"]},
     zip_safe=False,
 )
