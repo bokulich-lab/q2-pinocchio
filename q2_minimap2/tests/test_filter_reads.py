@@ -44,10 +44,10 @@ class TestFilterReads(Minimap2TestsBase):
         self.query_reads = Artifact.load(self.get_data_path("single-end.qza"))
         self.minimap2_index = Artifact.load(self.get_data_path("index.qza"))
 
-    # Exclude mapped
-    def test_filter_exclude_mapped(self):
+    # Keep unmapped
+    def test_keep_unmapped_mapped(self):
         (obs_art,) = self.plugin.methods["filter_reads"](
-            self.query_reads, self.minimap2_index, exclude_mapped=True
+            self.query_reads, self.minimap2_index, keep="unmapped"
         )
 
         obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
@@ -86,11 +86,11 @@ class TestFilterReads(Minimap2TestsBase):
                     self.assertTrue(obs_id in seq_ids_mapped)
                     self.assertTrue(obs_id not in seq_ids_unmapped)
 
-    def test_exclude_mapped_with_perc_id(self):
+    def test_keep_unmapped_with_perc_id(self):
         (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads,
             self.minimap2_index,
-            exclude_mapped=True,
+            keep="unmapped",
             min_per_identity=0.99,
         )
 
@@ -109,11 +109,11 @@ class TestFilterReads(Minimap2TestsBase):
                     self.assertTrue(obs_id in perc_id_unmapped)
                     self.assertTrue(obs_id not in perc_id_mapped)
 
-    def test_exclude_unmapped_with_perc_id(self):
+    def test_keep_mapped_with_perc_id(self):
         (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads,
             self.minimap2_index,
-            exclude_mapped=False,
+            keep="mapped",
             min_per_identity=0.99,
         )
 
