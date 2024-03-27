@@ -58,7 +58,7 @@ def _minimap2_extract_seqs(
 
 
 def extract_seqs(
-    query_reads: DNAFASTAFormat,
+    sequences: DNAFASTAFormat,
     index_database: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,
     n_threads: int = 1,
@@ -101,7 +101,7 @@ def extract_seqs(
 
     # Filter the read using minimap2 according to the specified parameters
     _minimap2_extract_seqs(
-        str(query_reads),
+        str(sequences),
         filtered_seqs,
         idx_ref_path,
         n_threads,

@@ -66,12 +66,12 @@ filter_reads_dsc = (
 
 # extract-seqs
 extract_seqs_inputs = {
-    "query_reads": FeatureData[Sequence],
+    "sequences": FeatureData[Sequence],
     "index_database": Minimap2IndexDB,
     "reference_reads": FeatureData[Sequence],
 }
 extract_seqs_inputs_dsc = {
-    "query_reads": "Feature sequences to be filtered.",
+    "sequences": "Feature sequences to be filtered.",
     "index_database": "Minimap2 index database. Incompatible with reference-reads.",
     "reference_reads": "Reference sequences. Incompatible with index-database.",
 }
@@ -154,7 +154,7 @@ minimap2_search_param_dsc = {
     "feature table will need to be filtered to exclude "
     "unclassified sequences, otherwise you may run into "
     "errors downstream from missing feature IDs. Set to "
-    "FALSE to mirror default Minimap2 search.",
+    "True to mirror default Minimap2 search.",
 }
 minimap2_search_params = {
     "n_threads": Int % Range(1, None),
