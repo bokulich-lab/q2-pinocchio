@@ -36,6 +36,6 @@ test:
     - pytest --cov q2_minimap2 --cov-report xml:coverage.xml --pyargs q2_minimap2
 
 about:
-  home: https://github.com/ChristosMatzoros/q2-minimap2.git
+  home: https://github.com/bokulich-lab/q2-minimap2
   license: BSD-3-Clause
   license_family: BSD
