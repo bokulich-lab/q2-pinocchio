@@ -37,7 +37,7 @@ perc_id_mapped = [
 perc_id_unmapped = ["SARS2:6:73:941:1973#", "SARS2:6:73:356:9806#"]
 
 
-class TestFilterReads(Minimap2TestsBase):
+class TestFilterSingleEndReads(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 
@@ -45,8 +45,8 @@ class TestFilterReads(Minimap2TestsBase):
         self.minimap2_index = Artifact.load(self.get_data_path("index.qza"))
 
     # Keep unmapped
-    def test_keep_unmapped_mapped(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
+    def test_filter_single_end_keep_unmapped(self):
+        (obs_art,) = self.plugin.methods["filter_single_end_reads"](
             self.query_reads, self.minimap2_index, keep="unmapped"
         )
 
@@ -66,8 +66,8 @@ class TestFilterReads(Minimap2TestsBase):
                     self.assertTrue(obs_id in seq_ids_unmapped)
 
     # Keep mapped
-    def test_filter_keep_mapped(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
+    def test_filter_single_end_keep_mapped(self):
+        (obs_art,) = self.plugin.methods["filter_single_end_reads"](
             self.query_reads, self.minimap2_index
         )
 
@@ -86,8 +86,8 @@ class TestFilterReads(Minimap2TestsBase):
                     self.assertTrue(obs_id in seq_ids_mapped)
                     self.assertTrue(obs_id not in seq_ids_unmapped)
 
-    def test_keep_unmapped_with_perc_id(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
+    def test_filter_single_end_keep_unmapped_with_perc_id(self):
+        (obs_art,) = self.plugin.methods["filter_single_end_reads"](
             self.query_reads,
             self.minimap2_index,
             keep="unmapped",
@@ -109,8 +109,8 @@ class TestFilterReads(Minimap2TestsBase):
                     self.assertTrue(obs_id in perc_id_unmapped)
                     self.assertTrue(obs_id not in perc_id_mapped)
 
-    def test_keep_mapped_with_perc_id(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
+    def test_filter_single_end_keep_mapped_with_perc_id(self):
+        (obs_art,) = self.plugin.methods["filter_single_end_reads"](
             self.query_reads,
             self.minimap2_index,
             keep="mapped",
