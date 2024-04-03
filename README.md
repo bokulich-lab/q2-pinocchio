@@ -17,10 +17,11 @@ conda activate q2-minimap2
 ### Step 3: Installing python package
 ```shell
 make dev
+qiime dev refresh-cache
 ```
 
 ### Step 4: Download input data
-[Download](https://polybox.ethz.ch/index.php/s/Y81jl4JAtPjuKH6)
+[Datasets](https://polybox.ethz.ch/index.php/s/Y81jl4JAtPjuKH6)
 
 ### Step 5: Execution
 
