@@ -63,7 +63,7 @@ def _minimap2_filter_reads(
             run_cmd(convert_to_fastq_cmd, "samtools fastq")
 
 
-def filter_reads(
+def filter_single_end_reads(
     query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
     index_database: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,

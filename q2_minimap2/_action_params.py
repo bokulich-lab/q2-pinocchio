@@ -13,22 +13,24 @@ from qiime2.plugin import Bool, Choices, Float, Int, Range, Str
 
 from q2_minimap2.types._type import Minimap2IndexDB, PairwiseAlignmentMN2
 
-# filter-reads
-filter_reads_inputs = {
+# filter-single-end-reads
+filter_single_end_reads_inputs = {
     "query_reads": SampleData[SequencesWithQuality],
     "index_database": Minimap2IndexDB,
     "reference_reads": FeatureData[Sequence],
 }
-filter_reads_outputs = [("filtered_query_reads", SampleData[SequencesWithQuality])]
-filter_reads_inputs_dsc = {
-    "query_reads": "The sequences to be filtered.",
+filter_single_end_reads_outputs = [
+    ("filtered_query_reads", SampleData[SequencesWithQuality])
+]
+filter_single_end_reads_inputs_dsc = {
+    "query_reads": "Single-end reads to be filtered.",
     "index_database": "Minimap2 index database. Incompatible with reference-reads.",
     "reference_reads": "Reference sequences. Incompatible with index-database.",
 }
-filter_reads_outputs_dsc = {
+filter_single_end_reads_outputs_dsc = {
     "filtered_query_reads": "The resulting filtered sequences.",
 }
-filter_reads_params = {
+filter_single_end_reads_params = {
     "n_threads": Int % Range(1, None),
     "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
     "keep": Str % Choices(["mapped", "unmapped"]),
@@ -38,7 +40,7 @@ filter_reads_params = {
     "gap_open_penalty": Int % Range(1, None),
     "gap_extension_penalty": Int % Range(1, None),
 }
-filter_reads_param_dsc = {
+filter_single_end_reads_param_dsc = {
     "n_threads": "Number of threads to use.",
     "mapping_preset": "Specifies the type of input sequences that will be "
     "used during the mapping process. 1) map-ont: Align noisy long reads "
@@ -56,9 +58,9 @@ filter_reads_param_dsc = {
     "gap_open_penalty": "Gap open penalty.",
     "gap_extension_penalty": "Gap extension penalty.",
 }
-filter_reads_dsc = (
-    "Filter demultiplexed single- or paired-end sequences based "
-    "on alignment to a reference database using Minimap2 and samtools. "
+filter_single_end_reads_dsc = (
+    "Filter demultiplexed single-end sequences based on "
+    "alignment to a reference database using Minimap2 and samtools. "
     "This versatile command allows for the exclusion of long sequences "
     "or, when exclude_mapped is set to False, selectively retains only "
     "those sequences aligning to the reference."
