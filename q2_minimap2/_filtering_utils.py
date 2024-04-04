@@ -14,6 +14,7 @@ import qiime2.util
 import yaml
 from q2_types.per_sample_sequences import (
     FastqManifestFormat,
+    SingleLanePerSamplePairedEndFastqDirFmt,
     SingleLanePerSampleSingleEndFastqDirFmt,
     YamlFormat,
 )
@@ -161,6 +162,24 @@ def convert_to_fastq(_reads, n_threads, bamfile_filepath):
     return convert_cmd
 
 
+def convert_to_fastq_paired(_reads, n_threads, bamfile_filepath):
+    convert_cmd = [
+        "samtools",
+        "fastq",
+        *_reads,
+        "-0",
+        "/dev/null",
+        "-s",
+        "/dev/null",
+        "-@",
+        str(n_threads - 1),
+        "-n",
+        str(bamfile_filepath),
+    ]
+
+    return convert_cmd
+
+
 # Generate samtools view filtering command
 def make_samt_cmd(samfile_filepath, bamfile_filepath, n_threads):
     samtools_cmd = [
@@ -191,6 +210,27 @@ def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads, samf_fp):
     ] + penalties
 
     minimap2_cmd += [reads]
+    minimap2_cmd += ["-o", samf_fp]
+
+    return minimap2_cmd
+
+
+# Generate Minimap2 paired-end mapping command
+def make_mn2_paired_end_cmd(
+    mapping_preset, index, n_threads, penalties, reads1, reads2, samf_fp
+):
+    # align to reference with Minimap2
+    minimap2_cmd = [
+        "minimap2",
+        "-a",
+        "-x",
+        mapping_preset,
+        str(index),
+        "-t",
+        str(n_threads),
+    ] + penalties
+
+    minimap2_cmd += [reads1, reads2]
     minimap2_cmd += ["-o", samf_fp]
 
     return minimap2_cmd
@@ -229,6 +269,41 @@ def build_filtered_out_dir(input_reads, filtered_seqs):
     # Write the output manifest to the result object
     result.manifest.write_data(output_manifest, FastqManifestFormat)
     # Duplicate each filtered sequence file to the result object's directory
+    for _, _, filename, _ in output_df.itertuples():
+        qiime2.util.duplicate(
+            str(filtered_seqs.path / filename), str(result.path / filename)
+        )
+
+    # Create metadata about the phred offset
+    metadata = YamlFormat()
+    metadata.path.write_text(yaml.dump({"phred-offset": 33}))
+    # Attach metadata to the result
+    result.metadata.write_data(metadata, YamlFormat)
+
+    return result
+
+
+def build_filtered_paired_end_out_dir(input_reads, filtered_seqs):
+    # Parse the input manifest to get a DataFrame of reads
+    with input_reads.manifest.view(FastqManifestFormat).open() as fh:
+        input_manifest = _parse_and_validate_manifest_partial(
+            fh, single_end=False, absolute=False
+        )
+        # Filter the input manifest DataFrame for forward reads
+        output_df = input_manifest
+
+    # Initialize the output manifest
+    output_manifest = FastqManifestFormat()
+    # Copy input manifest to output manifest
+    with output_manifest.open() as fh:
+        output_df.to_csv(fh, index=False)
+
+    # Initialize the result object to store filtered reads
+    result = SingleLanePerSamplePairedEndFastqDirFmt()
+    # Write the output manifest to the result object
+    result.manifest.write_data(output_manifest, FastqManifestFormat)
+    # Duplicate each filtered sequence file to the result object's directory
+
     for _, _, filename, _ in output_df.itertuples():
         qiime2.util.duplicate(
             str(filtered_seqs.path / filename), str(result.path / filename)
