@@ -25,6 +25,7 @@ setup(
     package_data={
         "q2_minimap2": ["citations.bib"],
         "q2_minimap2.tests": ["data/*"],
+        "q2_minimap2.types": ["data/*"],
     },
     zip_safe=False,
 )
