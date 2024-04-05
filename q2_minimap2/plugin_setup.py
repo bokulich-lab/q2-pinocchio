@@ -80,7 +80,7 @@ plugin = Plugin(
     website="https://github.com/bokulich-lab/q2-plugin-name",
     package="q2_minimap2",
     description="QIIME 2 Plugin for quality control and taxonomic "
-    "classification of long read sequences using Minimap2",
+    "classification of long read sequences using Minimap2.",
     short_description="",
 )
 
@@ -96,9 +96,9 @@ plugin.register_artifact_class(
     Minimap2IndexDB,
     directory_format=Minimap2IndexDBDirFmt,
     description=(
-        "Represents a Minimap2 index database as a binary file, used for "
-        "efficient sequence alignment by storing pre-processed genome or "
-        "reference data. Ideal when we have repeated use of the same reference file."
+        "Represents a Minimap2 index database used for efficient sequence "
+        "alignment by storing pre-processed genome or reference data. "
+        "Ideal when we have repeated use of the same reference file."
     ),
 )
 
@@ -122,7 +122,7 @@ plugin.methods.register_function(
     input_descriptions=extract_seqs_inputs_dsc,
     parameter_descriptions=extract_seqs_param_dsc,
     output_descriptions=extract_seqs_outputs_dsc,
-    name="Extract feature sequences using Minimap2.",
+    name="Extract feature sequences (fsata format) using Minimap2.",
     description=extract_seqs_dsc,
     citations=[citations["Minimap2"]],
 )
@@ -135,7 +135,8 @@ plugin.methods.register_function(
     input_descriptions=filter_single_end_reads_inputs_dsc,
     parameter_descriptions=filter_single_end_reads_param_dsc,
     output_descriptions=filter_single_end_reads_outputs_dsc,
-    name="Filter demultiplexed single-end long sequences " "using Minimap2.",
+    name="Filter demultiplexed single-end long sequences "
+    "(fastq format) using Minimap2.",
     description=filter_single_end_reads_dsc,
     citations=[citations["Minimap2"]],
 )
@@ -148,7 +149,8 @@ plugin.methods.register_function(
     input_descriptions=filter_paired_end_reads_inputs_dsc,
     parameter_descriptions=filter_paired_end_reads_param_dsc,
     output_descriptions=filter_paired_end_reads_outputs_dsc,
-    name="Filter demultiplexed paired-end long sequences " "using Minimap2.",
+    name="Filter demultiplexed paired-end long sequences "
+    "(fastq format) using Minimap2.",
     description=filter_paired_end_reads_dsc,
     citations=[citations["Minimap2"]],
 )
