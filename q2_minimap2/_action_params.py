@@ -185,7 +185,7 @@ build_index_param_dsc = {"kmer_length": "Minimizer k-mer length."}
 build_index_dsc = "Build Minimap2 index database from reference sequences."
 
 
-# minimap2
+# minimap2-search
 minimap2_search_inputs = {
     "query_reads": FeatureData[Sequence],
     "index_database": Minimap2IndexDB,
@@ -193,7 +193,7 @@ minimap2_search_inputs = {
 }
 minimap2_search_outputs = [("search_results", FeatureData[PairwiseAlignmentMN2])]
 minimap2_search_inputs_dsc = {
-    "query_reads": "Query sequences.",
+    "query_reads": "Query reads.",
     "index_database": "Minimap2 index database. Incompatible with reference-reads.",
     "reference_reads": "Reference sequences. Incompatible with index-database.",
 }

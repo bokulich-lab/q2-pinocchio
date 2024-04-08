@@ -122,7 +122,7 @@ plugin.methods.register_function(
     input_descriptions=extract_seqs_inputs_dsc,
     parameter_descriptions=extract_seqs_param_dsc,
     output_descriptions=extract_seqs_outputs_dsc,
-    name="Extract feature sequences (fsata format) using Minimap2.",
+    name="Extract feature sequences (fasta format) using Minimap2.",
     description=extract_seqs_dsc,
     citations=[citations["Minimap2"]],
 )

@@ -14,24 +14,15 @@ from q2_minimap2._utils import run_command
 from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 
 
+# Generates a QIIME 2 artifact representing a Minimap2 index database
 def build_index(
-    sequences: DNAFASTAFormat, kmer_length: int = 15
+    sequences: DNAFASTAFormat,
+    kmer_length: int = 15,
 ) -> Minimap2IndexDBDirFmt:
-    """
-    Generates a QIIME 2 artifact representing a Minimap2 index database.
-
-    Args:
-    sequences: Reference sequences to be indexed.
-    kmer_length: The k-mer size for indexing.
-
-    Returns:
-    A QIIME 2 artifact containing the Minimap2 index.
-    """
-
-    # Initialize a directory format object to store the Minimap2 index.
+    # Initialize a directory format object to store the Minimap2 index
     database = Minimap2IndexDBDirFmt()
 
-    # Command to build the Minimap2 index file
+    # Construct the command to build the Minimap2 index file
     build_cmd = [
         "minimap2",
         "-d",
@@ -42,7 +33,7 @@ def build_index(
     ]
 
     try:
-        # Execute the command to create the index
+        # Execute the command to create the index database
         run_command(build_cmd)
     except subprocess.CalledProcessError as e:
         raise Exception(

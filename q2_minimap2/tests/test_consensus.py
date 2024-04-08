@@ -11,9 +11,7 @@ import pandas as pd
 import pandas.testing as pdt
 from qiime2 import Artifact
 
-from q2_minimap2.classify_consensus import (
-    _PairwiseAlignmentMN2_format_df_to_series_of_lists,
-)
+from q2_minimap2.classify_consensus import _PAF_format_df_to_series_of_lists
 
 from .test_minimap2 import Minimap2TestsBase
 
@@ -42,11 +40,11 @@ class TestConsensusAssignment(Minimap2TestsBase):
 
         self.assertTrue(series_is_subset(self.exp, taxonomy.view(pd.Series)))
 
-    def test_PairwiseAlignmentMN2_format_df_to_series_of_lists(self):
+    def test_PAF_format_df_to_series_of_lists(self):
         paf = self.paf.view(pd.DataFrame)
         taxonomy = self.taxonomy.view(pd.Series)
 
-        obs = _PairwiseAlignmentMN2_format_df_to_series_of_lists(paf, taxonomy)
+        obs = _PAF_format_df_to_series_of_lists(paf, taxonomy)
         exp = pd.Series(
             {
                 "1111561": [
@@ -66,14 +64,14 @@ class TestConsensusAssignment(Minimap2TestsBase):
         assert exp.tolist() == obs.tolist(), "Contents of the Series are not equal."
 
     # should fail when hit IDs are missing from reference taxonomy
-    def test_PairwiseAlignmentMN2_format_df_to_series_of_lists_fail_on_missing_ids(
+    def test_PAF_format_df_to_series_of_lists_fail_on_missing_ids(
         self,
     ):
         paf = self.paf.view(pd.DataFrame)
         taxonomy = self.taxonomy.view(pd.Series)
         paf.loc[3] = ["junk", "", "", "", "", "lost-id"] + [""] * 17
         with self.assertRaisesRegex(KeyError, "results do not match.*lost-id"):
-            _PairwiseAlignmentMN2_format_df_to_series_of_lists(paf, taxonomy)
+            _PAF_format_df_to_series_of_lists(paf, taxonomy)
 
     def test_find_consensus_annotation(self):
         (consensus,) = self.plugin.methods["_find_consensus_annotation"](
