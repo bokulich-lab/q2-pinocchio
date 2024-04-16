@@ -5,15 +5,14 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+from q2_types.feature_data import FeatureData, Sequence
 from qiime2 import Artifact
 
 from .test_minimap2 import Minimap2TestsBase
 
 
 class TestMinimap2Build(Minimap2TestsBase):
-
-    # This test just makes sure this runs without error, which will include
-    # validating the contents.
     def test_build(self):
-        genome = Artifact.load(self.get_data_path("genome.qza"))
+        fasta_path = self.get_data_path("dna-sequences.fasta")
+        genome = Artifact.import_data(FeatureData[Sequence], fasta_path)
         self.plugin.methods["build_index"](genome)
