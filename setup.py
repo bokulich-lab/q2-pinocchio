@@ -24,7 +24,7 @@ setup(
     entry_points={"qiime2.plugins": ["q2-minimap2=q2_minimap2.plugin_setup:plugin"]},
     package_data={
         "q2_minimap2": ["citations.bib"],
-        "q2_minimap2.tests": ["data/*"],
+        "q2_minimap2.tests": ["data/*", "data/consensus/*"],
         "q2_minimap2.types": ["data/*"],
     },
     zip_safe=False,
