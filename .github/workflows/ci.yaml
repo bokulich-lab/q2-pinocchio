@@ -29,5 +29,5 @@ jobs:
         name: 'Upload coverage'
         with:
           fail_ci_if_error: true
-          verbose: true
-          commit: ${{ github.sha }}
+          env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
