@@ -15,8 +15,10 @@ from q2_minimap2._filtering_utils import (
     calculate_identity,
     convert_to_fasta,
     convert_to_fastq,
+    convert_to_fastq_paired,
     get_alignment_length,
     make_mn2_cmd,
+    make_mn2_paired_end_cmd,
     make_samt_cmd,
     process_sam_file,
     set_penalties,
@@ -397,6 +399,73 @@ class TestMakeMn2Cmd(unittest.TestCase):
             mapping_preset, index, n_threads, penalties, reads, samf_fp
         )
         self.assertEqual(actual_cmd, expected_cmd)
+
+
+class TestConvertToFastqPaired(unittest.TestCase):
+    def test_convert_to_fastq_paired(self):
+        _reads = ["read1.bam", "read2.bam"]
+        n_threads = 4
+        bamfile_filepath = "output.fastq"
+
+        expected_cmd = [
+            "samtools",
+            "fastq",
+            *_reads,
+            "-0",
+            "/dev/null",
+            "-s",
+            "/dev/null",
+            "-@",
+            str(n_threads - 1),
+            "-n",
+            str(bamfile_filepath),
+        ]
+
+        result_cmd = convert_to_fastq_paired(_reads, n_threads, bamfile_filepath)
+        self.assertEqual(
+            result_cmd,
+            expected_cmd,
+            "The generated command for converting BAM to FastQ paired-end does not "
+            "match the expected command.",
+        )
+
+
+class TestMakeMn2PairedEndCmd(unittest.TestCase):
+    def test_make_mn2_paired_end_cmd(self):
+        mapping_preset = "map-preset"
+        index = "/path/to/index"
+        n_threads = 4
+        penalties = ["-A", "1", "-B", "-1", "-O", "4", "-E", "1"]
+        reads1 = "input1.fastq"
+        reads2 = "input2.fastq"
+        samf_fp = "output.sam"
+
+        expected_cmd = [
+            "minimap2",
+            "-a",
+            "-x",
+            mapping_preset,
+            str(index),
+            "-t",
+            str(n_threads),
+            "-A",
+            "1",
+            "-B",
+            "-1",
+            "-O",
+            "4",
+            "-E",
+            "1",
+            reads1,
+            reads2,
+            "-o",
+            samf_fp,
+        ]
+
+        result_cmd = make_mn2_paired_end_cmd(
+            mapping_preset, index, n_threads, penalties, reads1, reads2, samf_fp
+        )
+        self.assertEqual(result_cmd, expected_cmd)
 
 
 if __name__ == "__main__":

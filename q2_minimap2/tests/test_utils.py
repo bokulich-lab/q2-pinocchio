@@ -15,6 +15,7 @@ import bs4
 
 from q2_minimap2._utils import (
     _construct_param,
+    _get_sample_from_path,
     _modify_links,
     _process_common_input_params,
     _remove_html_element,
@@ -124,3 +125,40 @@ class TestHtmlManipulation(unittest.TestCase):
 
     def tearDown(self):
         os.remove(self.fp)
+
+
+class TestGetSampleFromPath(unittest.TestCase):
+    def test_normal_case(self):
+        # A typical file path
+        path = "/path/to/sample1_contigs.fa"
+        expected = "sample1"
+        result = _get_sample_from_path(path)
+        self.assertEqual(result, expected)
+
+    def test_with_directories_in_path(self):
+        # Path containing directories
+        path = "sample2_contigs.fa"
+        expected = "sample2"
+        result = _get_sample_from_path(path)
+        self.assertEqual(result, expected)
+
+    def test_path_without_suffix(self):
+        # Path does not have the expected suffix
+        path = "sample3.fasta"
+        expected = "sample3.fasta"  # Full name should return as no suffix to split
+        result = _get_sample_from_path(path)
+        self.assertEqual(result, expected)
+
+    def test_empty_string(self):
+        # Empty string input
+        path = ""
+        expected = ""  # Should return empty string if no path is given
+        result = _get_sample_from_path(path)
+        self.assertEqual(result, expected)
+
+    def test_suffix_not_at_end(self):
+        # Suffix appears but not at the end
+        path = "sample4_contigs.fa_contigs.fa"
+        expected = "sample4_contigs.fa"
+        result = _get_sample_from_path(path)
+        self.assertEqual(result, expected)

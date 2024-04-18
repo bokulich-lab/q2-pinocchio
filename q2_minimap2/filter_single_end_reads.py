@@ -97,10 +97,6 @@ def filter_single_end_reads(
         idx_ref_path = str(index_database.path) + "/index.mmi"
     elif reference_reads:
         idx_ref_path = str(reference_reads.path)
-    else:
-        raise ValueError(
-            "Either reference_reads or a minimap2_index must be provided as input."
-        )
 
     # Initialize directory format for filtered sequences
     filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()

@@ -43,6 +43,7 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
 
         self.query_reads = Artifact.load(self.get_data_path("single-end.qza"))
         self.minimap2_index = Artifact.load(self.get_data_path("index.qza"))
+        self.reference_reads = Artifact.load(self.get_data_path("filter-reads-ref.qza"))
 
     # Keep unmapped
     def test_filter_single_end_keep_unmapped(self):
@@ -69,6 +70,27 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
     def test_filter_single_end_keep_mapped(self):
         (obs_art,) = self.plugin.methods["filter_single_end_reads"](
             self.query_reads, self.minimap2_index
+        )
+
+        obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
+        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
+
+        for _, obs_fp in obs_seqs:
+            with gzip.open(str(obs_fp), "rt") as obs_fh:
+                self.assertNotEqual(len(obs_fh.readlines()), 0)
+                obs_fh.seek(0)
+                # Iterate over expected and observed reads, side-by-side
+                for records in itertools.zip_longest(*[obs_fh] * 4):
+                    (obs_seq_h, obs_seq, _, obs_qual) = records
+                    # Make sure seqs that do not map to genome were removed
+                    obs_id = obs_seq_h.strip("@/012\n")
+                    self.assertTrue(obs_id in seq_ids_mapped)
+                    self.assertTrue(obs_id not in seq_ids_unmapped)
+
+    # Keep mapped using reference
+    def test_filter_single_end_keep_mapped_using_ref(self):
+        (obs_art,) = self.plugin.methods["filter_single_end_reads"](
+            self.query_reads, reference_reads=self.reference_reads
         )
 
         obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
@@ -131,6 +153,28 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
                     obs_id = obs_seq_h.strip("@/012\n")
                     self.assertTrue(obs_id in perc_id_mapped)
                     self.assertTrue(obs_id not in perc_id_unmapped)
+
+    def test_both_reference_and_index_provided(self):
+        with self.assertRaises(ValueError) as context:
+            self.plugin.methods["filter_single_end_reads"](
+                self.query_reads,
+                index_database=self.minimap2_index,
+                reference_reads=self.reference_reads,
+            )
+        self.assertIn(
+            "Only one of reference_reads or index_database can be provided",
+            str(context.exception),
+        )
+
+    def test_neither_reference_nor_index_provided(self):
+        with self.assertRaises(ValueError) as context:
+            self.plugin.methods["filter_single_end_reads"](
+                self.query_reads, index_database=None, reference_reads=None
+            )
+        self.assertIn(
+            "Either reference_reads or index_database must be provided",
+            str(context.exception),
+        )
 
 
 if __name__ == "__main__":
