@@ -1,6 +1,6 @@
 # q2-minimap2
 
-## QIIME 2 Plugin for quality control and taxonomic classification of long read sequences using Minimap2
+## QIIME 2 Plugin for quality control and taxonomic classification of long sequences using Minimap2
 
 
 
