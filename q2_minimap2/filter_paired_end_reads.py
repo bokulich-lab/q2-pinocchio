@@ -39,7 +39,7 @@ def _minimap2_filter_paired_end_reads(
     idx_path,  # Path to the Minimap2 index database
     n_threads,  # Number of threads for Minimap2 and samtools
     preset,  # Minimap2 alignment preset
-    exclude_mapped,  # Flag indicating whether to exclude mapped reads
+    keep_mapped,  # Flag indicating whether to exclude mapped reads
     min_per_identity,  # Minimum percentage identity for an alignment to be kept
     penalties,  # Alignment penalties
 ):
@@ -56,7 +56,7 @@ def _minimap2_filter_paired_end_reads(
             run_cmd(mn2_cmd, "Minimap2 paired-end")
 
             # Filter the SAM file using samtools based on the include/exclude criteria
-            process_sam_file(samf_fp, exclude_mapped, min_per_identity)
+            process_sam_file(samf_fp, keep_mapped, min_per_identity)
             # Modify flags for paired and unmapped reads
             # making them suitable for samtools fastq command
             process_paired_unmapped_flags(samf_fp)
@@ -123,7 +123,7 @@ def filter_paired_end_reads(
     )
 
     # Decide whether to exclude mapped reads based on 'keep' parameter
-    exclude_mapped = keep == "unmapped"
+    keep_mapped = keep == "mapped"
 
     # Process each pair of reads for filtering
     for _, fwd, rev in input_df.itertuples():
@@ -135,7 +135,7 @@ def filter_paired_end_reads(
             idx_ref_path,
             n_threads,
             mapping_preset,
-            exclude_mapped,
+            keep_mapped,
             min_per_identity,
             penalties,
         )

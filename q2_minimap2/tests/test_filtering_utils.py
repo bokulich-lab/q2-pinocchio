@@ -222,7 +222,7 @@ class TestProcessSamFile(Minimap2TestsBase):
             # Copy the SAM file to the temporary location
             shutil.copy(self.samfile, tmpfile)
 
-            process_sam_file(tmpfile, False, None)
+            process_sam_file(tmpfile, True, None)
 
             # Check each line for equality using splitlines()
             with open(tmpfile, "r") as tmpfile_content, open(
@@ -259,7 +259,7 @@ class TestProcessSamFile(Minimap2TestsBase):
             # Copy the SAM file to the temporary location
             shutil.copy(self.samfile, tmpfile)
 
-            process_sam_file(tmpfile, True, None)
+            process_sam_file(tmpfile, False, None)
 
             # Check each line for equality using splitlines()
             with open(tmpfile, "r") as tmpfile_content, open(

@@ -34,7 +34,7 @@ def _minimap2_filter_reads(
     idx_path,  # Path to the Minimap2 index file
     n_threads,  # Number of threads for Minimap2 and samtools
     preset,  # Preset options for Minimap2 alignment
-    exclude_mapped,  # Flag to exclude mapped reads, keeping only unmapped
+    keep_mapped,  # Flag to exclude mapped reads, keeping only unmapped
     min_per_identity,  # Minimum percentage identity for a read to be included
     penalties,  # Scoring penalties for Minimap2 alignment
 ):
@@ -52,7 +52,7 @@ def _minimap2_filter_reads(
             run_cmd(mn2_cmd, "Minimap2")
 
             # Process the SAM file to filter alignments based on criteria
-            process_sam_file(samf_fp, exclude_mapped, min_per_identity)
+            process_sam_file(samf_fp, keep_mapped, min_per_identity)
             # Construct and execute samtools view command to convert SAM to BAM
             samtools_view_cmd = make_samt_cmd(samf_fp, bamf_fp, n_threads)
             run_cmd(samtools_view_cmd, "samtools view")
@@ -110,7 +110,7 @@ def filter_single_end_reads(
     )
 
     # Determine whether to exclude mapped reads based on the 'keep' parameter
-    exclude_mapped = keep != "mapped"
+    keep_mapped = keep == "mapped"
 
     # Process each read, filtering according to the specified parameters
     for _, fwd in input_df.itertuples():
@@ -120,7 +120,7 @@ def filter_single_end_reads(
             idx_ref_path,
             n_threads,
             mapping_preset,
-            exclude_mapped,
+            keep_mapped,
             min_per_identity,
             penalties,
         )
