@@ -210,11 +210,11 @@ class TestFilterByPercIdentityWithZeroDivisor(Minimap2TestsBase):
         super().setUp()
         # Setting up test data with all 12 columns of the PAF format
         self.paf_content_with_zero_divisor = [
-            "query1\t1000\t100\t900\t+\ttarget1\t2000\t50\t850\t700\t800\t0\t255\n",
-            "query2\t1000\t100\t900\t+\ttarget2\t2000\t50\t850\t300\t800\t60\t255\n",
+            "query1\t1000\t100\t900\ttarget1\t2000\t50\t850\t700\t0\t0\t255\n",
+            "query2\t1000\t100\t900\ttarget2\t2000\t50\t850\t300\t6\t60\t255\n",
         ]
         self.expected_output = [
-            "query1\t1000\t100\t900\t+\ttarget1\t2000\t50\t850\t700\t800\t0\t255\n"
+            "query1\t1000\t100\t900\ttarget1\t2000\t50\t850\t700\t0\t0\t255\n"
         ]
 
     def test_filter_with_zero_divisor(self):
@@ -224,13 +224,14 @@ class TestFilterByPercIdentityWithZeroDivisor(Minimap2TestsBase):
 
         # Apply the filter function
         filter_by_perc_identity(
-            temp_file_path, 0.85
+            temp_file_path, 0.9
         )  # Any threshold should skip processing the zero divisor
 
         # Read and verify the output
         with open(temp_file_path, "r") as temp_file:
             temp_content = [line.strip() for line in temp_file.readlines()]
             expected_content = [line.strip() for line in self.expected_output]
+
             self.assertEqual(
                 temp_content,
                 expected_content,
