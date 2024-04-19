@@ -8,8 +8,10 @@
 
 import os
 import shutil
+import subprocess
 import tempfile
 import unittest
+from unittest.mock import MagicMock, patch
 
 from q2_minimap2._filtering_utils import (
     calculate_identity,
@@ -21,6 +23,7 @@ from q2_minimap2._filtering_utils import (
     make_mn2_paired_end_cmd,
     make_samt_cmd,
     process_sam_file,
+    run_cmd,
     set_penalties,
 )
 
@@ -466,6 +469,38 @@ class TestMakeMn2PairedEndCmd(unittest.TestCase):
             mapping_preset, index, n_threads, penalties, reads1, reads2, samf_fp
         )
         self.assertEqual(result_cmd, expected_cmd)
+
+
+class TestRunCmd(unittest.TestCase):
+    @patch("subprocess.run")
+    def test_run_cmd_success(self, mock_run):
+        cmd = "samtools fastq -o output.fastq input.bam"
+        description = "samtools command"
+        mock_run.return_value = MagicMock(returncode=0)  # Simulate successful run
+
+        # Attempt to run the command
+        try:
+            run_cmd(cmd, description)
+        except Exception as e:
+            self.fail(f"run_cmd raised an exception unexpectedly: {e}")
+
+    @patch("subprocess.run")
+    def test_run_cmd_exception(self, mock_run):
+        """Test that run_cmd raises the correct exception when subprocess.run fails."""
+        cmd = "samtools fastq -o output.fastq input.bam"
+        description = "samtools command"
+        mock_run.side_effect = subprocess.CalledProcessError(
+            1, cmd
+        )  # Simulate an error
+
+        with self.assertRaises(Exception) as context:
+            run_cmd(cmd, description)
+
+        expected_message = (
+            "An error was encountered while using samtools command, "
+            "(return code 1), please inspect stdout and stderr to learn more."
+        )
+        self.assertEqual(str(context.exception), expected_message)
 
 
 if __name__ == "__main__":

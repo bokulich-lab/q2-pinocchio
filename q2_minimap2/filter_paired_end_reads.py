@@ -14,10 +14,13 @@ from q2_types.feature_data import DNAFASTAFormat
 from q2_types.per_sample_sequences import SingleLanePerSamplePairedEndFastqDirFmt
 
 from q2_minimap2._filtering_utils import (
+    add_mapped_paired_read_flags,
     build_filtered_paired_end_out_dir,
+    collate_bam_inplace,
     convert_to_fastq_paired,
     make_mn2_paired_end_cmd,
     make_samt_cmd,
+    process_paired_unmapped_flags,
     process_sam_file,
     run_cmd,
     set_penalties,
@@ -53,10 +56,18 @@ def _minimap2_filter_paired_end_reads(
             run_cmd(mn2_cmd, "Minimap2 paired-end")
 
             # Filter the SAM file using samtools based on the include/exclude criteria
-            # and convert to BAM
             process_sam_file(samf_fp, exclude_mapped, min_per_identity)
+            # Modify flags for paired and unmapped reads
+            # making them suitable for samtools fastq command
+            process_paired_unmapped_flags(samf_fp)
+            add_mapped_paired_read_flags(samf_fp)
+
+            # Convert the filtered SAM file to a BAM file using samtools view
             samtools_view_cmd = make_samt_cmd(samf_fp, bamf_fp, n_threads)
             run_cmd(samtools_view_cmd, "samtools view")
+
+            # Collate the BAM file in place, ensuring proper read grouping
+            collate_bam_inplace(bamf_fp)
 
             # Convert the filtered BAM file to FASTQ format, generating separate files
             # for each read in the pair
@@ -99,10 +110,6 @@ def filter_paired_end_reads(
         idx_ref_path = str(index_database.path) + "/index.mmi"
     elif reference_reads:
         idx_ref_path = str(reference_reads.path)
-    else:
-        raise ValueError(
-            "Either reference_reads or a minimap2_index must be provided as input."
-        )
 
     # Initialize directory format for filtered sequences
     filtered_seqs = SingleLanePerSamplePairedEndFastqDirFmt()
@@ -116,7 +123,7 @@ def filter_paired_end_reads(
     )
 
     # Decide whether to exclude mapped reads based on 'keep' parameter
-    exclude_mapped = keep != "mapped"
+    exclude_mapped = keep == "unmapped"
 
     # Process each pair of reads for filtering
     for _, fwd, rev in input_df.itertuples():

@@ -5,6 +5,7 @@
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+import os
 import re
 import shutil
 import subprocess
@@ -316,3 +317,101 @@ def build_filtered_paired_end_out_dir(input_reads, filtered_seqs):
     result.metadata.write_data(metadata, YamlFormat)
 
     return result
+
+
+def collate_bam_inplace(input_bam_path):
+    input_bam_path = os.path.abspath(input_bam_path)
+    # Temporary file prefix based on the input file name
+    temp_prefix = os.path.splitext(input_bam_path)[0] + "_temp_collate"
+    # Output file path in the same directory
+    output_bam_path = os.path.splitext(input_bam_path)[0] + "_collated.bam"
+
+    # Samtools collate command
+    collate_cmd = [
+        "samtools",
+        "collate",
+        "-u",
+        "-o",
+        output_bam_path,
+        "-T",
+        temp_prefix,
+        input_bam_path,
+    ]
+
+    # Execute samtools collate command
+    run_cmd(collate_cmd, "Samtools collate")
+
+    shutil.move(output_bam_path, input_bam_path)
+
+
+def add_mapped_paired_read_flags(input_file):
+    temp_fd, temp_path = tempfile.mkstemp()
+    with os.fdopen(temp_fd, "w") as outfile, open(input_file, "r") as infile:
+        read_number = 1  # Start with the first read of a pair
+        for line in infile:
+            if line.startswith("@"):
+                outfile.write(line)  # Copy header lines directly
+            else:
+                parts = line.strip().split("\t")
+                flag = int(parts[1])
+
+                if int(parts[1]) == 4:
+                    continue
+
+                if read_number == 1:  # First read in a pair
+                    flag |= 0x40  # Add the READ1 flag
+                    read_number = (
+                        2  # Set up for the next read to be the second in a pair
+                    )
+                else:  # Second read in a pair
+                    flag |= 0x80  # Add the READ2 flag
+                    read_number = 1  # Reset for the next pair
+
+                parts[1] = str(flag)  # Update the flag in the line
+                outfile.write("\t".join(parts) + "\n")  # Write the modified line
+
+    # Replace the original file with the updated one
+    shutil.move(temp_path, input_file)
+
+
+def process_paired_unmapped_flags(input_sam_path):
+    # Create a temporary file
+    temp_path = tempfile.mktemp()
+    with open(temp_path, "w") as outfile, open(input_sam_path, "r") as infile:
+        read_pair_buffer = []  # Buffer to store consecutive reads
+
+        for line in infile:
+            if line.startswith("@"):
+                # Write header lines directly to the output
+                outfile.write(line)
+            else:
+                parts = line.strip().split("\t")
+                if int(parts[1]) == 4:
+                    read_pair_buffer.append(parts)
+
+                    if len(read_pair_buffer) == 2:
+                        # Process the pair
+                        read_pair_buffer[0][
+                            1
+                        ] = "69"  # Set flag for the first read in pair
+                        read_pair_buffer[1][
+                            1
+                        ] = "133"  # Set flag for the second read in pair
+
+                        # Write modified reads to file
+                        outfile.write("\t".join(read_pair_buffer[0]) + "\n")
+                        outfile.write("\t".join(read_pair_buffer[1]) + "\n")
+
+                        # Clear the buffer after processing the pair
+                        read_pair_buffer = []
+                else:
+                    # If not an unmapped read, write directly to the output
+                    # and clear the buffer (in case it's out of sync)
+                    if read_pair_buffer:
+                        for read in read_pair_buffer:
+                            outfile.write("\t".join(read) + "\n")
+                        read_pair_buffer = []
+                    outfile.write(line)
+
+    # Replace the original file with the new file
+    shutil.move(temp_path, input_sam_path)
