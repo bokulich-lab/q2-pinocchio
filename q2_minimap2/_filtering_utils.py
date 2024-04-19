@@ -76,7 +76,7 @@ def get_alignment_length(cigar):
 
 
 # Function to process a SAM file, filter based on mappings and identity percentage
-def process_sam_file(input_sam_file, exclude_mapped, min_per_identity):
+def process_sam_file(input_sam_file, keep_mapped, min_per_identity):
     # Creates a temporary file to write filtered alignments to
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file:
         temp_file_path = tmp_file.name
@@ -89,6 +89,7 @@ def process_sam_file(input_sam_file, exclude_mapped, min_per_identity):
                 outfile.write(line)
                 continue
 
+            # Extract information from cigar
             parts = line.split("\t")
             flag = int(parts[1])
             cigar = parts[5]
@@ -102,9 +103,18 @@ def process_sam_file(input_sam_file, exclude_mapped, min_per_identity):
                 # min_per_identity is specified
                 identity_percentage = 1
 
-            # Logic for excluding or including reads based on mappings and
+            # Logic for including or excluding reads based on mappings and
             # identity percentage
-            if exclude_mapped:
+            if keep_mapped:
+                # Includes reads that are mapped and not secondary, based on the
+                # identity threshold
+                if not (flag & 0x4) and not (flag & 0x100):
+                    if (
+                        min_per_identity is not None
+                        and identity_percentage >= min_per_identity
+                    ) or (min_per_identity is None):
+                        outfile.write(line)
+            else:
                 # Condition for keeping unmapped reads or mapped reads below the
                 # identity threshold
                 keep_this_mapped = (
@@ -113,15 +123,6 @@ def process_sam_file(input_sam_file, exclude_mapped, min_per_identity):
                 )
                 if (flag & 0x4) or keep_this_mapped:
                     outfile.write(line)
-            else:
-                # Includes reads that are not unmapped and not secondary, based on the
-                # identity threshold
-                if not (flag & 0x4) and not (flag & 0x100):
-                    if (
-                        min_per_identity is not None
-                        and identity_percentage >= min_per_identity
-                    ) or (min_per_identity is None):
-                        outfile.write(line)
 
     # Replaces the original SAM file with the filtered temporary file
     shutil.move(temp_file_path, input_sam_file)

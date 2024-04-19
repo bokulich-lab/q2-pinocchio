@@ -31,7 +31,7 @@ def _minimap2_extract_seqs(
     idx_path,
     n_threads,
     preset,
-    exclude_mapped,
+    keep_mapped,
     min_per_identity,
     penalties,
 ):
@@ -48,7 +48,7 @@ def _minimap2_extract_seqs(
             run_cmd(mn2_cmd, "Minimap2")
 
             # Filter sam file using samtools view
-            process_sam_file(samf_fp, exclude_mapped, min_per_identity)
+            process_sam_file(samf_fp, keep_mapped, min_per_identity)
             samtools_view_cmd = make_samt_cmd(samf_fp, bamf_fp, n_threads)
             run_cmd(samtools_view_cmd, "samtools view")
 
@@ -95,9 +95,9 @@ def extract_seqs(
     )
 
     if extract == "mapped":
-        exclude_mapped = False
+        keep_mapped = True
     else:
-        exclude_mapped = True
+        keep_mapped = False
 
     # Filter the read using minimap2 according to the specified parameters
     _minimap2_extract_seqs(
@@ -106,7 +106,7 @@ def extract_seqs(
         idx_ref_path,
         n_threads,
         mapping_preset,
-        exclude_mapped,
+        keep_mapped,
         min_per_identity,
         penalties,
     )
