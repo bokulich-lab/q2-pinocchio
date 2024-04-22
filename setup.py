@@ -24,7 +24,17 @@ setup(
     entry_points={"qiime2.plugins": ["q2-minimap2=q2_minimap2.plugin_setup:plugin"]},
     package_data={
         "q2_minimap2": ["citations.bib"],
-        "q2_minimap2.tests": ["data/*", "data/consensus/*", "data/extract_seqs/*"],
+        "q2_minimap2.tests": [
+            "data/*",
+            "data/consensus/*",
+            "data/extract_seqs/*",
+            "data/filter_reads/*",
+            "data/filter_reads/single_end/*",
+            "data/filter_reads/paired_end/*",
+            "data/filtering_utils/*",
+            "data/minimap2_build/*",
+            "data/minimap2_search/*",
+        ],
         "q2_minimap2.types": ["data/*"],
     },
     zip_safe=False,

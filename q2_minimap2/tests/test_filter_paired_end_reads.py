@@ -10,11 +10,16 @@ import gzip
 import itertools
 import unittest
 
+from q2_types.feature_data import FeatureData, Sequence
 from q2_types.per_sample_sequences import (
     FastqGzFormat,
+    PairedEndSequencesWithQuality,
     SingleLanePerSamplePairedEndFastqDirFmt,
 )
+from q2_types.sample_data import SampleData
 from qiime2 import Artifact
+
+from q2_minimap2.types._type import Minimap2IndexDB
 
 from .test_minimap2 import Minimap2TestsBase
 
@@ -41,9 +46,17 @@ class TestFilterPairedEndReads(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 
-        self.query_reads = Artifact.load(self.get_data_path("paired-end.qza"))
-        self.minimap2_index = Artifact.load(self.get_data_path("index.qza"))
-        self.reference_reads = Artifact.load(self.get_data_path("filter-reads-ref.qza"))
+        minimap2_index_path = self.get_data_path("filter_reads/index.mmi")
+        query_reads_path = self.get_data_path("filter_reads/paired_end/")
+        reference_reads_path = self.get_data_path("filter_reads/dna-sequences.fasta")
+
+        self.query_reads = Artifact.import_data(
+            SampleData[PairedEndSequencesWithQuality], query_reads_path
+        )
+        self.minimap2_index = Artifact.import_data(Minimap2IndexDB, minimap2_index_path)
+        self.reference_reads = Artifact.import_data(
+            FeatureData[Sequence], reference_reads_path
+        )
 
     # Keep unmapped
     def test_filter_paired_end_keep_unmapped(self):
