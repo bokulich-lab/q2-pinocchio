@@ -29,16 +29,16 @@ class TestFilterByMaxAccepts(Minimap2TestsBase):
         super().setUp()
         # Retrieve the paths to test data files
         self.initial_PairwiseAlignmentMN2_file = self.get_data_path(
-            "initial_paf_file.paf"
+            "minimap2_search/initial_paf_file.paf"
         )
         self.exp_PairwiseAlignmentMN2_f_max1 = self.get_data_path(
-            "expected_paf_file_max1.paf"
+            "minimap2_search/expected_paf_file_max1.paf"
         )
         self.exp_PairwiseAlignmentMN2_f_max2 = self.get_data_path(
-            "expected_paf_file_max2.paf"
+            "minimap2_search/expected_paf_file_max2.paf"
         )
         self.exp_PairwiseAlignmentMN2_f_max3 = self.get_data_path(
-            "expected_paf_file_max3.paf"
+            "minimap2_search/expected_paf_file_max3.paf"
         )
 
     def test_filter_by_maxaccepts_max1(self):
@@ -83,12 +83,14 @@ class TestFilterByMaxAccepts(Minimap2TestsBase):
 class TestFilterByPercIdentity(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
-        self.PairwiseAlignmentMN2_file = self.get_data_path("initial_paf_file.paf")
+        self.PairwiseAlignmentMN2_file = self.get_data_path(
+            "minimap2_search/initial_paf_file.paf"
+        )
         self.expected_PairwiseAlignmentMN2_file_perc_85 = self.get_data_path(
-            "expected_paf_file_perc_85.paf"
+            "minimap2_search/expected_paf_file_perc_85.paf"
         )
         self.expected_PairwiseAlignmentMN2_file_perc_80 = self.get_data_path(
-            "expected_paf_file_perc_80.paf"
+            "minimap2_search/expected_paf_file_perc_80.paf"
         )
 
     def test_filter_by_perc_identity_85(self):
@@ -128,14 +130,20 @@ class TestMinimap2(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 
-        self.query_reads = Artifact.load(self.get_data_path("query-seqs.qza"))
-        self.index_database = Artifact.load(
-            self.get_data_path("minimap2_test_index.qza")
+        self.query_reads = Artifact.load(
+            self.get_data_path("minimap2_search/query-seqs.qza")
         )
-        self.ref = Artifact.load(self.get_data_path("se-dna-sequences.qza"))
-        self.paf_true = Artifact.load(self.get_data_path("minimap2_test_paf.qza"))
+        self.index_database = Artifact.load(
+            self.get_data_path("minimap2_search/minimap2_test_index.qza")
+        )
+        self.ref = Artifact.load(
+            self.get_data_path("minimap2_search/se-dna-sequences.qza")
+        )
+        self.paf_true = Artifact.load(
+            self.get_data_path("minimap2_search/minimap2_test_paf.qza")
+        )
         self.paf_true_only_hits = Artifact.load(
-            self.get_data_path("minimap2_only_hits_test_paf.qza")
+            self.get_data_path("minimap2_search/minimap2_only_hits_test_paf.qza")
         )
 
     def test_minimap2(self):

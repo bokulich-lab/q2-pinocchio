@@ -42,23 +42,26 @@ class TestExtractSeqs(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 
-        self.minimap2_index_path = self.get_data_path("extract_seqs/index.mmi")
-        self.index_database2_path = self.get_data_path(
-            "extract_seqs/minimap2_test_index.mmi"
-        )
-        self.query_reads_path = self.get_data_path(
+        query1_reads_path = self.get_data_path(
             "extract_seqs/extract_seqs_test_input.fasta"
         )
-        self.query_seqs_path = self.get_data_path("extract_seqs/query-seqs.fasta")
-        self.ref_path = self.get_data_path("extract_seqs/se-dna-sequences.fasta")
+        query2_reads_path = self.get_data_path("extract_seqs/query-seqs.fasta")
+        minimap2_index_path = self.get_data_path("extract_seqs/index.mmi")
+        ref_path = self.get_data_path("extract_seqs/se-dna-sequences.fasta")
+
+        self.query1_reads = Artifact.import_data(
+            FeatureData[Sequence], query1_reads_path
+        )
+        self.query2_reads = Artifact.import_data(
+            FeatureData[Sequence], query2_reads_path
+        )
+        self.minimap2_index = Artifact.import_data(Minimap2IndexDB, minimap2_index_path)
+        self.ref = Artifact.import_data(FeatureData[Sequence], ref_path)
 
     # Exclude mapped
     def test_extract_unmapped(self):
-        query_reads = Artifact.import_data(FeatureData[Sequence], self.query_reads_path)
-        minimap2_index = Artifact.import_data(Minimap2IndexDB, self.minimap2_index_path)
-
         (obs_art,) = self.plugin.methods["extract_seqs"](
-            query_reads, minimap2_index, extract="unmapped"
+            self.query1_reads, self.minimap2_index, extract="unmapped"
         )
 
         # Create a temporary directory to hold the extracted sequences
@@ -83,10 +86,9 @@ class TestExtractSeqs(Minimap2TestsBase):
 
     # Keep mapped
     def test_extract_mapped(self):
-        query_reads = Artifact.import_data(FeatureData[Sequence], self.query_reads_path)
-        minimap2_index = Artifact.import_data(Minimap2IndexDB, self.minimap2_index_path)
-
-        (obs_art,) = self.plugin.methods["extract_seqs"](query_reads, minimap2_index)
+        (obs_art,) = self.plugin.methods["extract_seqs"](
+            self.query1_reads, self.minimap2_index
+        )
 
         # Create a temporary directory to hold the extracted sequences
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -107,11 +109,9 @@ class TestExtractSeqs(Minimap2TestsBase):
                     self.assertTrue(obs_id not in seq_ids_unmapped)
 
     def test_extract_unmapped_with_perc_id(self):
-        query_reads = Artifact.import_data(FeatureData[Sequence], self.query_reads_path)
-        minimap2_index = Artifact.import_data(Minimap2IndexDB, self.minimap2_index_path)
         (obs_art,) = self.plugin.methods["extract_seqs"](
-            query_reads,
-            minimap2_index,
+            self.query1_reads,
+            self.minimap2_index,
             extract="unmapped",
             min_per_identity=0.99,
         )
@@ -135,11 +135,9 @@ class TestExtractSeqs(Minimap2TestsBase):
                     self.assertTrue(obs_id not in perc_id_mapped)
 
     def test_extract_mapped_with_perc_id(self):
-        query_reads = Artifact.import_data(FeatureData[Sequence], self.query_reads_path)
-        minimap2_index = Artifact.import_data(Minimap2IndexDB, self.minimap2_index_path)
         (obs_art,) = self.plugin.methods["extract_seqs"](
-            query_reads,
-            minimap2_index,
+            self.query1_reads,
+            self.minimap2_index,
             extract="mapped",
             min_per_identity=0.99,
         )
@@ -163,15 +161,17 @@ class TestExtractSeqs(Minimap2TestsBase):
                     self.assertTrue(obs_id not in perc_id_unmapped)
 
     def test_extract_mapped_using_reference(self):
-        query2 = Artifact.import_data(FeatureData[Sequence], self.query_seqs_path)
-        ref = Artifact.import_data(FeatureData[Sequence], self.ref_path)
-        (obs_art,) = self.plugin.methods["extract_seqs"](query2, reference_reads=ref)
+        (obs_art,) = self.plugin.methods["extract_seqs"](
+            self.query2_reads, reference_reads=self.ref
+        )
 
         # Create a temporary directory to hold the extracted sequences
         with tempfile.TemporaryDirectory() as temp_dir:
             obs_art.export_data(temp_dir)
             obs_fp = os.path.join(temp_dir, "dna-sequences.fasta")
-            correct_output_fp = self.get_data_path("extracted_mapped.fasta")
+            correct_output_fp = self.get_data_path(
+                "extract_seqs/extracted_mapped.fasta"
+            )
 
             with open(correct_output_fp, "r") as file1, open(obs_fp, "r") as file2:
                 true_fasta_content = file1.read()
@@ -179,19 +179,14 @@ class TestExtractSeqs(Minimap2TestsBase):
                 self.assertEqual(true_fasta_content, output_fasta_content)
 
     def test_extract_seqs_both_ref_and_index(self):
-        query2 = Artifact.import_data(FeatureData[Sequence], self.query_seqs_path)
-        ref = Artifact.import_data(FeatureData[Sequence], self.ref_path)
-        index_database2 = Artifact.import_data(
-            Minimap2IndexDB, self.index_database2_path
-        )
         with self.assertRaisesRegex(ValueError, "Only one.*can be provided.*"):
             extract_seqs(
-                query2,
-                reference_reads=ref,
-                index_database=index_database2,
+                self.query2_reads,
+                reference_reads=self.ref,
+                index_database=self.minimap2_index,
             )
         with self.assertRaisesRegex(ValueError, "Either.*must be provided.*"):
-            extract_seqs(query2)
+            extract_seqs(self.query2_reads)
 
 
 if __name__ == "__main__":

@@ -209,9 +209,9 @@ class TestProcessSamFile(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 
-        self.samfile = self.get_data_path("initial.sam")
-        self.only_primary = self.get_data_path("mapped.sam")
-        self.only_unmapped = self.get_data_path("unmapped.sam")
+        self.samfile = self.get_data_path("filtering_utils/initial.sam")
+        self.only_primary = self.get_data_path("filtering_utils/mapped.sam")
+        self.only_unmapped = self.get_data_path("filtering_utils/unmapped.sam")
 
     def test_keep_primary_mapped(self):
         # Create a temporary directory
