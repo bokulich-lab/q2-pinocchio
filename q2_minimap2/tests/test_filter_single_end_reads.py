@@ -47,7 +47,7 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
         super().setUp()
 
         minimap2_index_path = self.get_data_path("filter_reads/index.mmi")
-        query_reads_path = self.get_data_path("filter_reads/single_end")
+        query_reads_path = self.get_data_path("filter_reads/single_end/")
         reference_reads_path = self.get_data_path("filter_reads/dna-sequences.fasta")
 
         self.query_reads = Artifact.import_data(
