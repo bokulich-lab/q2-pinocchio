@@ -51,24 +51,36 @@ qiime dev refresh-cache
 
 <br>
 
-* filter-reads
-  - Keep mapped
+* filter reads (fastq)
+  - Keep mapped (single-end reads)
   ```shell
-  qiime minimap2 filter-reads --i-query-reads reads.qza --i-index-database database.qza --o-filtered-query-reads mapped.qza --verbose
+  qiime minimap2 filter-single-end-reads --i-query-reads reads.qza --i-index-database database.qza --o-filtered-query-reads mapped.qza --verbose
   ```
-  - Keep unmapped
+  - Keep unmapped (single-end reads)
   ```shell
-  qiime minimap2 filter-reads --i-query-reads reads.qza --i-index-database database.qza --p-keep "unmapped" --o-filtered-query-reads unmapped.qza --verbose
+  qiime minimap2 filter-single-end-reads --i-query-reads reads.qza --i-index-database database.qza --p-keep "unmapped" --o-filtered-query-reads unmapped.qza --verbose
   ```
-  - Keep mapped reads with mapping percentage >= 85%
+  - Keep mapped reads with mapping percentage >= 85% (single-end reads)
   ```shell
-  qiime minimap2 filter-reads --i-query-reads reads.qza --i-index-database database.qza --p-min-per-identity 0.85  --o-filtered-query-reads mapped_over_85p_id.qza --verbose
+  qiime minimap2 filter-single-end-reads --i-query-reads reads.qza --i-index-database database.qza --p-min-per-identity 0.85  --o-filtered-query-reads mapped_over_85p_id.qza --verbose
   ```
   
-  - Using the reference sequences instead of the index database
+  - Using the reference sequences instead of the index database (single-end reads)
   ```shell
-  qiime minimap2 filter-reads --i-query-reads reads.qza --i-reference-reads reference.qza --o-filtered-query-reads mapped.qza --verbose
+  qiime minimap2 filter-single-end-reads --i-query-reads reads.qza --i-reference-reads reference.qza --o-filtered-query-reads mapped.qza --verbose
   ```
+<br>
+
+* Extract sequences (fasta)
+  - Extract mapped
+  ```shell
+  qqiime minimap2 extract-seqs --i-sequences fasta_reads.qza --i-index-database database.qza --p-extract "mapped" --o-extracted-seqs extracted_mapped.qza --verbose
+  ```
+  - Extract unmapped
+  ```shell
+  qiime minimap2 extract-seqs --i-sequences fasta_reads.qza --i-index-database database.qza --p-extract "unmapped" --o-extracted-seqs extracted_unmapped.qza --verbose
+  ```
+
 
 <br>
 
