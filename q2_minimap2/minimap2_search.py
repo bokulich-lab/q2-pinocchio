@@ -6,24 +6,17 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os
-import shutil
-
 import pandas as pd
 from q2_types.feature_data import DNAFASTAFormat
 
 from q2_minimap2._filtering_utils import run_cmd
-from q2_minimap2.types._format import (
-    Minimap2IndexDBDirFmt,
-    PairwiseAlignmentMN2DirectoryFormat,
-    PairwiseAlignmentMN2Format,
-)
+from q2_minimap2.types._format import Minimap2IndexDBDirFmt, PairwiseAlignmentMN2Format
 
 
 # Filter a PAF file to keep only a certain number of entries
 # for each read, as defined by "maxaccepts"
 def filter_by_maxaccepts(input_PairwiseAlignmentMN2_path, maxaccepts):
-    # Dictionary to keep track of the counts of occurrences for each read ID
+    # Dictionary to keep track of the counts of occurancies/hits for each read ID
     counts = {}
     # List to hold the lines that meet the filtering criteria
     filtered_lines = []
@@ -36,6 +29,8 @@ def filter_by_maxaccepts(input_PairwiseAlignmentMN2_path, maxaccepts):
             read_id = line.split("\t")[0]
 
             # Check and update the count for the specific read ID
+            # We need this in order to not exceed the maximum
+            # number of hits allowed per read ID
             if counts.get(read_id, 0) < maxaccepts:
                 counts[read_id] = counts.get(read_id, 0) + 1
                 filtered_lines.append(line)
@@ -54,15 +49,20 @@ def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity):
     # Initialize list to hold lines that pass the filter
     filtered_lines = []
     for line in lines:
-        # Split each line into its components
+        # Split each line of the PAF file into its components (columns)
         parts = line.strip().split("\t")
+
         # Skip and immediately include lines where the divisor for identity calculation
-        # would be 0, to avoid division by zero
+        # would be 0, to avoid division by zero. Here parts[10] contains the total
+        # number of bases (including gaps) in the mapping
         if int(parts[10]) == 0:
             filtered_lines.append(line)
             continue
+
         # Calculate the BLAST-like alignment identity
+        # https://lh3.github.io/minimap2/minimap2.html - OUTPUT FORMAT
         identity_score = int(parts[9]) / int(parts[10])
+
         # If the identity score meets or exceeds the threshold
         # include the line in the filtered output
         if identity_score >= perc_identity:
@@ -71,6 +71,25 @@ def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity):
     # Overwrite the input file with only the lines that met the filtering criteria
     with open(PairwiseAlignmentMN2_path, "w") as file:
         file.writelines(filtered_lines)
+
+
+# Construct the command list for the Minimap2 alignment search
+def construct_command(
+    idx_ref_path, query_reads, n_threads, paf_file_fp, output_no_hits
+):
+    cmd = [
+        "minimap2",
+        "-c",
+        str(idx_ref_path),
+        str(query_reads),
+        "-t",
+        str(n_threads),
+        "-o",
+        str(paf_file_fp),
+    ]
+    if output_no_hits:
+        cmd.append("--paf-no-hit")
+    return cmd
 
 
 # Performs sequence alignment using Minimap2 and outputs results in
@@ -105,41 +124,25 @@ def minimap2_search(
         else str(reference_reads.path)
     )
 
-    # Construct output file
+    # Create a reference to a file with PAF format
     paf_file_fp = PairwiseAlignmentMN2Format()
 
-    # Build the Minimap2 command
-    cmd = [
-        "minimap2",
-        "-c",
-        idx_ref_path,
-        str(query_reads),
-        "-t",
-        str(n_threads),
-        "-o",
-        str(paf_file_fp),
-    ]
-
-    if output_no_hits:
-        cmd += ["--paf-no-hit"]
+    # Construct the
+    cmd = construct_command(
+        idx_ref_path, query_reads, n_threads, paf_file_fp, output_no_hits
+    )
 
     # Execute the Minimap2 alignment command
     run_cmd(cmd, "Minimap2")
 
-    # Filter the PAF file by maxaccepts
+    # Filter the PAF file by maxaccepts (default = 1)
     filter_by_maxaccepts(str(paf_file_fp), maxaccepts)
 
     # Optionally filter by perc_identity
     if perc_identity is not None:
         filter_by_perc_identity(str(paf_file_fp), perc_identity)
 
-    # Initialize result dictionary to store the output PAF file
-    result = PairwiseAlignmentMN2DirectoryFormat()
-    # Define the path where the output PAF file will be stored in result directory
-    destination_path = os.path.join(result.path, "output.paf")
-    # Copy the PAF file to the `destination_path` result directory.
-    shutil.copy(str(paf_file_fp), destination_path)
-    # Read the copied PAF file into a pandas DataFrame
-    df = pd.read_csv(destination_path, sep="\t", header=None)
+    # Read the PAF file as a pandas DataFrame
+    df = pd.read_csv(str(paf_file_fp), sep="\t", header=None)
 
     return df
