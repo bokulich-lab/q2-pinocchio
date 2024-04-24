@@ -34,6 +34,7 @@ setup(
             "data/filtering_utils/*",
             "data/minimap2_build/*",
             "data/minimap2_search/*",
+            "data/type/*",
         ],
         "q2_minimap2.types": ["data/*"],
     },
