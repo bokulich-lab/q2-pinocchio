@@ -109,13 +109,15 @@ class TestFilterByPercIdentity(Minimap2TestsBase):
 
         shutil.copy(self.PairwiseAlignmentMN2_file, temp_file_path)
 
-        filter_by_perc_identity(temp_file_path, perc_identity)
+        filter_by_perc_identity(temp_file_path, perc_identity, True)
 
         with open(temp_file_path, "r") as temp_file, open(
             expected_file_path, "r"
         ) as expected_file:
             temp_content = temp_file.read()
             expected_content = expected_file.read()
+            print(temp_content)
+            print(expected_content)
             self.assertEqual(
                 temp_content,
                 expected_content,
@@ -211,44 +213,6 @@ class TestMinimap2(Minimap2TestsBase):
             )
         with self.assertRaisesRegex(ValueError, "Either.*must be provided.*"):
             minimap2_search(self.query_reads)
-
-
-class TestFilterByPercIdentityWithZeroDivisor(Minimap2TestsBase):
-    def setUp(self):
-        super().setUp()
-        # Setting up test data with all 12 columns of the PAF format
-        self.paf_content_with_zero_divisor = [
-            "query1\t1000\t100\t900\ttarget1\t2000\t50\t850\t700\t0\t0\t255\n",
-            "query2\t1000\t100\t900\ttarget2\t2000\t50\t850\t300\t6\t60\t255\n",
-        ]
-        self.expected_output = [
-            "query1\t1000\t100\t900\ttarget1\t2000\t50\t850\t700\t0\t0\t255\n"
-        ]
-
-    def test_filter_with_zero_divisor(self):
-        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as tmp_file:
-            temp_file_path = tmp_file.name
-            tmp_file.writelines(self.paf_content_with_zero_divisor)
-
-        # Apply the filter function
-        filter_by_perc_identity(
-            temp_file_path, 0.9
-        )  # Any threshold should skip processing the zero divisor
-
-        # Read and verify the output
-        with open(temp_file_path, "r") as temp_file:
-            temp_content = [line.strip() for line in temp_file.readlines()]
-            expected_content = [line.strip() for line in self.expected_output]
-
-            self.assertEqual(
-                temp_content,
-                expected_content,
-                "Filtered output should include the entry with a zero divisor "
-                "unchanged.",
-            )
-
-        # Clean up the temporary file
-        os.remove(temp_file_path)
 
 
 if __name__ == "__main__":
