@@ -17,11 +17,11 @@ from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 def create_idx_build_cmd(database, sequences, kmer_length):
     build_cmd = [
         "minimap2",
-        "-d",
-        str(database.path / "index.mmi"),
-        str(sequences),
-        "-k",
-        str(kmer_length),
+        "-d",  # Option for generating index
+        str(database.path / "index.mmi"),  # Output index path
+        str(sequences),  # Input sequences file path
+        "-k",  # Option to specify k-mer length
+        str(kmer_length),  # k-mer length
     ]
 
     return build_cmd
@@ -29,7 +29,7 @@ def create_idx_build_cmd(database, sequences, kmer_length):
 
 def build_index(
     sequences: DNAFASTAFormat,
-    kmer_length: int = 15,
+    kmer_length: int = 15,  # Minimap2 uses this value as the default value
 ) -> Minimap2IndexDBDirFmt:
     # Initialize a directory format object to store the Minimap2 index
     database = Minimap2IndexDBDirFmt()
@@ -38,7 +38,7 @@ def build_index(
     build_cmd = create_idx_build_cmd(database, sequences, kmer_length)
 
     try:
-        # Execute the command to create the index database
+        # Execute the command to create the Minimap2 index database
         run_command(build_cmd)
     except subprocess.CalledProcessError as e:
         raise Exception(

@@ -13,6 +13,9 @@ class Minimap2IndexDBFmt(model.BinaryFileFormat):
         super().__init__(*args, **kwargs)
 
     def _validate_(self, level):
+        # It's not clear if there is any way to tell if a Minimap2 index is
+        # correct or not.
+        # Minimap2 does have an inspect method
         pass
 
 

@@ -175,11 +175,11 @@ extract_seqs_dsc = (
 
 # build-index
 build_index_inputs = {"sequences": FeatureData[Sequence]}
-build_index_outputs = [("database", Minimap2IndexDB)]
+build_index_outputs = [("index_database", Minimap2IndexDB)]
 build_index_inputs_dsc = {
     "sequences": "Reference sequences used to build Minimap2 index database."
 }
-build_index_outputs_dsc = {"database": "Minimap2 index."}
+build_index_outputs_dsc = {"index_database": "Minimap2 index database."}
 build_index_params = {"kmer_length": Int % Range(1, 28)}
 build_index_param_dsc = {"kmer_length": "Minimizer k-mer length."}
 build_index_dsc = "Build Minimap2 index database from reference sequences."
