@@ -48,31 +48,35 @@ def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity, output_no_
 
     # Initialize list to hold lines that pass the filter
     filtered_lines = []
+    # Track queries that have been set as unmapped
+    unmapped_queries = set()
+
     for line in lines:
         # Split each line of the PAF file into its components (columns)
         parts = line.strip().split("\t")
 
-        # Add unmapped entry if it exists
-        if (int(parts[10]) == 0) and (output_no_hits is True):
-            filtered_lines.append(line)
-            continue
-
-        # Calculate the BLAST-like alignment identity
-        # https://lh3.github.io/minimap2/minimap2.html - OUTPUT FORMAT
-        identity_score = int(parts[9]) / int(parts[10])
-
-        # If the identity score meets or exceeds the threshold
-        # include the line in the filtered output
-        if identity_score >= perc_identity:
-            filtered_lines.append(line)
+        # Calculate the BLAST-like alignment identity only if there are mapped bases
+        if int(parts[10]) > 0:
+            identity_score = int(parts[9]) / int(parts[10])
+            # Include the line if the identity score meets or exceeds the threshold
+            if identity_score >= perc_identity:
+                filtered_lines.append(line)
+            else:
+                # Mark as unmapped, but only add one entry per query
+                if output_no_hits and parts[0] not in unmapped_queries:
+                    modified_line = (
+                        f"{parts[0]}\t{parts[1]}\t0\t0\t*\t*\t0\t0\t0\t0\t0\t0\n"
+                    )
+                    filtered_lines.append(modified_line)
+                    unmapped_queries.add(parts[0])
         else:
-            # Modify the line to mark it as unmapped while keeping the
-            # first two columns intact
-            if output_no_hits is True:
+            # Handle completely unmapped entries
+            if (output_no_hits is True) and (parts[0] not in unmapped_queries):
                 modified_line = (
                     f"{parts[0]}\t{parts[1]}\t0\t0\t*\t*\t0\t0\t0\t0\t0\t0\n"
                 )
                 filtered_lines.append(modified_line)
+                unmapped_queries.add(parts[0])
 
     # Overwrite the input file with only the lines that met the filtering criteria
     with open(PairwiseAlignmentMN2_path, "w") as file:
