@@ -28,7 +28,7 @@ qiime dev refresh-cache
 * build-index
   - Build Minimap2 index database
   ```shell
-  qiime minimap2 build-index --i-sequences reference.qza --o-database database.qza --verbose
+  qiime minimap2 build-index --i-sequences reference.qza --o-index-database index.qza --verbose
   ```
 
 <br>
@@ -64,7 +64,7 @@ qiime dev refresh-cache
   ```shell
   qiime minimap2 filter-single-end-reads --i-query-reads reads.qza --i-index-database database.qza --p-min-per-identity 0.85  --o-filtered-query-reads mapped_over_85p_id.qza --verbose
   ```
-  
+
   - Using the reference sequences instead of the index database (single-end reads)
   ```shell
   qiime minimap2 filter-single-end-reads --i-query-reads reads.qza --i-reference-reads reference.qza --o-filtered-query-reads mapped.qza --verbose
@@ -89,5 +89,3 @@ qiime dev refresh-cache
   ```shell
   qiime minimap2 classify-consensus-minimap2 --i-index-database classification_input/index.qza --i-query classification_input/n1K_initial_reads_SILVA132.fna.qza --i-reference-taxonomy classification_input/raw_taxonomy.qza --p-num-threads 6 --output-dir outDir --verbose
   ```
-
-

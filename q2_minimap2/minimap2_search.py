@@ -41,7 +41,7 @@ def filter_by_maxaccepts(input_PairwiseAlignmentMN2_path, maxaccepts):
 
 
 # Filter PAF entries based on a threshold of percentage identity
-def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity):
+def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity, output_no_hits):
     # Open and read all lines from the input file
     with open(PairwiseAlignmentMN2_path, "r") as file:
         lines = file.readlines()
@@ -52,10 +52,8 @@ def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity):
         # Split each line of the PAF file into its components (columns)
         parts = line.strip().split("\t")
 
-        # Skip and immediately include lines where the divisor for identity calculation
-        # would be 0, to avoid division by zero. Here parts[10] contains the total
-        # number of bases (including gaps) in the mapping
-        if int(parts[10]) == 0:
+        # Add unmapped entry if it exists
+        if (int(parts[10]) == 0) and (output_no_hits is True):
             filtered_lines.append(line)
             continue
 
@@ -67,6 +65,14 @@ def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity):
         # include the line in the filtered output
         if identity_score >= perc_identity:
             filtered_lines.append(line)
+        else:
+            # Modify the line to mark it as unmapped while keeping the
+            # first two columns intact
+            if output_no_hits is True:
+                modified_line = (
+                    f"{parts[0]}\t{parts[1]}\t0\t0\t*\t*\t0\t0\t0\t0\t0\t0\n"
+                )
+                filtered_lines.append(modified_line)
 
     # Overwrite the input file with only the lines that met the filtering criteria
     with open(PairwiseAlignmentMN2_path, "w") as file:
@@ -140,7 +146,7 @@ def minimap2_search(
 
     # Optionally filter by perc_identity
     if perc_identity is not None:
-        filter_by_perc_identity(str(paf_file_fp), perc_identity)
+        filter_by_perc_identity(str(paf_file_fp), perc_identity, output_no_hits)
 
     # Read the PAF file as a pandas DataFrame
     df = pd.read_csv(str(paf_file_fp), sep="\t", header=None)
