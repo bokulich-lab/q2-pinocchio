@@ -16,28 +16,21 @@ from q2_minimap2.types._format import Minimap2IndexDBDirFmt, PairwiseAlignmentMN
 # Filter a PAF file to keep only a certain number of entries
 # for each read, as defined by "maxaccepts"
 def filter_by_maxaccepts(input_PairwiseAlignmentMN2_path, maxaccepts):
-    # Dictionary to keep track of the counts of occurancies/hits for each read ID
-    counts = {}
-    # List to hold the lines that meet the filtering criteria
-    filtered_lines = []
+    # Read the input file line by line and split by tab
+    with open(input_PairwiseAlignmentMN2_path, "r") as file:
+        lines = file.readlines()
+        data = [line.strip().split("\t", maxsplit=1) for line in lines]
+    df = pd.DataFrame(data, columns=["query_id", "rest_of_line"])
 
-    # Open the input file in read mode
-    with open(input_PairwiseAlignmentMN2_path, "r") as infile:
-        # Iterate over each line in the input file
-        for line in infile:
-            # Extract the read ID from the current line
-            read_id = line.split("\t")[0]
+    # Group by read_id and count occurrences
+    counts = df.groupby("query_id").cumcount() + 1
+    # Filter the DataFrame based on maxaccepts
+    filtered_df = df[counts <= maxaccepts]
 
-            # Check and update the count for the specific read ID
-            # We need this in order to not exceed the maximum
-            # number of hits allowed per read ID
-            if counts.get(read_id, 0) < maxaccepts:
-                counts[read_id] = counts.get(read_id, 0) + 1
-                filtered_lines.append(line)
-
-    # Write the filtered lines back to the file
-    with open(input_PairwiseAlignmentMN2_path, "w") as outfile:
-        outfile.writelines(filtered_lines)
+    # Write the filtered DataFrame back to a TSV file
+    with open(input_PairwiseAlignmentMN2_path, "w") as file:
+        for index, row in filtered_df.iterrows():
+            file.write(row["query_id"] + "\t" + row["rest_of_line"] + "\n")
 
 
 # Filter PAF entries based on a threshold of percentage identity
