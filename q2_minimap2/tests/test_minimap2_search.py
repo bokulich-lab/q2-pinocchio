@@ -116,8 +116,6 @@ class TestFilterByPercIdentity(Minimap2TestsBase):
         ) as expected_file:
             temp_content = temp_file.read()
             expected_content = expected_file.read()
-            print(temp_content)
-            print(expected_content)
             self.assertEqual(
                 temp_content,
                 expected_content,
