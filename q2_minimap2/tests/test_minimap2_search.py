@@ -114,8 +114,21 @@ class TestFilterByPercIdentity(Minimap2TestsBase):
         with open(temp_file_path, "r") as temp_file, open(
             expected_file_path, "r"
         ) as expected_file:
+            # Read the contents of the temp file
             temp_content = temp_file.read()
+
+            # Read the contents of the expected file
             expected_content = expected_file.read()
+
+            # Write the contents of temp_content into a new file
+            with open("temp_content.txt", "w") as temp_out_file:
+                temp_out_file.write(temp_content)
+
+            # Write the contents of expected_content into a new file
+            with open("expected_content.txt", "w") as expected_out_file:
+                expected_out_file.write(expected_content)
+
+            # Perform the assertion
             self.assertEqual(
                 temp_content,
                 expected_content,

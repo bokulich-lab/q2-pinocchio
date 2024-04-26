@@ -35,45 +35,44 @@ def filter_by_maxaccepts(input_PairwiseAlignmentMN2_path, maxaccepts):
 
 # Filter PAF entries based on a threshold of percentage identity
 def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity, output_no_hits):
-    # Open and read all lines from the input file
-    with open(PairwiseAlignmentMN2_path, "r") as file:
-        lines = file.readlines()
+    # Read the input file into a DataFrame
+    df = pd.read_csv(PairwiseAlignmentMN2_path, sep="\t", header=None)
 
-    # Initialize list to hold lines that pass the filter
-    filtered_lines = []
-    # Track queries that have been set as unmapped
-    unmapped_queries = set()
+    # Add a new column containing the row numbers
+    df["row_num"] = df.index
 
-    for line in lines:
-        # Split each line of the PAF file into its components (columns)
-        parts = line.strip().split("\t")
+    # Calculate the BLAST-like alignment identity only if there are mapped bases
+    df["identity_score"] = df.apply(
+        lambda row: row[9] / row[10] if row[10] > 0 else 0, axis=1
+    )
 
-        # Calculate the BLAST-like alignment identity only if there are mapped bases
-        if int(parts[10]) > 0:
-            identity_score = int(parts[9]) / int(parts[10])
-            # Include the line if the identity score meets or exceeds the threshold
-            if identity_score >= perc_identity:
-                filtered_lines.append(line)
-            else:
-                # Mark as unmapped, but only add one entry per query
-                if output_no_hits and parts[0] not in unmapped_queries:
-                    modified_line = (
-                        f"{parts[0]}\t{parts[1]}\t0\t0\t*\t*\t0\t0\t0\t0\t0\t0\n"
-                    )
-                    filtered_lines.append(modified_line)
-                    unmapped_queries.add(parts[0])
-        else:
-            # Handle completely unmapped entries
-            if (output_no_hits is True) and (parts[0] not in unmapped_queries):
-                modified_line = (
-                    f"{parts[0]}\t{parts[1]}\t0\t0\t*\t*\t0\t0\t0\t0\t0\t0\n"
-                )
-                filtered_lines.append(modified_line)
-                unmapped_queries.add(parts[0])
+    # Filter based on identity score
+    mapped_df = df[df["identity_score"] >= perc_identity]
+    filtered_out = df[df["identity_score"] < perc_identity]
 
-    # Overwrite the input file with only the lines that met the filtering criteria
-    with open(PairwiseAlignmentMN2_path, "w") as file:
-        file.writelines(filtered_lines)
+    # Keep only the first entry/row for each unique value in column 1 (query)
+    # in filtered_out
+    filtered_out = filtered_out.drop_duplicates(subset=1)
+
+    # Set columns 2 to 22 to '*'
+    filtered_out.iloc[:, 2:23] = "*"
+
+    # Set all columns after the second to 0
+    filtered_out.iloc[:, 2:23] = 0
+
+    # Set columns 4 and 5 to '*'
+    filtered_out.iloc[:, 4:6] = "*"
+
+    # Merging the rows of the two DataFrames based on row number
+    merged_df = pd.concat([mapped_df, filtered_out], axis=0)
+    merged_df = merged_df.sort_values(by="row_num")
+    merged_df.reset_index(drop=True, inplace=True)
+
+    # Drop unnecessary columns
+    merged_df.drop(columns=["row_num", "identity_score"], inplace=True)
+
+    # Write the filtered DataFrame back to the input file
+    merged_df.to_csv(PairwiseAlignmentMN2_path, sep="\t", header=False, index=False)
 
 
 # Construct the command list for the Minimap2 alignment search
@@ -130,7 +129,7 @@ def minimap2_search(
     # Create a reference to a file with PAF format
     paf_file_fp = PairwiseAlignmentMN2Format()
 
-    # Construct the
+    # Construct the command
     cmd = construct_command(
         idx_ref_path, query_reads, n_threads, paf_file_fp, output_no_hits
     )
