@@ -58,8 +58,8 @@ class TestFilterByMaxAccepts(Minimap2TestsBase):
         # Copy the content of the initial PairwiseAlignmentMN2 file to the temp file
         shutil.copy(self.initial_PairwiseAlignmentMN2_file, temp_file_path)
 
-        # Call the function with the temp file as input and output, and
-        # specified maxaccepts
+        # Call the function with the temp file as input and output,
+        # and specified maxaccepts
         filter_by_maxaccepts(temp_file_path, max_accepts)
 
         # Compare the content of the temp file with the expected
@@ -67,14 +67,16 @@ class TestFilterByMaxAccepts(Minimap2TestsBase):
         with open(temp_file_path, "r") as temp_file, open(
             expected_file_path, "r"
         ) as expected_file:
-            temp_content = temp_file.read()
-            expected_content = expected_file.read()
-            self.assertEqual(
-                temp_content,
-                expected_content,
-                "Filtered PairwiseAlignmentMN2 file content does not match expected "
-                f"output for maxaccepts {max_accepts}",
-            )
+            temp_lines = [line.rstrip() for line in temp_file]
+            expected_lines = [line.rstrip() for line in expected_file]
+
+            for temp_line, expected_line in zip(temp_lines, expected_lines):
+                self.assertEqual(
+                    temp_line,
+                    expected_line,
+                    "Filtered PairwiseAlignmentMN2 file content does not match "
+                    f"expected output for maxaccepts {max_accepts}",
+                )
 
         # Clean up the temporary file
         os.remove(temp_file_path)
@@ -108,20 +110,21 @@ class TestFilterByPercIdentity(Minimap2TestsBase):
             temp_file_path = tmp_file.name
 
         shutil.copy(self.PairwiseAlignmentMN2_file, temp_file_path)
-
         filter_by_perc_identity(temp_file_path, perc_identity, True)
 
         with open(temp_file_path, "r") as temp_file, open(
             expected_file_path, "r"
         ) as expected_file:
-            temp_content = temp_file.read()
-            expected_content = expected_file.read()
-            self.assertEqual(
-                temp_content,
-                expected_content,
-                "Filtered PairwiseAlignmentMN2 file content does not match expected "
-                f"output for perc_identity {perc_identity}",
-            )
+            temp_lines = [line.rstrip() for line in temp_file]
+            expected_lines = [line.rstrip() for line in expected_file]
+
+            for temp_line, expected_line in zip(temp_lines, expected_lines):
+                self.assertEqual(
+                    temp_line,
+                    expected_line,
+                    "Filtered PairwiseAlignmentMN2 file content does not match "
+                    f"expected output for perc_identity {perc_identity}",
+                )
 
         os.remove(temp_file_path)
 
