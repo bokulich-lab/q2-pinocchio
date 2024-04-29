@@ -27,32 +27,32 @@ def filter_by_maxaccepts(df, maxaccepts):
 
 # Filter PAF entries based on a threshold of percentage identity
 def filter_by_perc_identity(df, perc_identity, output_no_hits):
-
     # Filter based on identity score
     mapped_df = df[df[9] / df[10] >= perc_identity]
-    
+
     if output_no_hits:
         filtered_out = df[(df[9] / df[10] < perc_identity) | (df[10] == 0)]
-    
+
         # Keep only the first entry/row for each unique value in column 1 (query)
         # in filtered_out
         filtered_out = filtered_out.drop_duplicates(subset=1)
-    
+
         # Set all columns after the second to 0
         filtered_out.iloc[:, 2:] = 0
-    
+
         # Set columns 5 and 6 to '*'
         filtered_out.iloc[:, 4:6] = "*"
-    
+
         # Merging the rows of the two DataFrames based on row number
         mapped_df = pd.concat([mapped_df, filtered_out], axis=0)
         mapped_df = mapped_df.sort_index()
 
     return mapped_df
 
+
 # Construct the command list for the Minimap2 alignment search
 def construct_command(
-    idx_ref_path, query_reads, n_threads, paf_file_fp, output_no_hits
+        idx_ref_path, query_reads, n_threads, paf_file_fp, output_no_hits
 ):
     cmd = [
         "minimap2",
@@ -72,15 +72,14 @@ def construct_command(
 # Performs sequence alignment using Minimap2 and outputs results in
 # PairwiseAlignmentMN2 format.
 def minimap2_search(
-    query_reads: DNAFASTAFormat,
-    index_database: Minimap2IndexDBDirFmt = None,
-    reference_reads: DNAFASTAFormat = None,
-    n_threads: int = 3,
-    maxaccepts: int = 1,
-    perc_identity: float = None,
-    output_no_hits: bool = True,
+        query_reads: DNAFASTAFormat,
+        index_database: Minimap2IndexDBDirFmt = None,
+        reference_reads: DNAFASTAFormat = None,
+        n_threads: int = 3,
+        maxaccepts: int = 1,
+        perc_identity: float = None,
+        output_no_hits: bool = True,
 ) -> pd.DataFrame:
-
     # Ensure that only one of reference_reads or index_database is provided
     if reference_reads and index_database:
         raise ValueError(
