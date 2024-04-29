@@ -19,22 +19,14 @@ def filter_by_maxaccepts(input_PairwiseAlignmentMN2_path, maxaccepts):
     # Read the input file into a DataFrame
     df = pd.read_csv(input_PairwiseAlignmentMN2_path, sep="\t", header=None)
 
-    # Create two columns: query_id and rest_of_line
-    df["query_id"] = df.iloc[:, 0]
-    df["rest_of_line"] = df.iloc[:, 1:].apply(
-        lambda row: "\t".join(map(str, row)), axis=1
-    )
-
     # Group by read_id and count occurrences
-    counts = df.groupby("query_id").cumcount() + 1
+    counts = df.groupby(0).cumcount() + 1
+
     # Filter the DataFrame based on maxaccepts
     filtered_df = df[counts <= maxaccepts]
 
-    # Select everything except the 'query_id' and 'rest_of_line' columns for output
-    output_df = filtered_df.drop(columns=["query_id", "rest_of_line"])
-
     # Write the output DataFrame back to a TSV file
-    output_df.to_csv(
+    filtered_df.to_csv(
         input_PairwiseAlignmentMN2_path, sep="\t", header=False, index=False
     )
 
