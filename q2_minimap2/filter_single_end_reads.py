@@ -15,7 +15,7 @@ from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFm
 
 from q2_minimap2._filtering_utils import (
     build_filtered_out_dir,
-    convert_to_fastq,
+    convert_to_fastq_single,
     make_mn2_cmd,
     make_samt_cmd,
     process_sam_file,
@@ -28,7 +28,7 @@ from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 # This function aligns reads to a reference using Minimap2,
 # filters the alignments, and converts the filtered alignments
 # to FASTQ format, storing the output in a given directory
-def _minimap2_filter_reads(
+def _minimap2_filter_single_end_reads(
     reads,  # Input reads file path
     outdir,  # Output directory for filtered reads in FASTQ format
     idx_path,  # Path to the Minimap2 index file
@@ -61,15 +61,17 @@ def _minimap2_filter_reads(
             # using samtools fastq, directing output to the specified output directory
             fwd = str(outdir.path / os.path.basename(reads))
             _reads = ["-0", fwd]
-            convert_to_fastq_cmd = convert_to_fastq(_reads, n_threads, bamf_fp)
-            run_cmd(convert_to_fastq_cmd, "samtools fastq")
+            convert_to_fastq_single_cmd = convert_to_fastq_single(
+                _reads, n_threads, bamf_fp
+            )
+            run_cmd(convert_to_fastq_single_cmd, "samtools fastq")
 
 
 def filter_single_end_reads(
     query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
     index_database: Minimap2IndexDBDirFmt = None,  # Optional pre-built Minimap2 index
     reference_reads: DNAFASTAFormat = None,  # Optional reference sequences
-    n_threads: int = 1,  # Number of threads for Minimap2
+    n_threads: int = 4,  # Number of threads for Minimap2
     mapping_preset: str = "map-ont",  # Minimap2 mapping preset
     keep: str = "mapped",  # Keep 'mapped' or 'unmapped' reads
     min_per_identity: float = None,  # Minimum percentage identity to keep a read
@@ -94,9 +96,9 @@ def filter_single_end_reads(
 
     # Determine the reference path from the provided index_database or reference_reads
     if index_database:
-        idx_ref_path = str(index_database.path) + "/index.mmi"
+        idx_ref_path = str(index_database) + "/index.mmi"  # Path to index file
     elif reference_reads:
-        idx_ref_path = str(reference_reads.path)
+        idx_ref_path = str(reference_reads)  # Path to the reference file
 
     # Initialize directory format for filtered sequences
     filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
@@ -114,7 +116,7 @@ def filter_single_end_reads(
 
     # Process each read, filtering according to the specified parameters
     for _, fwd in input_df.itertuples():
-        _minimap2_filter_reads(
+        _minimap2_filter_single_end_reads(
             fwd,
             filtered_seqs,
             idx_ref_path,

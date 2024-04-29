@@ -82,7 +82,7 @@ def filter_paired_end_reads(
     query_reads: SingleLanePerSamplePairedEndFastqDirFmt,  # Input paired-end reads
     index_database: Minimap2IndexDBDirFmt = None,  # Optional pre-built Minimap2 index
     reference_reads: DNAFASTAFormat = None,  # Optional reference sequences for indexing
-    n_threads: int = 1,  # Number of threads for Minimap2
+    n_threads: int = 4,  # Number of threads for Minimap2
     mapping_preset: str = "map-ont",  # Preset options for Minimap2 alignment
     keep: str = "mapped",  # Option to keep 'mapped' or 'unmapped' reads
     min_per_identity: float = None,  # Minimum percentage identity to keep a read
@@ -107,9 +107,9 @@ def filter_paired_end_reads(
 
     # Get the path of index database or reference sequences
     if index_database:
-        idx_ref_path = str(index_database.path) + "/index.mmi"
+        idx_ref_path = str(index_database) + "/index.mmi"  # Path to index file
     elif reference_reads:
-        idx_ref_path = str(reference_reads.path)
+        idx_ref_path = str(reference_reads)  # Path to the reference file
 
     # Initialize directory format for filtered sequences
     filtered_seqs = SingleLanePerSamplePairedEndFastqDirFmt()

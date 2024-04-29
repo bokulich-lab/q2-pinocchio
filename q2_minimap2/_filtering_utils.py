@@ -148,7 +148,7 @@ def convert_to_fasta(_reads, n_threads, bamfile_filepath):
     return convert_cmd
 
 
-def convert_to_fastq(_reads, n_threads, bamfile_filepath):
+def convert_to_fastq_single(_reads, n_threads, bamfile_filepath):
     convert_cmd = [
         "samtools",
         "fastq",

@@ -88,9 +88,6 @@ class TestFilterPairedEndReads(Minimap2TestsBase):
         obs = obs_art.view(SingleLanePerSamplePairedEndFastqDirFmt)
         obs_seqs = obs.sequences.iter_views(FastqGzFormat)
 
-        print(obs)
-        print(obs_seqs)
-
         for _, obs_fp in obs_seqs:
             with gzip.open(str(obs_fp), "rt") as obs_fh:
                 self.assertNotEqual(len(obs_fh.readlines()), 0)

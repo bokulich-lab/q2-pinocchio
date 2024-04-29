@@ -16,8 +16,8 @@ from unittest.mock import MagicMock, patch
 from q2_minimap2._filtering_utils import (
     calculate_identity,
     convert_to_fasta,
-    convert_to_fastq,
     convert_to_fastq_paired,
+    convert_to_fastq_single,
     get_alignment_length,
     make_mn2_cmd,
     make_mn2_paired_end_cmd,
@@ -337,7 +337,7 @@ class TestConvertToFastq(unittest.TestCase):
         ]
 
         # Call the function and compare the result with the expected command
-        actual_cmd = convert_to_fastq(_reads, n_threads, bamfile_filepath)
+        actual_cmd = convert_to_fastq_single(_reads, n_threads, bamfile_filepath)
         self.assertEqual(actual_cmd, expected_cmd)
 
 
