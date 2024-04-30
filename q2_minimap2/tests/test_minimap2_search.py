@@ -7,12 +7,12 @@
 # ----------------------------------------------------------------------------
 
 import os
-import shutil
 import tempfile
 import unittest
 
 import pandas as pd
 import pandas.testing as pdt
+from pandas.testing import assert_frame_equal
 from qiime2 import Artifact
 
 from q2_minimap2.minimap2_search import (
@@ -51,33 +51,18 @@ class TestFilterByMaxAccepts(Minimap2TestsBase):
         self._test_filter_by_maxaccepts(3, self.exp_PairwiseAlignmentMN2_f_max3)
 
     def _test_filter_by_maxaccepts(self, max_accepts, expected_file_path):
-        # Create a temporary file to use as the output destination
-        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as tmp_file:
-            temp_file_path = tmp_file.name
+        # Load input and expected data
+        input_df = pd.read_csv(
+            self.initial_PairwiseAlignmentMN2_file, sep="\t", header=None
+        )
+        expected_df = pd.read_csv(expected_file_path, sep="\t", header=None)
 
-        # Copy the content of the initial PairwiseAlignmentMN2 file to the temp file
-        shutil.copy(self.initial_PairwiseAlignmentMN2_file, temp_file_path)
+        # Generate results from function
+        result_df = filter_by_maxaccepts(input_df, max_accepts)
+        result_df.reset_index(drop=True, inplace=True)
 
-        # Call the function with the temp file as input and output, and
-        # specified maxaccepts
-        filter_by_maxaccepts(temp_file_path, max_accepts)
-
-        # Compare the content of the temp file with the expected
-        # PairwiseAlignmentMN2 file for specified maxaccepts
-        with open(temp_file_path, "r") as temp_file, open(
-            expected_file_path, "r"
-        ) as expected_file:
-            temp_content = temp_file.read()
-            expected_content = expected_file.read()
-            self.assertEqual(
-                temp_content,
-                expected_content,
-                "Filtered PairwiseAlignmentMN2 file content does not match expected "
-                f"output for maxaccepts {max_accepts}",
-            )
-
-        # Clean up the temporary file
-        os.remove(temp_file_path)
+        # Assert that the two data frames are equal
+        assert_frame_equal(result_df, expected_df)
 
 
 class TestFilterByPercIdentity(Minimap2TestsBase):
@@ -104,26 +89,16 @@ class TestFilterByPercIdentity(Minimap2TestsBase):
         )
 
     def _test_filter_by_perc_identity(self, perc_identity, expected_file_path):
-        with tempfile.NamedTemporaryFile(mode="w+", delete=False) as tmp_file:
-            temp_file_path = tmp_file.name
+        # Load input and expected data
+        input_df = pd.read_csv(self.PairwiseAlignmentMN2_file, sep="\t", header=None)
+        expected_df = pd.read_csv(expected_file_path, sep="\t", header=None)
 
-        shutil.copy(self.PairwiseAlignmentMN2_file, temp_file_path)
+        # Generate results from function
+        result_df = filter_by_perc_identity(input_df, perc_identity, True)
+        result_df.reset_index(drop=True, inplace=True)
 
-        filter_by_perc_identity(temp_file_path, perc_identity, True)
-
-        with open(temp_file_path, "r") as temp_file, open(
-            expected_file_path, "r"
-        ) as expected_file:
-            temp_content = temp_file.read()
-            expected_content = expected_file.read()
-            self.assertEqual(
-                temp_content,
-                expected_content,
-                "Filtered PairwiseAlignmentMN2 file content does not match expected "
-                f"output for perc_identity {perc_identity}",
-            )
-
-        os.remove(temp_file_path)
+        # Assert that the two data frames are equal
+        assert_frame_equal(result_df, expected_df)
 
 
 class TestMinimap2(Minimap2TestsBase):
