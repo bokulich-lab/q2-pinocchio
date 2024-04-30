@@ -15,70 +15,39 @@ from q2_minimap2.types._format import Minimap2IndexDBDirFmt, PairwiseAlignmentMN
 
 # Filter a PAF file to keep only a certain number of entries
 # for each read, as defined by "maxaccepts"
-def filter_by_maxaccepts(input_PairwiseAlignmentMN2_path, maxaccepts):
-    # Read the input file into a DataFrame
-    df = pd.read_csv(input_PairwiseAlignmentMN2_path, sep="\t", header=None)
-
-    # Create two columns: query_id and rest_of_line
-    df["query_id"] = df.iloc[:, 0]
-    df["rest_of_line"] = df.iloc[:, 1:].apply(
-        lambda row: "\t".join(map(str, row)), axis=1
-    )
-
+def filter_by_maxaccepts(df, maxaccepts):
     # Group by read_id and count occurrences
-    counts = df.groupby("query_id").cumcount() + 1
+    counts = df.groupby(0).cumcount() + 1
+
     # Filter the DataFrame based on maxaccepts
     filtered_df = df[counts <= maxaccepts]
 
-    # Select everything except the 'query_id' and 'rest_of_line' columns for output
-    output_df = filtered_df.drop(columns=["query_id", "rest_of_line"])
-
-    # Write the output DataFrame back to a TSV file
-    output_df.to_csv(
-        input_PairwiseAlignmentMN2_path, sep="\t", header=False, index=False
-    )
+    return filtered_df
 
 
 # Filter PAF entries based on a threshold of percentage identity
-def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity, output_no_hits):
-    # Read the input file into a DataFrame
-    df = pd.read_csv(PairwiseAlignmentMN2_path, sep="\t", header=None)
-
-    # Add a new column containing the row numbers
-    df["row_num"] = df.index
-
-    # Calculate the BLAST-like alignment identity only if there are mapped bases
-    df["identity_score"] = df.apply(
-        lambda row: row[9] / row[10] if row[10] > 0 else 0, axis=1
-    )
-
+def filter_by_perc_identity(df, perc_identity, output_no_hits):
     # Filter based on identity score
-    mapped_df = df[df["identity_score"] >= perc_identity]
-    filtered_out = df[df["identity_score"] < perc_identity]
+    mapped_df = df[df[9] / df[10] >= perc_identity]
 
-    # Keep only the first entry/row for each unique value in column 1 (query)
-    # in filtered_out
-    filtered_out = filtered_out.drop_duplicates(subset=1)
+    if output_no_hits:
+        filtered_out = df[(df[9] / df[10] < perc_identity) | (df[10] == 0)]
 
-    # Set columns 2 to 22 to '*'
-    filtered_out.iloc[:, 2:23] = "*"
+        # Keep only the first entry/row for each unique value in column 1 (query)
+        # in filtered_out
+        filtered_out = filtered_out.drop_duplicates(subset=1)
 
-    # Set all columns after the second to 0
-    filtered_out.iloc[:, 2:23] = 0
+        # Set all columns after the second to 0
+        filtered_out.iloc[:, 2:] = 0
 
-    # Set columns 4 and 5 to '*'
-    filtered_out.iloc[:, 4:6] = "*"
+        # Set columns 5 and 6 to '*'
+        filtered_out.iloc[:, 4:6] = "*"
 
-    # Merging the rows of the two DataFrames based on row number
-    merged_df = pd.concat([mapped_df, filtered_out], axis=0)
-    merged_df = merged_df.sort_values(by="row_num")
-    merged_df.reset_index(drop=True, inplace=True)
+        # Merging the rows of the two DataFrames based on row number
+        mapped_df = pd.concat([mapped_df, filtered_out], axis=0)
+        mapped_df = mapped_df.sort_index()
 
-    # Drop unnecessary columns
-    merged_df.drop(columns=["row_num", "identity_score"], inplace=True)
-
-    # Write the filtered DataFrame back to the input file
-    merged_df.to_csv(PairwiseAlignmentMN2_path, sep="\t", header=False, index=False)
+    return mapped_df
 
 
 # Construct the command list for the Minimap2 alignment search
@@ -111,7 +80,6 @@ def minimap2_search(
     perc_identity: float = None,
     output_no_hits: bool = True,
 ) -> pd.DataFrame:
-
     # Ensure that only one of reference_reads or index_database is provided
     if reference_reads and index_database:
         raise ValueError(
@@ -143,14 +111,14 @@ def minimap2_search(
     # Execute the Minimap2 alignment command
     run_cmd(cmd, "Minimap2")
 
+    # Read the PAF file as a pandas DataFrame
+    df = pd.read_csv(str(paf_file_fp), sep="\t", header=None)
+
     # Filter the PAF file by maxaccepts (default = 1)
-    filter_by_maxaccepts(str(paf_file_fp), maxaccepts)
+    df = filter_by_maxaccepts(df, maxaccepts)
 
     # Optionally filter by perc_identity
     if perc_identity is not None:
-        filter_by_perc_identity(str(paf_file_fp), perc_identity, output_no_hits)
-
-    # Read the PAF file as a pandas DataFrame
-    df = pd.read_csv(str(paf_file_fp), sep="\t", header=None)
+        df = filter_by_perc_identity(df, perc_identity, output_no_hits)
 
     return df
