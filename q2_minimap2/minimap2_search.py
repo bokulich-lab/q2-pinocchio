@@ -14,9 +14,9 @@ from q2_minimap2.types._format import Minimap2IndexDBDirFmt, PairwiseAlignmentMN
 
 
 # Filter a PAF file to keep only a certain number of entries
-# for each read, as defined by "maxaccepts"
+# for each individual query name, as defined by "maxaccepts"
 def filter_by_maxaccepts(df, maxaccepts):
-    # Group by read_id and count occurrences
+    # Group by query_name and count occurrences
     counts = df.groupby(0).cumcount() + 1
 
     # Filter the DataFrame based on maxaccepts
@@ -27,23 +27,24 @@ def filter_by_maxaccepts(df, maxaccepts):
 
 # Filter PAF entries based on a threshold of percentage identity
 def filter_by_perc_identity(df, perc_identity, output_no_hits):
-    # Filter based on identity score
+    # Filter mapped query entries based on identity score
     mapped_df = df[df[9] / df[10] >= perc_identity]
 
     if output_no_hits:
         filtered_out = df[(df[9] / df[10] < perc_identity) | (df[10] == 0)]
 
-        # Keep only the first entry/row for each unique value in column 1 (query)
-        # in filtered_out
+        # Keep only the first entry/row for each unique query
+        # that is filtered out, which signifies that we treat it
+        # as an unmapped query
         filtered_out = filtered_out.drop_duplicates(subset=1)
 
-        # Set all columns after the second to 0
-        filtered_out.iloc[:, 2:] = 0
-
-        # Set columns 5 and 6 to '*'
+        # Change paf file column entries that are filtered out
+        # to indicate that are unmapped queries
+        filtered_out.iloc[:, 2:12] = 0
         filtered_out.iloc[:, 4:6] = "*"
+        filtered_out.iloc[:, 12:] = "*"
 
-        # Merging the rows of the two DataFrames based on row number
+        # Merging the two DataFrames based on row number
         mapped_df = pd.concat([mapped_df, filtered_out], axis=0)
         mapped_df = mapped_df.sort_index()
 
@@ -120,5 +121,7 @@ def minimap2_search(
     # Optionally filter by perc_identity
     if perc_identity is not None:
         df = filter_by_perc_identity(df, perc_identity, output_no_hits)
+
+    df.reset_index(drop=True, inplace=True)
 
     return df
