@@ -106,22 +106,23 @@ def process_sam_file(input_sam_file, keep_mapped, min_per_identity):
             # Logic for including or excluding reads based on mappings and
             # identity percentage
             if keep_mapped:
-                # Includes reads that are mapped and not secondary, based on the
-                # identity threshold
+                # Keep reads if they are mapped
                 if not (flag & 0x4) and not (flag & 0x100):
-                    if (
-                        min_per_identity is not None
-                        and identity_percentage >= min_per_identity
-                    ) or (min_per_identity is None):
+                    # If the minimum identity percentage is provided then accept the
+                    # mapped read if its identity percentage is equal or exceeds
+                    # the minimum identity percentage
+                    if (min_per_identity is None) or (
+                        identity_percentage >= min_per_identity
+                    ):
                         outfile.write(line)
             else:
-                # Condition for keeping unmapped reads or mapped reads below the
-                # identity threshold
-                keep_this_mapped = (
+                # Κeep τηε unmapped reads or if the minimum identity percentage
+                # is provided  keep also the mapped reads below the identity threshold
+                # which are reclassified as unmapped reads
+                if (flag & 0x4) or (
                     min_per_identity is not None
                     and identity_percentage < min_per_identity
-                )
-                if (flag & 0x4) or keep_this_mapped:
+                ):
                     outfile.write(line)
 
     # Replaces the original SAM file with the filtered temporary file
