@@ -15,7 +15,7 @@ from q2_types.per_sample_sequences import SingleLanePerSamplePairedEndFastqDirFm
 
 from q2_minimap2._filtering_utils import (
     add_mapped_paired_read_flags,
-    build_filtered_paired_end_out_dir,
+    build_filtered_out_dir,
     collate_bam_inplace,
     convert_to_fastq_paired,
     make_mn2_paired_end_cmd,
@@ -141,6 +141,6 @@ def filter_paired_end_reads(
         )
 
     # Compile filtered reads into a new output directory
-    result = build_filtered_paired_end_out_dir(query_reads, filtered_seqs)
+    build_filtered_out_dir(query_reads, input_df, filtered_seqs)
 
-    return result
+    return query_reads

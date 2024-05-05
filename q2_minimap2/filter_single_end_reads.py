@@ -128,6 +128,6 @@ def filter_single_end_reads(
         )
 
     # Build and return the directory of filtered output reads
-    result = build_filtered_out_dir(query_reads, filtered_seqs)
+    build_filtered_out_dir(query_reads, input_df, filtered_seqs)
 
-    return result
+    return query_reads
