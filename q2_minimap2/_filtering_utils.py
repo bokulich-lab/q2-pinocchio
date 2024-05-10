@@ -117,7 +117,7 @@ def process_sam_file(input_sam_file, keep_mapped, min_per_identity):
                         outfile.write(line)
             else:
                 # Κeep the unmapped reads or if the minimum identity percentage
-                # is provided  keep also the mapped reads below the identity threshold
+                # is provided keep also the mapped reads below the identity threshold
                 # which are reclassified as unmapped reads
                 if (flag & 0x4) or (
                     min_per_identity is not None
