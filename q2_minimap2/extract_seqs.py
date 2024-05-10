@@ -41,18 +41,19 @@ def _minimap2_extract_seqs(
         with tempfile.NamedTemporaryFile() as bam_f:
             bamf_fp = bam_f.name
 
-            # Use Minimap2 to find mapped and unmapped reads
+            # Use Minimap2 to produce a SAM file that contains sequence alignments
             mn2_cmd = make_mn2_cmd(
                 preset, idx_path, n_threads, penalties, reads, samf_fp
             )
             run_cmd(mn2_cmd, "Minimap2")
 
-            # Filter sam file using samtools view
+            # Filter SAM file mappings based on a minimum percentage identity
             process_sam_file(samf_fp, keep_mapped, min_per_identity)
+            # Transform SAM to BAM file
             samtools_view_cmd = make_samt_cmd(samf_fp, bamf_fp, n_threads)
             run_cmd(samtools_view_cmd, "samtools view")
 
-            # Convert to FASTA with samtools
+            # Convert to FASTA using the alignment information from the BAM file
             convert_to_fasta_cmd = convert_to_fasta(outdir.path, n_threads, bamf_fp)
             run_cmd(convert_to_fasta_cmd, "samtools fasta")
 
