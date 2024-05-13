@@ -15,16 +15,18 @@ from q2_minimap2._utils import run_command
 
 
 # Set Minimap2 alignment penalties based on provided parameters
-def set_penalties(match, mismatch, gap_o, gap_e):
+def set_penalties(
+    matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
+):
     options = []
-    if match is not None:
-        options += ["-A", str(match)]
-    if mismatch is not None:
-        options += ["-B", str(mismatch)]
-    if gap_o is not None:
-        options += ["-O", str(gap_o)]
-    if gap_e is not None:
-        options += ["-E", str(gap_e)]
+    if matching_score is not None:
+        options += ["-A", str(matching_score)]
+    if mismatching_penalty is not None:
+        options += ["-B", str(mismatching_penalty)]
+    if gap_open_penalty:
+        options += ["-O", str(gap_open_penalty)]
+    if gap_extension_penalty:
+        options += ["-E", str(gap_extension_penalty)]
 
     return options
 
@@ -65,19 +67,19 @@ def get_alignment_length(cigar):
 
 # Function to process a SAM file, filter based on mappings and identity percentage
 def process_sam_file(input_sam_file, keep_mapped, min_per_identity):
-    # Creates a temporary file to write filtered alignments to
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file:
+    # Creates a temporary file and opens the input SAM file for reading simultaneously
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file, open(
+        input_sam_file, "r"
+    ) as infile:
         temp_file_path = tmp_file.name
 
-    # Opens the input SAM file and the temporary file for writing
-    with open(input_sam_file, "r") as infile, open(temp_file_path, "w") as outfile:
         for line in infile:
             # Writes header lines directly to the output file
             if line.startswith("@"):
-                outfile.write(line)
+                tmp_file.write(line)
                 continue
 
-            # Extract information from cigar
+            # Extract information from the line
             parts = line.split("\t")
             flag = int(parts[1])
             cigar = parts[5]
@@ -87,21 +89,19 @@ def process_sam_file(input_sam_file, keep_mapped, min_per_identity):
                 total_length = get_alignment_length(cigar)
                 identity_percentage = calculate_identity(line, total_length)
             else:
-                # Defaults identity percentage to 1 (100%) if no CIGAR string or no
-                # min_per_identity is specified
+                # Defaults identity percentage to 100% if no CIGAR string or no
+                # min_per_identity specified
                 identity_percentage = 1
 
             # Logic for including or excluding reads based on mappings and
             # identity percentage
             if keep_mapped:
-                # Includes reads that are mapped and not secondary, based on the
-                # identity threshold
                 if not (flag & 0x4) and not (flag & 0x100):
                     if (
                         min_per_identity is not None
                         and identity_percentage >= min_per_identity
                     ) or (min_per_identity is None):
-                        outfile.write(line)
+                        tmp_file.write(line)
             else:
                 # Condition for keeping unmapped reads or mapped reads below the
                 # identity threshold
@@ -110,14 +110,14 @@ def process_sam_file(input_sam_file, keep_mapped, min_per_identity):
                     and identity_percentage < min_per_identity
                 )
                 if (flag & 0x4) or keep_this_mapped:
-                    outfile.write(line)
+                    tmp_file.write(line)
 
     # Replaces the original SAM file with the filtered temporary file
     shutil.move(temp_file_path, input_sam_file)
 
 
 # Generate samtools fasta convert command
-def convert_to_fasta(_reads, n_threads, bamfile_filepath):
+def convert_to_fasta(_reads, n_threads, samfile_filepath):
     # -s /dev/null excludes singletons
     # -n keeps samtools from altering header IDs
     convert_cmd = [
@@ -128,15 +128,15 @@ def convert_to_fasta(_reads, n_threads, bamfile_filepath):
         "-s",
         "/dev/null",
         "-@",
-        str(n_threads - 1),
+        str(n_threads),
         "-n",
-        str(bamfile_filepath),
+        str(samfile_filepath),
     ]
 
     return convert_cmd
 
 
-def convert_to_fastq_single(_reads, n_threads, bamfile_filepath):
+def convert_to_fastq_single(_reads, n_threads, samfile_filepath):
     convert_cmd = [
         "samtools",
         "fastq",
@@ -144,15 +144,15 @@ def convert_to_fastq_single(_reads, n_threads, bamfile_filepath):
         "-s",
         "/dev/null",
         "-@",
-        str(n_threads - 1),
+        str(n_threads),
         "-n",
-        str(bamfile_filepath),
+        str(samfile_filepath),
     ]
 
     return convert_cmd
 
 
-def convert_to_fastq_paired(_reads, n_threads, bamfile_filepath):
+def convert_to_fastq_paired(_reads, n_threads, samfile_filepath):
     convert_cmd = [
         "samtools",
         "fastq",
@@ -162,45 +162,32 @@ def convert_to_fastq_paired(_reads, n_threads, bamfile_filepath):
         "-s",
         "/dev/null",
         "-@",
-        str(n_threads - 1),
+        str(n_threads),
         "-n",
-        str(bamfile_filepath),
+        str(samfile_filepath),
     ]
 
     return convert_cmd
 
 
-# Generate samtools view filtering command
-def make_samt_cmd(samfile_filepath, bamfile_filepath, n_threads):
-    samtools_cmd = [
-        "samtools",
-        "view",
-        "-bS",
-        str(samfile_filepath),
-        "-o",
-        str(bamfile_filepath),
-        "-@",
-        str(n_threads - 1),
-    ]
-
-    return samtools_cmd
-
-
 # Generate Minimap2 mapping command
 def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads, samf_fp):
     # align to reference with Minimap2
-    minimap2_cmd = [
-        "minimap2",
-        "-a",
-        "-x",
-        mapping_preset,
-        str(index),
-        "-t",
-        str(n_threads),
-    ] + penalties
-
-    minimap2_cmd += [reads]
-    minimap2_cmd += ["-o", samf_fp]
+    minimap2_cmd = (
+        [
+            "minimap2",
+            "-a",
+            "-x",
+            mapping_preset,
+            str(index),
+            "-t",
+            str(n_threads),
+            "-o",
+            str(samf_fp),
+        ]
+        + penalties
+        + [reads]
+    )
 
     return minimap2_cmd
 
@@ -210,18 +197,21 @@ def make_mn2_paired_end_cmd(
     mapping_preset, index, n_threads, penalties, reads1, reads2, samf_fp
 ):
     # align to reference with Minimap2
-    minimap2_cmd = [
-        "minimap2",
-        "-a",
-        "-x",
-        mapping_preset,
-        str(index),
-        "-t",
-        str(n_threads),
-    ] + penalties
-
-    minimap2_cmd += [reads1, reads2]
-    minimap2_cmd += ["-o", samf_fp]
+    minimap2_cmd = (
+        [
+            "minimap2",
+            "-a",
+            "-x",
+            mapping_preset,
+            str(index),
+            "-t",
+            str(n_threads),
+            "-o",
+            str(samf_fp),
+        ]
+        + penalties
+        + [reads1, reads2]
+    )
 
     return minimap2_cmd
 
@@ -239,20 +229,17 @@ def run_cmd(cmd, str):
         )
 
 
-def build_filtered_out_dir(input_reads, input_df, filtered_seqs):
+def build_filtered_out_dir(input_reads, filtered_seqs):
     for filename in os.listdir(filtered_seqs.path):
-        input_files_path = os.path.join(input_reads.path, filename)
-        filtered_files_path = os.path.join(filtered_seqs.path, filename)
-        # Copy file from filtered_seqs.path to input_reads.path
-        shutil.copy(filtered_files_path, input_files_path)
+        shutil.copy(os.path.join(filtered_seqs.path, filename), input_reads.path)
 
 
-def collate_bam_inplace(input_bam_path):
-    input_bam_path = os.path.abspath(input_bam_path)
+def collate_sam_inplace(input_sam_path):
+    input_sam_path = os.path.abspath(input_sam_path)
     # Temporary file prefix based on the input file name
-    temp_prefix = os.path.splitext(input_bam_path)[0] + "_temp_collate"
+    temp_prefix = os.path.splitext(input_sam_path)[0] + "_temp_collate"
     # Output file path in the same directory
-    output_bam_path = os.path.splitext(input_bam_path)[0] + "_collated.bam"
+    output_sam_path = os.path.splitext(input_sam_path)[0] + "_collated.sam"
 
     # Samtools collate command
     collate_cmd = [
@@ -260,16 +247,16 @@ def collate_bam_inplace(input_bam_path):
         "collate",
         "-u",
         "-o",
-        output_bam_path,
+        output_sam_path,
         "-T",
         temp_prefix,
-        input_bam_path,
+        input_sam_path,
     ]
 
     # Execute samtools collate command
     run_cmd(collate_cmd, "Samtools collate")
 
-    shutil.move(output_bam_path, input_bam_path)
+    shutil.move(output_sam_path, input_sam_path)
 
 
 def add_mapped_paired_read_flags(input_file):

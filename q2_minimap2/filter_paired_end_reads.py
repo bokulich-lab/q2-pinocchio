@@ -16,10 +16,9 @@ from q2_types.per_sample_sequences import SingleLanePerSamplePairedEndFastqDirFm
 from q2_minimap2._filtering_utils import (
     add_mapped_paired_read_flags,
     build_filtered_out_dir,
-    collate_bam_inplace,
+    collate_sam_inplace,
     convert_to_fastq_paired,
     make_mn2_paired_end_cmd,
-    make_samt_cmd,
     process_paired_unmapped_flags,
     process_sam_file,
     run_cmd,
@@ -43,46 +42,38 @@ def _minimap2_filter_paired_end_reads(
     min_per_identity,  # Minimum percentage identity for an alignment to be kept
     penalties,  # Alignment penalties
 ):
-    # Temporary files are used for SAM and BAM outputs
+    # Temporary files are used for SAM output
     with tempfile.NamedTemporaryFile() as sam_f:
-        samf_fp = sam_f.name  # Temporary SAM file path
-        with tempfile.NamedTemporaryFile() as bam_f:
-            bamf_fp = bam_f.name  # Temporary BAM file path
+        # Align reads to the reference using Minimap2 and generate a SAM file
+        mn2_cmd = make_mn2_paired_end_cmd(
+            preset, idx_path, n_threads, penalties, reads1, reads2, sam_f.name
+        )
+        run_cmd(mn2_cmd, "Minimap2 paired-end")
 
-            # Align reads to the reference using Minimap2 and generate a SAM file
-            mn2_cmd = make_mn2_paired_end_cmd(
-                preset, idx_path, n_threads, penalties, reads1, reads2, samf_fp
-            )
-            run_cmd(mn2_cmd, "Minimap2 paired-end")
+        # Filter the SAM file using samtools based on the include/exclude criteria
+        process_sam_file(sam_f.name, keep_mapped, min_per_identity)
+        # Modify flags for paired and unmapped reads
+        # making them suitable for samtools fastq command
+        process_paired_unmapped_flags(sam_f.name)
+        add_mapped_paired_read_flags(sam_f.name)
 
-            # Filter the SAM file using samtools based on the include/exclude criteria
-            process_sam_file(samf_fp, keep_mapped, min_per_identity)
-            # Modify flags for paired and unmapped reads
-            # making them suitable for samtools fastq command
-            process_paired_unmapped_flags(samf_fp)
-            add_mapped_paired_read_flags(samf_fp)
+        # Collate the SAM file in place, ensuring proper read grouping
+        collate_sam_inplace(sam_f.name)
 
-            # Convert the filtered SAM file to a BAM file using samtools view
-            samtools_view_cmd = make_samt_cmd(samf_fp, bamf_fp, n_threads)
-            run_cmd(samtools_view_cmd, "samtools view")
-
-            # Collate the BAM file in place, ensuring proper read grouping
-            collate_bam_inplace(bamf_fp)
-
-            # Convert the filtered BAM file to FASTQ format, generating separate files
-            # for each read in the pair
-            file1 = str(outdir.path / os.path.basename(reads1))
-            file2 = str(outdir.path / os.path.basename(reads2))
-            _reads = ["-1", file1, "-2", file2]
-            convert_to_fastq_cmd = convert_to_fastq_paired(_reads, n_threads, bamf_fp)
-            run_cmd(convert_to_fastq_cmd, "samtools fastq")
+        # Convert the filtered SAM file to FASTQ format, generating separate files
+        # for each read in the pair
+        file1 = str(outdir.path / os.path.basename(reads1))
+        file2 = str(outdir.path / os.path.basename(reads2))
+        _reads = ["-1", file1, "-2", file2]
+        convert_to_fastq_cmd = convert_to_fastq_paired(_reads, n_threads, sam_f.name)
+        run_cmd(convert_to_fastq_cmd, "samtools fastq")
 
 
 def filter_paired_end_reads(
     query_reads: SingleLanePerSamplePairedEndFastqDirFmt,  # Input paired-end reads
     index_database: Minimap2IndexDBDirFmt = None,  # Optional pre-built Minimap2 index
     reference_reads: DNAFASTAFormat = None,  # Optional reference sequences for indexing
-    n_threads: int = 4,  # Number of threads for Minimap2
+    n_threads: int = 3,  # Number of threads for Minimap2
     mapping_preset: str = "map-ont",  # Preset options for Minimap2 alignment
     keep: str = "mapped",  # Option to keep 'mapped' or 'unmapped' reads
     min_per_identity: float = None,  # Minimum percentage identity to keep a read
@@ -141,6 +132,6 @@ def filter_paired_end_reads(
         )
 
     # Compile filtered reads into a new output directory
-    build_filtered_out_dir(query_reads, input_df, filtered_seqs)
+    build_filtered_out_dir(query_reads, filtered_seqs)
 
     return query_reads

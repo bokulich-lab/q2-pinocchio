@@ -21,7 +21,6 @@ from q2_minimap2._filtering_utils import (
     get_alignment_length,
     make_mn2_cmd,
     make_mn2_paired_end_cmd,
-    make_samt_cmd,
     process_sam_file,
     run_cmd,
     set_penalties,
@@ -293,9 +292,9 @@ class TestProcessSamFile(Minimap2TestsBase):
 class TestConvertToFasta(unittest.TestCase):
     def test_convert_to_fasta(self):
         # Mock input parameters
-        _reads = "read1.bam"
+        _reads = "read1.sam"
         n_threads = 4
-        bamfile_filepath = "output.bam"
+        samfile_filepath = "output.sam"
 
         # Expected command based on the provided inputs
         expected_cmd = [
@@ -306,22 +305,22 @@ class TestConvertToFasta(unittest.TestCase):
             "-s",
             "/dev/null",
             "-@",
-            str(n_threads - 1),
+            str(n_threads),
             "-n",
-            str(bamfile_filepath),
+            str(samfile_filepath),
         ]
 
         # Call the function and compare the result with the expected command
-        actual_cmd = convert_to_fasta(_reads, n_threads, bamfile_filepath)
+        actual_cmd = convert_to_fasta(_reads, n_threads, samfile_filepath)
         self.assertEqual(actual_cmd, expected_cmd)
 
 
 class TestConvertToFastq(unittest.TestCase):
     def test_convert_to_fasta(self):
         # Mock input parameters
-        _reads = "read1.bam"
+        _reads = "read1.sam"
         n_threads = 4
-        bamfile_filepath = "output.bam"
+        samfile_filepath = "output.sam"
 
         # Expected command based on the provided inputs
         expected_cmd = [
@@ -331,37 +330,13 @@ class TestConvertToFastq(unittest.TestCase):
             "-s",
             "/dev/null",
             "-@",
-            str(n_threads - 1),
+            str(n_threads),
             "-n",
-            str(bamfile_filepath),
-        ]
-
-        # Call the function and compare the result with the expected command
-        actual_cmd = convert_to_fastq_single(_reads, n_threads, bamfile_filepath)
-        self.assertEqual(actual_cmd, expected_cmd)
-
-
-class TestMakeSamtCmd(unittest.TestCase):
-    def test_make_samt_cmd(self):
-        # Mock input parameters
-        samfile_filepath = "input.sam"
-        bamfile_filepath = "output.bam"
-        n_threads = 4
-
-        # Expected command based on the provided inputs
-        expected_cmd = [
-            "samtools",
-            "view",
-            "-bS",
             str(samfile_filepath),
-            "-o",
-            str(bamfile_filepath),
-            "-@",
-            str(n_threads - 1),
         ]
 
         # Call the function and compare the result with the expected command
-        actual_cmd = make_samt_cmd(samfile_filepath, bamfile_filepath, n_threads)
+        actual_cmd = convert_to_fastq_single(_reads, n_threads, samfile_filepath)
         self.assertEqual(actual_cmd, expected_cmd)
 
 
@@ -384,6 +359,8 @@ class TestMakeMn2Cmd(unittest.TestCase):
             "/path/to/index",
             "-t",
             str(n_threads),
+            "-o",
+            "output.sam",
             "-A",
             "1",
             "-B",
@@ -393,8 +370,6 @@ class TestMakeMn2Cmd(unittest.TestCase):
             "-E",
             "1",
             "input.fastq",
-            "-o",
-            "output.sam",
         ]
 
         # Call the function and compare the result with the expected command
@@ -406,9 +381,9 @@ class TestMakeMn2Cmd(unittest.TestCase):
 
 class TestConvertToFastqPaired(unittest.TestCase):
     def test_convert_to_fastq_paired(self):
-        _reads = ["read1.bam", "read2.bam"]
+        _reads = ["read1.qc", "read2.fq"]
         n_threads = 4
-        bamfile_filepath = "output.fastq"
+        samfile_filepath = "output.sam"
 
         expected_cmd = [
             "samtools",
@@ -419,16 +394,16 @@ class TestConvertToFastqPaired(unittest.TestCase):
             "-s",
             "/dev/null",
             "-@",
-            str(n_threads - 1),
+            str(n_threads),
             "-n",
-            str(bamfile_filepath),
+            str(samfile_filepath),
         ]
 
-        result_cmd = convert_to_fastq_paired(_reads, n_threads, bamfile_filepath)
+        result_cmd = convert_to_fastq_paired(_reads, n_threads, samfile_filepath)
         self.assertEqual(
             result_cmd,
             expected_cmd,
-            "The generated command for converting BAM to FastQ paired-end does not "
+            "The generated command for converting SAM to FastQ paired-end does not "
             "match the expected command.",
         )
 
@@ -451,6 +426,8 @@ class TestMakeMn2PairedEndCmd(unittest.TestCase):
             str(index),
             "-t",
             str(n_threads),
+            "-o",
+            samf_fp,
             "-A",
             "1",
             "-B",
@@ -461,8 +438,6 @@ class TestMakeMn2PairedEndCmd(unittest.TestCase):
             "1",
             reads1,
             reads2,
-            "-o",
-            samf_fp,
         ]
 
         result_cmd = make_mn2_paired_end_cmd(
@@ -474,7 +449,7 @@ class TestMakeMn2PairedEndCmd(unittest.TestCase):
 class TestRunCmd(unittest.TestCase):
     @patch("subprocess.run")
     def test_run_cmd_success(self, mock_run):
-        cmd = "samtools fastq -o output.fastq input.bam"
+        cmd = "samtools fastq -o output.fastq input.sam"
         description = "samtools command"
         mock_run.return_value = MagicMock(returncode=0)  # Simulate successful run
 
@@ -487,7 +462,7 @@ class TestRunCmd(unittest.TestCase):
     @patch("subprocess.run")
     def test_run_cmd_exception(self, mock_run):
         """Test that run_cmd raises the correct exception when subprocess.run fails."""
-        cmd = "samtools fastq -o output.fastq input.bam"
+        cmd = "samtools fastq -o output.fastq input.sam"
         description = "samtools command"
         mock_run.side_effect = subprocess.CalledProcessError(
             1, cmd

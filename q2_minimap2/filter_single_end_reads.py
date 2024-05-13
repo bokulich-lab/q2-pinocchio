@@ -17,7 +17,6 @@ from q2_minimap2._filtering_utils import (
     build_filtered_out_dir,
     convert_to_fastq_single,
     make_mn2_cmd,
-    make_samt_cmd,
     process_sam_file,
     run_cmd,
     set_penalties,
@@ -40,38 +39,30 @@ def _minimap2_filter_single_end_reads(
 ):
     # Create a temporary file for SAM output from Minimap2
     with tempfile.NamedTemporaryFile() as sam_f:
-        samf_fp = sam_f.name
-        # Create a temporary file for BAM output from samtools view
-        with tempfile.NamedTemporaryFile() as bam_f:
-            bamf_fp = bam_f.name
+        # Construct and execute Minimap2 command for alignment
+        mn2_cmd = make_mn2_cmd(
+            preset, idx_path, n_threads, penalties, reads, sam_f.name
+        )
+        run_cmd(mn2_cmd, "Minimap2")
 
-            # Construct and execute Minimap2 command for alignment
-            mn2_cmd = make_mn2_cmd(
-                preset, idx_path, n_threads, penalties, reads, samf_fp
-            )
-            run_cmd(mn2_cmd, "Minimap2")
+        # Process the SAM file to filter alignments based on criteria
+        process_sam_file(sam_f.name, keep_mapped, min_per_identity)
 
-            # Process the SAM file to filter alignments based on criteria
-            process_sam_file(samf_fp, keep_mapped, min_per_identity)
-            # Construct and execute samtools view command to convert SAM to BAM
-            samtools_view_cmd = make_samt_cmd(samf_fp, bamf_fp, n_threads)
-            run_cmd(samtools_view_cmd, "samtools view")
-
-            # Construct and execute command to convert BAM to FASTQ
-            # using samtools fastq, directing output to the specified output directory
-            fwd = str(outdir.path / os.path.basename(reads))
-            _reads = ["-0", fwd]
-            convert_to_fastq_single_cmd = convert_to_fastq_single(
-                _reads, n_threads, bamf_fp
-            )
-            run_cmd(convert_to_fastq_single_cmd, "samtools fastq")
+        # Construct and execute command to convert SAM to FASTQ
+        # using samtools fastq, directing output to the specified output directory
+        fwd = str(outdir.path / os.path.basename(reads))
+        _reads = ["-0", fwd]
+        convert_to_fastq_single_cmd = convert_to_fastq_single(
+            _reads, n_threads, sam_f.name
+        )
+        run_cmd(convert_to_fastq_single_cmd, "samtools fastq")
 
 
 def filter_single_end_reads(
     query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
     index_database: Minimap2IndexDBDirFmt = None,  # Optional pre-built Minimap2 index
     reference_reads: DNAFASTAFormat = None,  # Optional reference sequences
-    n_threads: int = 4,  # Number of threads for Minimap2
+    n_threads: int = 3,  # Number of threads for Minimap2
     mapping_preset: str = "map-ont",  # Minimap2 mapping preset
     keep: str = "mapped",  # Keep 'mapped' or 'unmapped' reads
     min_per_identity: float = None,  # Minimum percentage identity to keep a read
@@ -128,6 +119,6 @@ def filter_single_end_reads(
         )
 
     # Build and return the directory of filtered output reads
-    build_filtered_out_dir(query_reads, input_df, filtered_seqs)
+    build_filtered_out_dir(query_reads, filtered_seqs)
 
     return query_reads

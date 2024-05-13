@@ -13,7 +13,6 @@ from q2_types.feature_data import DNAFASTAFormat
 from q2_minimap2._filtering_utils import (
     convert_to_fasta,
     make_mn2_cmd,
-    make_samt_cmd,
     process_sam_file,
     run_cmd,
     set_penalties,
@@ -23,7 +22,7 @@ from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 
 # This function uses Minimap2 to align reads to a reference, filters the
 # resulting SAM file based on mapping criteria using samtools view, and
-# finally converts the filtered BAM file to FASTA format using samtools fasta,
+# finally converts the filtered SAM file to FASTA format using samtools fasta,
 # saving the output in the specified directory.
 def _minimap2_extract_seqs(
     reads,
@@ -37,31 +36,25 @@ def _minimap2_extract_seqs(
 ):
 
     with tempfile.NamedTemporaryFile() as sam_f:
-        samf_fp = sam_f.name
-        with tempfile.NamedTemporaryFile() as bam_f:
-            bamf_fp = bam_f.name
+        # Use Minimap2 to find mapped and unmapped reads
+        mn2_cmd = make_mn2_cmd(
+            preset, idx_path, n_threads, penalties, reads, sam_f.name
+        )
+        run_cmd(mn2_cmd, "Minimap2")
 
-            # Use Minimap2 to find mapped and unmapped reads
-            mn2_cmd = make_mn2_cmd(
-                preset, idx_path, n_threads, penalties, reads, samf_fp
-            )
-            run_cmd(mn2_cmd, "Minimap2")
+        # Filter sam file using samtools view
+        process_sam_file(sam_f.name, keep_mapped, min_per_identity)
 
-            # Filter sam file using samtools view
-            process_sam_file(samf_fp, keep_mapped, min_per_identity)
-            samtools_view_cmd = make_samt_cmd(samf_fp, bamf_fp, n_threads)
-            run_cmd(samtools_view_cmd, "samtools view")
-
-            # Convert to FASTA with samtools
-            convert_to_fasta_cmd = convert_to_fasta(outdir.path, n_threads, bamf_fp)
-            run_cmd(convert_to_fasta_cmd, "samtools fasta")
+        # Convert to FASTA with samtools
+        convert_to_fasta_cmd = convert_to_fasta(outdir.path, n_threads, sam_f.name)
+        run_cmd(convert_to_fasta_cmd, "samtools fasta")
 
 
 def extract_seqs(
     sequences: DNAFASTAFormat,
     index_database: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,
-    n_threads: int = 1,
+    n_threads: int = 3,
     mapping_preset: str = "map-ont",
     extract: str = "mapped",
     min_per_identity: float = None,
