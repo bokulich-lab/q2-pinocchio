@@ -14,73 +14,41 @@ from q2_minimap2.types._format import Minimap2IndexDBDirFmt, PairwiseAlignmentMN
 
 
 # Filter a PAF file to keep only a certain number of entries
-# for each read, as defined by "maxaccepts"
-def filter_by_maxaccepts(input_PairwiseAlignmentMN2_path, maxaccepts):
-    # Dictionary to keep track of the counts of occurancies/hits for each read ID
-    counts = {}
-    # List to hold the lines that meet the filtering criteria
-    filtered_lines = []
+# for each individual query name, as defined by "maxaccepts"
+def filter_by_maxaccepts(df, maxaccepts):
+    # Group by query_name and count occurrences
+    counts = df.groupby(0).cumcount() + 1
 
-    # Open the input file in read mode
-    with open(input_PairwiseAlignmentMN2_path, "r") as infile:
-        # Iterate over each line in the input file
-        for line in infile:
-            # Extract the read ID from the current line
-            read_id = line.split("\t")[0]
+    # Filter the DataFrame based on maxaccepts
+    filtered_df = df[counts <= maxaccepts]
 
-            # Check and update the count for the specific read ID
-            # We need this in order to not exceed the maximum
-            # number of hits allowed per read ID
-            if counts.get(read_id, 0) < maxaccepts:
-                counts[read_id] = counts.get(read_id, 0) + 1
-                filtered_lines.append(line)
-
-    # Write the filtered lines back to the file
-    with open(input_PairwiseAlignmentMN2_path, "w") as outfile:
-        outfile.writelines(filtered_lines)
+    return filtered_df
 
 
 # Filter PAF entries based on a threshold of percentage identity
-def filter_by_perc_identity(PairwiseAlignmentMN2_path, perc_identity, output_no_hits):
-    # Open and read all lines from the input file
-    with open(PairwiseAlignmentMN2_path, "r") as file:
-        lines = file.readlines()
+def filter_by_perc_identity(df, perc_identity, output_no_hits):
+    # Filter mapped query entries based on identity score
+    mapped_df = df[df[9] / df[10] >= perc_identity]
 
-    # Initialize list to hold lines that pass the filter
-    filtered_lines = []
-    # Track queries that have been set as unmapped
-    unmapped_queries = set()
+    if output_no_hits:
+        filtered_out = df[(df[9] / df[10] < perc_identity) | (df[10] == 0)]
 
-    for line in lines:
-        # Split each line of the PAF file into its components (columns)
-        parts = line.strip().split("\t")
+        # Keep only the first entry/row for each unique query
+        # that is filtered out, which signifies that we treat it
+        # as an unmapped query
+        filtered_out = filtered_out.drop_duplicates(subset=1)
 
-        # Calculate the BLAST-like alignment identity only if there are mapped bases
-        if int(parts[10]) > 0:
-            identity_score = int(parts[9]) / int(parts[10])
-            # Include the line if the identity score meets or exceeds the threshold
-            if identity_score >= perc_identity:
-                filtered_lines.append(line)
-            else:
-                # Mark as unmapped, but only add one entry per query
-                if output_no_hits and parts[0] not in unmapped_queries:
-                    modified_line = (
-                        f"{parts[0]}\t{parts[1]}\t0\t0\t*\t*\t0\t0\t0\t0\t0\t0\n"
-                    )
-                    filtered_lines.append(modified_line)
-                    unmapped_queries.add(parts[0])
-        else:
-            # Handle completely unmapped entries
-            if (output_no_hits is True) and (parts[0] not in unmapped_queries):
-                modified_line = (
-                    f"{parts[0]}\t{parts[1]}\t0\t0\t*\t*\t0\t0\t0\t0\t0\t0\n"
-                )
-                filtered_lines.append(modified_line)
-                unmapped_queries.add(parts[0])
+        # Change paf file column entries that are filtered out
+        # to indicate that are unmapped queries
+        filtered_out.iloc[:, 2:12] = 0
+        filtered_out.iloc[:, 4:6] = "*"
+        filtered_out.iloc[:, 12:] = "*"
 
-    # Overwrite the input file with only the lines that met the filtering criteria
-    with open(PairwiseAlignmentMN2_path, "w") as file:
-        file.writelines(filtered_lines)
+        # Merging the two DataFrames based on row number
+        mapped_df = pd.concat([mapped_df, filtered_out], axis=0)
+        mapped_df = mapped_df.sort_index()
+
+    return mapped_df
 
 
 # Construct the command list for the Minimap2 alignment search
@@ -113,7 +81,6 @@ def minimap2_search(
     perc_identity: float = None,
     output_no_hits: bool = True,
 ) -> pd.DataFrame:
-
     # Ensure that only one of reference_reads or index_database is provided
     if reference_reads and index_database:
         raise ValueError(
@@ -137,7 +104,7 @@ def minimap2_search(
     # Create a reference to a file with PAF format
     paf_file_fp = PairwiseAlignmentMN2Format()
 
-    # Construct the
+    # Construct the command
     cmd = construct_command(
         idx_ref_path, query_reads, n_threads, paf_file_fp, output_no_hits
     )
@@ -145,14 +112,16 @@ def minimap2_search(
     # Execute the Minimap2 alignment command
     run_cmd(cmd, "Minimap2")
 
+    # Read the PAF file as a pandas DataFrame
+    df = pd.read_csv(str(paf_file_fp), sep="\t", header=None)
+
     # Filter the PAF file by maxaccepts (default = 1)
-    filter_by_maxaccepts(str(paf_file_fp), maxaccepts)
+    df = filter_by_maxaccepts(df, maxaccepts)
 
     # Optionally filter by perc_identity
     if perc_identity is not None:
-        filter_by_perc_identity(str(paf_file_fp), perc_identity, output_no_hits)
+        df = filter_by_perc_identity(df, perc_identity, output_no_hits)
 
-    # Read the PAF file as a pandas DataFrame
-    df = pd.read_csv(str(paf_file_fp), sep="\t", header=None)
+    df.reset_index(drop=True, inplace=True)
 
     return df
