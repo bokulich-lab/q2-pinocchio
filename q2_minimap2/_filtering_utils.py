@@ -259,74 +259,33 @@ def collate_sam_inplace(input_sam_path):
     shutil.move(output_sam_path, input_sam_path)
 
 
-def add_mapped_paired_read_flags(input_file):
-    temp_fd, temp_path = tempfile.mkstemp()
-    with os.fdopen(temp_fd, "w") as outfile, open(input_file, "r") as infile:
-        read_number = 1  # Start with the first read of a pair
-        for line in infile:
-            if line.startswith("@"):
-                outfile.write(line)  # Copy header lines directly
-            else:
-                parts = line.strip().split("\t")
-                flag = int(parts[1])
-
-                if int(parts[1]) == 4:
+def process_paired_sam_flags(input_sam_path):
+    """
+    Process a SAM file containing paired-end reads to set specific flags for the read
+    pairs in order to be recognized py the samtools fastq command for paired end reads
+    """
+    with tempfile.NamedTemporaryFile(delete=False, mode="w") as temp_file:
+        temp_path = temp_file.name
+        with open(input_sam_path, "r") as infile:
+            for line in infile:
+                if line.startswith("@"):
+                    temp_file.write(line)
                     continue
 
-                if read_number == 1:  # First read in a pair
-                    flag |= 0x40  # Add the READ1 flag
-                    read_number = (
-                        2  # Set up for the next read to be the second in a pair
-                    )
-                else:  # Second read in a pair
-                    flag |= 0x80  # Add the READ2 flag
-                    read_number = 1  # Reset for the next pair
+                read1 = line.strip().split("\t")
+                read2 = infile.readline().strip().split("\t")
 
-                parts[1] = str(flag)  # Update the flag in the line
-                outfile.write("\t".join(parts) + "\n")  # Write the modified line
-
-    # Replace the original file with the updated one
-    shutil.move(temp_path, input_file)
-
-
-def process_paired_unmapped_flags(input_sam_path):
-    # Create a temporary file
-    temp_path = tempfile.mktemp()
-    with open(temp_path, "w") as outfile, open(input_sam_path, "r") as infile:
-        read_pair_buffer = []  # Buffer to store consecutive reads
-
-        for line in infile:
-            if line.startswith("@"):
-                # Write header lines directly to the output
-                outfile.write(line)
-            else:
-                parts = line.strip().split("\t")
-                if int(parts[1]) == 4:
-                    read_pair_buffer.append(parts)
-
-                    if len(read_pair_buffer) == 2:
-                        # Process the pair
-                        read_pair_buffer[0][
-                            1
-                        ] = "69"  # Set flag for the first read in pair
-                        read_pair_buffer[1][
-                            1
-                        ] = "133"  # Set flag for the second read in pair
-
-                        # Write modified reads to file
-                        outfile.write("\t".join(read_pair_buffer[0]) + "\n")
-                        outfile.write("\t".join(read_pair_buffer[1]) + "\n")
-
-                        # Clear the buffer after processing the pair
-                        read_pair_buffer = []
+                if int(read1[1]) == 4 and int(read2[1]) == 4:  # Both reads are unmapped
+                    read1[1] = "69"  # 1 + 4 + 64: Read is first in pair and unmapped
+                    read2[1] = "133"  # 1 + 4 + 128: Read is second in pair and unmapped
                 else:
-                    # If not an unmapped read, write directly to the output
-                    # and clear the buffer (in case it's out of sync)
-                    if read_pair_buffer:
-                        for read in read_pair_buffer:
-                            outfile.write("\t".join(read) + "\n")
-                        read_pair_buffer = []
-                    outfile.write(line)
+                    # Ensure paired flags
+                    # Add 1 and 64 (first read in a pair)
+                    read1[1] = str(int(read1[1]) | 1 | 64)
+                    # Add 1 and 128 (first read in a pair)
+                    read2[1] = str(int(read2[1]) | 1 | 128)
 
-    # Replace the original file with the new file
+                temp_file.write("\t".join(read1) + "\n")
+                temp_file.write("\t".join(read2) + "\n")
+
     shutil.move(temp_path, input_sam_path)

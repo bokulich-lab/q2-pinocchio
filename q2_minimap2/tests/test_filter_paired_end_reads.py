@@ -157,8 +157,7 @@ class TestFilterPairedEndReads(Minimap2TestsBase):
 
         for _, obs_fp in obs_seqs:
             with gzip.open(str(obs_fp), "rt") as obs_fh:
-                print(obs_fh.readlines())
-                # self.assertNotEqual(len(obs_fh.readlines()), 0)
+                self.assertNotEqual(len(obs_fh.readlines()), 0)
                 obs_fh.seek(0)
                 # Iterate over expected and observed reads, side-by-side
                 for records in itertools.zip_longest(*[obs_fh] * 4):

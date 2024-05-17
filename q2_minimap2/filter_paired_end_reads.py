@@ -14,12 +14,11 @@ from q2_types.feature_data import DNAFASTAFormat
 from q2_types.per_sample_sequences import SingleLanePerSamplePairedEndFastqDirFmt
 
 from q2_minimap2._filtering_utils import (
-    add_mapped_paired_read_flags,
     build_filtered_out_dir,
     collate_sam_inplace,
     convert_to_fastq_paired,
     make_mn2_paired_end_cmd,
-    process_paired_unmapped_flags,
+    process_paired_sam_flags,
     process_sam_file,
     run_cmd,
     set_penalties,
@@ -52,13 +51,12 @@ def _minimap2_filter_paired_end_reads(
 
         # Filter the SAM file using samtools based on the include/exclude criteria
         process_sam_file(sam_f.name, keep_mapped, min_per_identity)
-        # Modify flags for paired and unmapped reads
-        # making them suitable for samtools fastq command
-        process_paired_unmapped_flags(sam_f.name)
-        add_mapped_paired_read_flags(sam_f.name)
 
-        # Collate the SAM file in place, ensuring proper read grouping
+        # Ensuring proper read grouping of paired reaads
         collate_sam_inplace(sam_f.name)
+
+        # Making flags suitable for samtools fastq command
+        process_paired_sam_flags(sam_f.name)
 
         # Convert the filtered SAM file to FASTQ format, generating separate files
         # for each read in the pair
