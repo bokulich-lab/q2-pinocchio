@@ -24,6 +24,7 @@ requirements:
     - samtools
     - minimap2
     - beautifulsoup4
+    - nanoplot
 
 test:
   requires:

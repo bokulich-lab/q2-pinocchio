@@ -13,6 +13,7 @@ from .extract_seqs import extract_seqs
 from .filter_paired_end_reads import filter_paired_end_reads
 from .filter_single_end_reads import filter_single_end_reads
 from .minimap2_search import minimap2_search
+from .nanoplot_stats import stats
 
 __version__ = get_versions()["version"]
 del get_versions
@@ -25,4 +26,5 @@ __all__ = [
     "classify_consensus_minimap2",
     "_find_consensus_annotation",
     "extract_seqs",
+    "stats",
 ]

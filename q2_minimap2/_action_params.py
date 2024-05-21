@@ -12,7 +12,7 @@ from q2_types.per_sample_sequences import (
     SequencesWithQuality,
 )
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Bool, Choices, Float, Int, Range, Str
+from qiime2.plugin import Bool, Choices, Float, Int, Range, Str, TypeMatch
 
 from q2_minimap2.types._type import Minimap2IndexDB, PairwiseAlignmentMN2
 
@@ -309,3 +309,9 @@ find_consensus_annotation_dsc = (
     "annotations. Note that the annotation hierarchy is assumed "
     "to have an even number of ranks."
 )
+
+# stats
+T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
+stats_inputs = {"sequences": SampleData[T]}
+stats_input_descriptions = {"sequences": "Sequences to be analyzed."}
+stats_dsc = "Quality control statistics of long sequences using NanoPlot."

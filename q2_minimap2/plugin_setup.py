@@ -63,6 +63,9 @@ from q2_minimap2._action_params import (
     minimap2_search_outputs_dsc,
     minimap2_search_param_dsc,
     minimap2_search_params,
+    stats_dsc,
+    stats_input_descriptions,
+    stats_inputs,
 )
 from q2_minimap2.types._format import (
     Minimap2IndexDBDirFmt,
@@ -204,6 +207,17 @@ plugin.methods.register_function(
     output_descriptions=find_consensus_annotation_outputs_dsc,
     name="Find consensus among multiple annotations.",
     description=find_consensus_annotation_dsc,
+)
+
+plugin.visualizers.register_function(
+    function=q2_minimap2.stats,
+    inputs=stats_inputs,
+    parameters="",
+    input_descriptions=stats_input_descriptions,
+    parameter_descriptions={},
+    name="Quality control statistics of long sequences.",
+    description=stats_dsc,
+    citations=[citations["Nanopack2"]],
 )
 
 importlib.import_module("q2_minimap2.types._transformer")
