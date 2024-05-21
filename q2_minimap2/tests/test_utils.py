@@ -63,9 +63,21 @@ class TestCommandOperations(unittest.TestCase):
         # This is a simplistic test scenario; you might want to mock subprocess.run
         cmd1 = ["echo", "hello"]
         cmd2 = ["grep", "hello"]
-        run_commands_with_pipe(
-            cmd1, cmd2
-        )  # Assuming no exception is good enough for this test
+        cmd3 = ["echo", "hello"]
+        with tempfile.TemporaryDirectory() as temp_dir:
+            run_commands_with_pipe(
+                cmd1, cmd2, cmd3, temp_dir + "res.out"
+            )  # Assuming no exception is good enough for this test
+
+    def test_run_commands_with_pipe_no_verbose(self):
+        # This is a simplistic test scenario; you might want to mock subprocess.run
+        cmd1 = ["echo", "hello"]
+        cmd2 = ["grep", "hello"]
+        cmd3 = ["echo", "hello"]
+        with tempfile.TemporaryDirectory() as temp_dir:
+            run_commands_with_pipe(
+                cmd1, cmd2, cmd3, temp_dir + "res.out", verbose=False
+            )  # Assuming no exception is good enough for this test
 
 
 class TestParameterConstruction(unittest.TestCase):

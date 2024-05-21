@@ -24,6 +24,8 @@ requirements:
     - samtools
     - minimap2
     - beautifulsoup4
+    - chopper
+    - gzip
 
 test:
   requires:
