@@ -76,14 +76,14 @@ def trim(
 
     # Initialize directory format for filtered sequences
     filtered_seqs = CasavaOneEightSingleLanePerSampleDirFmt()
-
-    for filename in os.listdir(query_reads.path):
-        if filename.endswith(".fastq.gz"):
-            # Create an empty file with the same name
-            open(os.path.join(filtered_seqs.path, filename), "w").close()
-        else:
-            # Copy the file contents
-            shutil.copy(os.path.join(query_reads.path, filename), filtered_seqs.path)
+    shutil.copy(
+        os.path.join(query_reads.path, "MANIFEST"),
+        os.path.join(filtered_seqs.path, "MANIFEST"),
+    )
+    shutil.copy(
+        os.path.join(query_reads.path, "metadata.yml"),
+        os.path.join(filtered_seqs.path, "metadata.yml"),
+    )
 
     # Iterate over the FASTQ paired-end files in the DataFrame
     # and exececute chopper command
