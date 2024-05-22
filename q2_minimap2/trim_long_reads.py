@@ -6,7 +6,6 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 import os
-import shutil
 import subprocess
 
 from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
@@ -76,14 +75,6 @@ def trim(
 
     # Initialize directory format for filtered sequences
     filtered_seqs = CasavaOneEightSingleLanePerSampleDirFmt()
-    shutil.copy(
-        os.path.join(query_reads.path, "MANIFEST"),
-        os.path.join(filtered_seqs.path, "MANIFEST"),
-    )
-    shutil.copy(
-        os.path.join(query_reads.path, "metadata.yml"),
-        os.path.join(filtered_seqs.path, "metadata.yml"),
-    )
 
     # Iterate over the FASTQ paired-end files in the DataFrame
     # and exececute chopper command
