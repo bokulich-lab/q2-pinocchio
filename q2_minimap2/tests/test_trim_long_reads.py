@@ -8,9 +8,7 @@
 import gzip
 import itertools
 import os
-import shutil
 import subprocess
-import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -87,101 +85,82 @@ class TestTrim(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 
-        self.source_dir = self.get_data_path("trim/single_end/")
+        self.source_dir_se = self.get_data_path("trim/single_end/")
         self.source_dir_pe = self.get_data_path("trim/paired_end/")
 
     def test_trimmed_se_maxlen_10000(self):
-        # Create a temporary directory
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Copy the source directory to the temporary directory
-            temp_input_dir = os.path.join(temp_dir, "input")
-            shutil.copytree(self.source_dir, temp_input_dir)
+        # Initialize the query reads from the temporary directory
+        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
+            self.source_dir_se, mode="r"
+        )
 
-            # Initialize the query reads from the temporary directory
-            query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
-                temp_input_dir, mode="r"
-            )
+        trimmed_se_maxlen_10000 = trim(query_reads, maxlength=10000)
+        fastq_files = [
+            f
+            for f in os.listdir(str(trimmed_se_maxlen_10000))
+            if f.endswith(".fastq.gz")
+        ]
 
-            trimmed_se_maxlen_10000 = trim(query_reads, maxlength=10000)
-            fastq_files = [
-                f
-                for f in os.listdir(str(trimmed_se_maxlen_10000))
-                if f.endswith(".fastq.gz")
-            ]
-
-            # Process each FASTQ.GZ file
-            for obs_fp in fastq_files:
-                file_path = os.path.join(str(trimmed_se_maxlen_10000), obs_fp)
-                with gzip.open(file_path, "rt") as obs_fh:
-                    self.assertNotEqual(len(obs_fh.readlines()), 0)
-                    obs_fh.seek(0)
-                    # Iterate over expected and observed reads, side-by-side
-                    for records in itertools.zip_longest(*[obs_fh] * 4):
-                        (obs_seq_h, obs_seq, _, obs_qual) = records
-                        # Make sure seqs that do not map to genome were removed
-                        obs_id = obs_seq_h.strip("@\n")
-                        self.assertTrue(obs_id in seq_ids_maxlen10000)
+        # Process each FASTQ.GZ file
+        for obs_fp in fastq_files:
+            file_path = os.path.join(str(trimmed_se_maxlen_10000), obs_fp)
+            with gzip.open(file_path, "rt") as obs_fh:
+                self.assertNotEqual(len(obs_fh.readlines()), 0)
+                obs_fh.seek(0)
+                # Iterate over expected and observed reads, side-by-side
+                for records in itertools.zip_longest(*[obs_fh] * 4):
+                    (obs_seq_h, obs_seq, _, obs_qual) = records
+                    # Make sure seqs that do not map to genome were removed
+                    obs_id = obs_seq_h.strip("@\n")
+                    self.assertTrue(obs_id in seq_ids_maxlen10000)
 
     def test_trimmed_se_minlen_10000(self):
-        # Create a temporary directory
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Copy the source directory to the temporary directory
-            temp_input_dir = os.path.join(temp_dir, "input")
-            shutil.copytree(self.source_dir, temp_input_dir)
+        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
+            self.source_dir_se, mode="r"
+        )
 
-            # Initialize the query reads from the temporary directory
-            query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
-                temp_input_dir, mode="r"
-            )
+        trimmed_se_minlen_10000 = trim(query_reads, minlength=10000)
+        fastq_files = [
+            f
+            for f in os.listdir(str(trimmed_se_minlen_10000))
+            if f.endswith(".fastq.gz")
+        ]
 
-            trimmed_se_minlen_10000 = trim(query_reads, minlength=10000)
-            fastq_files = [
-                f
-                for f in os.listdir(str(trimmed_se_minlen_10000))
-                if f.endswith(".fastq.gz")
-            ]
-
-            # Process each FASTQ.GZ file
-            for obs_fp in fastq_files:
-                file_path = os.path.join(str(trimmed_se_minlen_10000), obs_fp)
-                with gzip.open(file_path, "rt") as obs_fh:
-                    self.assertNotEqual(len(obs_fh.readlines()), 0)
-                    obs_fh.seek(0)
-                    # Iterate over expected and observed reads, side-by-side
-                    for records in itertools.zip_longest(*[obs_fh] * 4):
-                        (obs_seq_h, obs_seq, _, obs_qual) = records
-                        # Make sure seqs that do not map to genome were removed
-                        obs_id = obs_seq_h.strip("@\n")
-                        self.assertTrue(obs_id in seq_ids_minlen10000)
+        # Process each FASTQ.GZ file
+        for obs_fp in fastq_files:
+            file_path = os.path.join(str(trimmed_se_minlen_10000), obs_fp)
+            with gzip.open(file_path, "rt") as obs_fh:
+                self.assertNotEqual(len(obs_fh.readlines()), 0)
+                obs_fh.seek(0)
+                # Iterate over expected and observed reads, side-by-side
+                for records in itertools.zip_longest(*[obs_fh] * 4):
+                    (obs_seq_h, obs_seq, _, obs_qual) = records
+                    # Make sure seqs that do not map to genome were removed
+                    obs_id = obs_seq_h.strip("@\n")
+                    self.assertTrue(obs_id in seq_ids_minlen10000)
 
     def test_trimmed_pe_minq_20(self):
-        # Create a temporary directory
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Copy the source directory to the temporary directory
-            temp_input_dir = os.path.join(temp_dir, "input")
-            shutil.copytree(self.source_dir_pe, temp_input_dir)
+        # Initialize the query reads from the temporary directory
+        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
+            self.source_dir_pe, mode="r"
+        )
+        trimmed_pe_minlen_10000 = trim(query_reads, quality=20)
+        fastq_files = [
+            f
+            for f in os.listdir(str(trimmed_pe_minlen_10000))
+            if f.endswith(".fastq.gz")
+        ]
 
-            # Initialize the query reads from the temporary directory
-            query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
-                temp_input_dir, mode="r"
-            )
-            trimmed_pe_minlen_10000 = trim(query_reads, quality=20)
-            fastq_files = [
-                f
-                for f in os.listdir(str(trimmed_pe_minlen_10000))
-                if f.endswith(".fastq.gz")
-            ]
-
-            # Process each FASTQ.GZ file
-            for obs_fp in fastq_files:
-                file_path = os.path.join(str(trimmed_pe_minlen_10000), obs_fp)
-                with gzip.open(file_path, "rt") as obs_fh:
-                    # Iterate over expected and observed reads, side-by-side
-                    for records in itertools.zip_longest(*[obs_fh] * 4):
-                        (obs_seq_h, obs_seq, _, obs_qual) = records
-                        # Make sure seqs that do not map to genome were removed
-                        obs_id = obs_seq_h.split()[0]
-                        self.assertTrue(obs_id in seq_ids_pe_minq_20)
+        # Process each FASTQ.GZ file
+        for obs_fp in fastq_files:
+            file_path = os.path.join(str(trimmed_pe_minlen_10000), obs_fp)
+            with gzip.open(file_path, "rt") as obs_fh:
+                # Iterate over expected and observed reads, side-by-side
+                for records in itertools.zip_longest(*[obs_fh] * 4):
+                    (obs_seq_h, obs_seq, _, obs_qual) = records
+                    # Make sure seqs that do not map to genome were removed
+                    obs_id = obs_seq_h.split()[0]
+                    self.assertTrue(obs_id in seq_ids_pe_minq_20)
 
 
 class TestConstructChopperCommand(Minimap2TestsBase):
