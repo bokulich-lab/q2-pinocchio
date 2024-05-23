@@ -13,7 +13,9 @@ import unittest
 from q2_types.feature_data import FeatureData, Sequence
 from q2_types.per_sample_sequences import (
     FastqGzFormat,
+    PairedEndSequencesWithQuality,
     SequencesWithQuality,
+    SingleLanePerSamplePairedEndFastqDirFmt,
     SingleLanePerSampleSingleEndFastqDirFmt,
 )
 from q2_types.sample_data import SampleData
@@ -188,6 +190,65 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
             "Either reference_reads or index_database must be provided",
             str(context.exception),
         )
+
+
+class TestFilterPairedEndReads(Minimap2TestsBase):
+    def setUp(self):
+        super().setUp()
+
+        minimap2_index_path = self.get_data_path("filter_reads/index.mmi")
+        query_reads_path = self.get_data_path("filter_reads/paired_end/")
+        reference_reads_path = self.get_data_path("filter_reads/dna-sequences.fasta")
+
+        self.query_reads = Artifact.import_data(
+            SampleData[PairedEndSequencesWithQuality], query_reads_path
+        )
+        self.minimap2_index = Artifact.import_data(Minimap2IndexDB, minimap2_index_path)
+        self.reference_reads = Artifact.import_data(
+            FeatureData[Sequence], reference_reads_path
+        )
+
+    # Keep unmapped
+    def test_filter_paired_end_keep_unmapped(self):
+        (obs_art,) = self.plugin.methods["filter_reads"](
+            self.query_reads, self.minimap2_index, keep="unmapped"
+        )
+
+        obs = obs_art.view(SingleLanePerSamplePairedEndFastqDirFmt)
+        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
+
+        for _, obs_fp in obs_seqs:
+            with gzip.open(str(obs_fp), "rt") as obs_fh:
+                self.assertNotEqual(len(obs_fh.readlines()), 0)
+                obs_fh.seek(0)
+                # Iterate over expected and observed reads, side-by-side
+                for records in itertools.zip_longest(*[obs_fh] * 4):
+                    (obs_seq_h, obs_seq, _, obs_qual) = records
+                    # Make sure seqs that map to genome were removed
+                    obs_id = obs_seq_h.strip("@/012\n")
+                    self.assertTrue(obs_id not in seq_ids_mapped)
+                    self.assertTrue(obs_id in seq_ids_unmapped)
+
+    # Keep mapped
+    def test_filter_paired_end_keep_mapped(self):
+        (obs_art,) = self.plugin.methods["filter_reads"](
+            self.query_reads, self.minimap2_index
+        )
+
+        obs = obs_art.view(SingleLanePerSamplePairedEndFastqDirFmt)
+        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
+
+        for _, obs_fp in obs_seqs:
+            with gzip.open(str(obs_fp), "rt") as obs_fh:
+                self.assertNotEqual(len(obs_fh.readlines()), 0)
+                obs_fh.seek(0)
+                # Iterate over expected and observed reads, side-by-side
+                for records in itertools.zip_longest(*[obs_fh] * 4):
+                    (obs_seq_h, obs_seq, _, obs_qual) = records
+                    # Make sure seqs that do not map to genome were removed
+                    obs_id = obs_seq_h.strip("@/012\n")
+                    self.assertTrue(obs_id in seq_ids_mapped)
+                    self.assertTrue(obs_id not in seq_ids_unmapped)
 
 
 if __name__ == "__main__":
