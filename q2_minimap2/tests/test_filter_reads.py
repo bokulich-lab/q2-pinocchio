@@ -60,7 +60,7 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
 
     # Keep unmapped
     def test_filter_single_end_keep_unmapped(self):
-        (obs_art,) = self.plugin.methods["filter_single_end_reads"](
+        (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads, self.minimap2_index, keep="unmapped"
         )
 
@@ -81,7 +81,7 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
 
     # Keep mapped
     def test_filter_single_end_keep_mapped(self):
-        (obs_art,) = self.plugin.methods["filter_single_end_reads"](
+        (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads, self.minimap2_index
         )
 
@@ -102,7 +102,7 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
 
     # Keep mapped using reference
     def test_filter_single_end_keep_mapped_using_ref(self):
-        (obs_art,) = self.plugin.methods["filter_single_end_reads"](
+        (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads, reference_reads=self.reference_reads
         )
 
@@ -122,7 +122,7 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
                     self.assertTrue(obs_id not in seq_ids_unmapped)
 
     def test_filter_single_end_keep_unmapped_with_perc_id(self):
-        (obs_art,) = self.plugin.methods["filter_single_end_reads"](
+        (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads,
             self.minimap2_index,
             keep="unmapped",
@@ -145,7 +145,7 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
                     self.assertTrue(obs_id not in perc_id_mapped)
 
     def test_filter_single_end_keep_mapped_with_perc_id(self):
-        (obs_art,) = self.plugin.methods["filter_single_end_reads"](
+        (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads,
             self.minimap2_index,
             keep="mapped",
@@ -169,7 +169,7 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
 
     def test_both_reference_and_index_provided(self):
         with self.assertRaises(ValueError) as context:
-            self.plugin.methods["filter_single_end_reads"](
+            self.plugin.methods["filter_reads"](
                 self.query_reads,
                 index_database=self.minimap2_index,
                 reference_reads=self.reference_reads,
@@ -181,7 +181,7 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
 
     def test_neither_reference_nor_index_provided(self):
         with self.assertRaises(ValueError) as context:
-            self.plugin.methods["filter_single_end_reads"](
+            self.plugin.methods["filter_reads"](
                 self.query_reads, index_database=None, reference_reads=None
             )
         self.assertIn(

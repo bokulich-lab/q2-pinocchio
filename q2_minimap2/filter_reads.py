@@ -9,14 +9,16 @@
 import os
 import tempfile
 
-import pandas as pd
 from q2_types.feature_data import DNAFASTAFormat
-from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFmt
+from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
 from q2_minimap2._filtering_utils import (
-    build_filtered_out_dir,
+    collate_sam_inplace,
+    convert_to_fastq_paired,
     convert_to_fastq_single,
     make_mn2_cmd,
+    make_mn2_paired_end_cmd,
+    process_paired_sam_flags,
     process_sam_file,
     run_cmd,
     set_penalties,
@@ -27,8 +29,9 @@ from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 # This function aligns reads to a reference using Minimap2,
 # filters the alignments, and converts the filtered alignments
 # to FASTQ format, storing the output in a given directory
-def _minimap2_filter_single_end_reads(
-    reads,  # Input reads file path
+def _minimap2_filter_reads(
+    reads1,
+    reads2,
     outdir,  # Output directory for filtered reads in FASTQ format
     idx_path,  # Path to the Minimap2 index file
     n_threads,  # Number of threads for Minimap2 and samtools
@@ -40,26 +43,47 @@ def _minimap2_filter_single_end_reads(
     # Create a temporary file for SAM output from Minimap2
     with tempfile.NamedTemporaryFile() as sam_f:
         # Construct and execute Minimap2 command for alignment
-        mn2_cmd = make_mn2_cmd(
-            preset, idx_path, n_threads, penalties, reads, sam_f.name
-        )
+        if reads2 is None:
+            mn2_cmd = make_mn2_cmd(
+                preset, idx_path, n_threads, penalties, reads1, sam_f.name
+            )
+        else:
+            mn2_cmd = make_mn2_paired_end_cmd(
+                preset, idx_path, n_threads, penalties, reads1, reads2, sam_f.name
+            )
+
         run_cmd(mn2_cmd, "Minimap2")
 
-        # Process the SAM file to filter alignments based on criteria
+        # Filter the SAM file using samtools based on the include/exclude criteria
         process_sam_file(sam_f.name, keep_mapped, min_per_identity)
+
+        if reads2 is not None:
+            # Ensuring proper read grouping of paired reaads
+            collate_sam_inplace(sam_f.name)
+            # Making flags suitable for samtools fastq command
+            process_paired_sam_flags(sam_f.name)
 
         # Construct and execute command to convert SAM to FASTQ
         # using samtools fastq, directing output to the specified output directory
-        fwd = str(outdir.path / os.path.basename(reads))
-        _reads = ["-0", fwd]
-        convert_to_fastq_single_cmd = convert_to_fastq_single(
-            _reads, n_threads, sam_f.name
-        )
-        run_cmd(convert_to_fastq_single_cmd, "samtools fastq")
+        if reads2 is None:
+            fwd = str(outdir.path / os.path.basename(reads1))
+            _reads = ["-0", fwd]
+            convert_to_fastq_cmd = convert_to_fastq_single(
+                _reads, n_threads, sam_f.name
+            )
+        else:
+            file1 = str(outdir.path / os.path.basename(reads1))
+            file2 = str(outdir.path / os.path.basename(reads2))
+            _reads = ["-1", file1, "-2", file2]
+            convert_to_fastq_cmd = convert_to_fastq_paired(
+                _reads, n_threads, sam_f.name
+            )
+
+        run_cmd(convert_to_fastq_cmd, "samtools fastq")
 
 
-def filter_single_end_reads(
-    query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
+def filter_reads(
+    query_reads: CasavaOneEightSingleLanePerSampleDirFmt,
     index_database: Minimap2IndexDBDirFmt = None,  # Optional pre-built Minimap2 index
     reference_reads: DNAFASTAFormat = None,  # Optional reference sequences
     n_threads: int = 3,  # Number of threads for Minimap2
@@ -70,7 +94,7 @@ def filter_single_end_reads(
     mismatching_penalty: int = None,  # Penalty for mismatched bases
     gap_open_penalty: int = None,  # Penalty for opening a gap
     gap_extension_penalty: int = None,  # Penalty for extending a gap
-) -> SingleLanePerSampleSingleEndFastqDirFmt:
+) -> CasavaOneEightSingleLanePerSampleDirFmt:
 
     # Ensure that only one of reference_reads or index_database is provided
     if reference_reads and index_database:
@@ -92,10 +116,7 @@ def filter_single_end_reads(
         idx_ref_path = str(reference_reads)  # Path to the reference file
 
     # Initialize directory format for filtered sequences
-    filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
-
-    # Import data from the manifest file to a df
-    input_df = query_reads.manifest.view(pd.DataFrame)
+    filtered_seqs = CasavaOneEightSingleLanePerSampleDirFmt()
 
     # Set penalties for alignment based on function parameters
     penalties = set_penalties(
@@ -106,9 +127,10 @@ def filter_single_end_reads(
     keep_mapped = keep == "mapped"
 
     # Process each read, filtering according to the specified parameters
-    for _, fwd in input_df.itertuples():
-        _minimap2_filter_single_end_reads(
+    for _, fwd, rev in query_reads.manifest.itertuples():
+        _minimap2_filter_reads(
             fwd,
+            rev,
             filtered_seqs,
             idx_ref_path,
             n_threads,
@@ -118,7 +140,4 @@ def filter_single_end_reads(
             penalties,
         )
 
-    # Build and return the directory of filtered output reads
-    build_filtered_out_dir(query_reads, filtered_seqs)
-
-    return query_reads
+    return filtered_seqs
