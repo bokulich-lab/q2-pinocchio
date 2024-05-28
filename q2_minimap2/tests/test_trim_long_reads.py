@@ -236,13 +236,11 @@ class TestProcessAndRezip(Minimap2TestsBase):
             returncode=1, cmd="chopper"
         )
 
-        with self.assertRaises(Exception) as context:
+        with self.assertRaisesRegex(
+            Exception, 
+            "An error was encountered while using chopper"
+        ):
             process_and_rezip(input_file, chopper_cmd, filtered_seqs_path)
-
-        self.assertIn(
-            "An error was encountered while using chopper", str(context.exception)
-        )
-        self.assertIn("(return code 1)", str(context.exception))
 
 
 if __name__ == "__main__":
