@@ -96,14 +96,13 @@ class TestTrim(Minimap2TestsBase):
 
         trimmed_se_maxlen_10000 = trim(query_reads, maxlength=10000)
         fastq_files = [
-            f
+            os.path.join(str(trimmed_se_maxlen_10000), f)
             for f in os.listdir(str(trimmed_se_maxlen_10000))
             if f.endswith(".fastq.gz")
         ]
 
         # Process each FASTQ.GZ file
-        for obs_fp in fastq_files:
-            file_path = os.path.join(str(trimmed_se_maxlen_10000), obs_fp)
+        for file_path in fastq_files:
             with gzip.open(file_path, "rt") as obs_fh:
                 self.assertNotEqual(len(obs_fh.readlines()), 0)
                 obs_fh.seek(0)
@@ -115,20 +114,17 @@ class TestTrim(Minimap2TestsBase):
                     self.assertTrue(obs_id in seq_ids_maxlen10000)
 
     def test_trimmed_se_minlen_10000(self):
-        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
-            self.source_dir_se, mode="r"
-        )
-
+        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(self.source_dir_se, mode="r")
         trimmed_se_minlen_10000 = trim(query_reads, minlength=10000)
+        
         fastq_files = [
-            f
+            os.path.join(str(trimmed_se_minlen_10000), f)
             for f in os.listdir(str(trimmed_se_minlen_10000))
             if f.endswith(".fastq.gz")
         ]
 
         # Process each FASTQ.GZ file
-        for obs_fp in fastq_files:
-            file_path = os.path.join(str(trimmed_se_minlen_10000), obs_fp)
+        for file_path in fastq_files:
             with gzip.open(file_path, "rt") as obs_fh:
                 self.assertNotEqual(len(obs_fh.readlines()), 0)
                 obs_fh.seek(0)
@@ -141,19 +137,17 @@ class TestTrim(Minimap2TestsBase):
 
     def test_trimmed_pe_minq_20(self):
         # Initialize the query reads from the temporary directory
-        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
-            self.source_dir_pe, mode="r"
-        )
+        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(self.source_dir_pe, mode="r")
         trimmed_pe_minlen_10000 = trim(query_reads, quality=20)
+        
         fastq_files = [
-            f
+            os.path.join(str(trimmed_pe_minlen_10000), f)
             for f in os.listdir(str(trimmed_pe_minlen_10000))
             if f.endswith(".fastq.gz")
         ]
 
         # Process each FASTQ.GZ file
-        for obs_fp in fastq_files:
-            file_path = os.path.join(str(trimmed_pe_minlen_10000), obs_fp)
+        for file_path in fastq_files:
             with gzip.open(file_path, "rt") as obs_fh:
                 # Iterate over expected and observed reads, side-by-side
                 for records in itertools.zip_longest(*[obs_fh] * 4):
