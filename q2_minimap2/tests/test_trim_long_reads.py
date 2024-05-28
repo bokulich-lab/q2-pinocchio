@@ -114,9 +114,11 @@ class TestTrim(Minimap2TestsBase):
                     self.assertTrue(obs_id in seq_ids_maxlen10000)
 
     def test_trimmed_se_minlen_10000(self):
-        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(self.source_dir_se, mode="r")
+        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
+            self.source_dir_se, mode="r"
+        )
         trimmed_se_minlen_10000 = trim(query_reads, minlength=10000)
-        
+
         fastq_files = [
             os.path.join(str(trimmed_se_minlen_10000), f)
             for f in os.listdir(str(trimmed_se_minlen_10000))
@@ -137,9 +139,11 @@ class TestTrim(Minimap2TestsBase):
 
     def test_trimmed_pe_minq_20(self):
         # Initialize the query reads from the temporary directory
-        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(self.source_dir_pe, mode="r")
+        query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
+            self.source_dir_pe, mode="r"
+        )
         trimmed_pe_minlen_10000 = trim(query_reads, quality=20)
-        
+
         fastq_files = [
             os.path.join(str(trimmed_pe_minlen_10000), f)
             for f in os.listdir(str(trimmed_pe_minlen_10000))
@@ -231,7 +235,7 @@ class TestProcessAndRezip(Minimap2TestsBase):
         )
 
         with self.assertRaisesRegex(
-            Exception, 
+            Exception,
             "An error was encountered while using chopper"
         ):
             process_and_rezip(input_file, chopper_cmd, filtered_seqs_path)
