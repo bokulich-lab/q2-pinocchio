@@ -84,7 +84,7 @@ def trim(
             quality, maxqual, minlength, maxlength, headcrop, tailcrop, threads
         )
         process_and_rezip(fwd, chopper_cmd, str(filtered_seqs_path_fwd))
-        
+
         if rev:
             filtered_seqs_path_rev = filtered_seqs.path / os.path.basename(rev)
             process_and_rezip(rev, chopper_cmd, str(filtered_seqs_path_rev))
