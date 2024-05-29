@@ -12,7 +12,7 @@ from q2_types.per_sample_sequences import (
     SequencesWithQuality,
 )
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Bool, Choices, Float, Int, Range, Str
+from qiime2.plugin import Bool, Choices, Float, Int, Range, Str, TypeMatch
 
 from q2_minimap2.types._type import Minimap2IndexDB, PairwiseAlignmentMN2
 
@@ -309,3 +309,29 @@ find_consensus_annotation_dsc = (
     "annotations. Note that the annotation hierarchy is assumed "
     "to have an even number of ranks."
 )
+
+# trim
+T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
+trim_inputs = {"query_reads": SampleData[T]}
+trim_outputs = [("filtered_query_reads", SampleData[T])]
+trim_parameters = {
+    "threads": Int % Range(1, None),
+    "quality": Int % Range(0, None),
+    "maxqual": Int % Range(0, None),
+    "minlength": Int % Range(1, None),
+    "maxlength": Int % Range(1, None),
+    "headcrop": Int % Range(0, None),
+    "tailcrop": Int % Range(0, None),
+}
+trim_input_descriptions = {"query_reads": "Sequences to be trimmed."}
+trim_output_descriptions = {"filtered_query_reads": "The resulting trimmed sequences."}
+trim_parameter_descriptions = {
+    "threads": "Number of threads.",
+    "quality": "Sets a minimum Phred average quality score.",
+    "maxqual": "Sets a maximum Phred average quality score.",
+    "minlength": "Sets a minimum read length.",
+    "maxlength": "Sets a maximum read length.",
+    "headcrop": "Trim N nucleotides from the start of a read.",
+    "tailcrop": "Trim N nucleotides from the end of a read.",
+}
+trim_dsc = "Trim long demultiplexed sequences using Chopper tool."

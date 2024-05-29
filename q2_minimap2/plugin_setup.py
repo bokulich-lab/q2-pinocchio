@@ -63,6 +63,13 @@ from q2_minimap2._action_params import (
     minimap2_search_outputs_dsc,
     minimap2_search_param_dsc,
     minimap2_search_params,
+    trim_dsc,
+    trim_input_descriptions,
+    trim_inputs,
+    trim_output_descriptions,
+    trim_outputs,
+    trim_parameter_descriptions,
+    trim_parameters,
 )
 from q2_minimap2.types._format import (
     Minimap2IndexDBDirFmt,
@@ -204,6 +211,19 @@ plugin.methods.register_function(
     output_descriptions=find_consensus_annotation_outputs_dsc,
     name="Find consensus among multiple annotations.",
     description=find_consensus_annotation_dsc,
+)
+
+plugin.methods.register_function(
+    function=q2_minimap2.trim,
+    inputs=trim_inputs,
+    outputs=trim_outputs,
+    parameters=trim_parameters,
+    input_descriptions=trim_input_descriptions,
+    output_descriptions=trim_output_descriptions,
+    parameter_descriptions=trim_parameter_descriptions,
+    name="Trim long sequences.",
+    description=trim_dsc,
+    citations=[citations["Nanopack2"]],
 )
 
 importlib.import_module("q2_minimap2.types._transformer")
