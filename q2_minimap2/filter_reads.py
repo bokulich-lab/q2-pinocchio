@@ -14,10 +14,8 @@ from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFm
 
 from q2_minimap2._filtering_utils import (
     collate_sam_inplace,
-    convert_to_fastq_paired,
-    convert_to_fastq_single,
+    convert_to_fastq,
     make_mn2_cmd,
-    make_mn2_paired_end_cmd,
     process_paired_sam_flags,
     process_sam_file,
     run_cmd,
@@ -36,47 +34,42 @@ def _minimap2_filter_reads(
     idx_path,  # Path to the Minimap2 index file
     n_threads,  # Number of threads for Minimap2 and samtools
     preset,  # Preset options for Minimap2 alignment
-    keep_mapped,  # Flag to exclude mapped reads, keeping only unmapped
+    keep,  # Flag to exclude mapped reads, keeping only unmapped
     min_per_identity,  # Minimum percentage identity for a read to be included
     penalties,  # Scoring penalties for Minimap2 alignment
 ):
     # Create a temporary file for SAM output from Minimap2
     with tempfile.NamedTemporaryFile() as sam_f:
         # Construct and execute Minimap2 command for alignment
-        if reads2 is None:
-            mn2_cmd = make_mn2_cmd(
-                preset, idx_path, n_threads, penalties, reads1, sam_f.name
-            )
-        else:
-            mn2_cmd = make_mn2_paired_end_cmd(
-                preset, idx_path, n_threads, penalties, reads1, reads2, sam_f.name
-            )
+        mn2_cmd = make_mn2_cmd(
+            preset, idx_path, n_threads, penalties, reads1, reads2, sam_f.name
+        )
 
         run_cmd(mn2_cmd, "Minimap2")
 
         # Filter the SAM file using samtools based on the include/exclude criteria
-        process_sam_file(sam_f.name, keep_mapped, min_per_identity)
+        process_sam_file(sam_f.name, keep, min_per_identity)
 
-        if reads2 is not None:
-            # Ensuring proper read grouping of paired reaads
+        if reads2:
+            # Ensuring proper read grouping of paired reads
             collate_sam_inplace(sam_f.name)
             # Making flags suitable for samtools fastq command
             process_paired_sam_flags(sam_f.name)
 
-        # Construct and execute command to convert SAM to FASTQ
-        # using samtools fastq, directing output to the specified output directory
-        if reads2 is None:
-            fwd = str(outdir.path / os.path.basename(reads1))
-            _reads = ["-0", fwd]
-            convert_to_fastq_cmd = convert_to_fastq_single(
-                _reads, n_threads, sam_f.name
-            )
-        else:
+            # Construct and execute command to convert SAM to FASTQ
+            # using samtools fastq, directing output to the specified output directory
             file1 = str(outdir.path / os.path.basename(reads1))
             file2 = str(outdir.path / os.path.basename(reads2))
             _reads = ["-1", file1, "-2", file2]
-            convert_to_fastq_cmd = convert_to_fastq_paired(
-                _reads, n_threads, sam_f.name
+            convert_to_fastq_cmd = convert_to_fastq(
+                _reads, n_threads, sam_f.name, "paired"
+            )
+        else:
+            # Convert SAM to FASTQ
+            fwd = str(outdir.path / os.path.basename(reads1))
+            _reads = ["-0", fwd]
+            convert_to_fastq_cmd = convert_to_fastq(
+                _reads, n_threads, sam_f.name, "single"
             )
 
         run_cmd(convert_to_fastq_cmd, "samtools fastq")
@@ -123,9 +116,6 @@ def filter_reads(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
     )
 
-    # Determine whether to exclude mapped reads based on the 'keep' parameter
-    keep_mapped = keep == "mapped"
-
     # Process each read, filtering according to the specified parameters
     for _, fwd, rev in query_reads.manifest.itertuples():
         _minimap2_filter_reads(
@@ -135,7 +125,7 @@ def filter_reads(
             idx_ref_path,
             n_threads,
             mapping_preset,
-            keep_mapped,
+            keep,
             min_per_identity,
             penalties,
         )

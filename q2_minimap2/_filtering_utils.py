@@ -66,12 +66,11 @@ def get_alignment_length(cigar):
 
 
 # Function to process a SAM file, filter based on mappings and identity percentage
-def process_sam_file(input_sam_file, keep_mapped, min_per_identity):
+def process_sam_file(input_sam_file, keep, min_per_identity):
     # Creates a temporary file and opens the input SAM file for reading simultaneously
     with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file, open(
         input_sam_file, "r"
     ) as infile:
-        temp_file_path = tmp_file.name
 
         for line in infile:
             # Writes header lines directly to the output file
@@ -85,7 +84,7 @@ def process_sam_file(input_sam_file, keep_mapped, min_per_identity):
             cigar = parts[5]
 
             # Calculates identity percentage for alignments with a valid CIGAR string
-            if min_per_identity is not None and cigar != "*":
+            if min_per_identity and cigar != "*":
                 total_length = get_alignment_length(cigar)
                 identity_percentage = calculate_identity(line, total_length)
             else:
@@ -95,25 +94,23 @@ def process_sam_file(input_sam_file, keep_mapped, min_per_identity):
 
             # Logic for including or excluding reads based on mappings and
             # identity percentage
-            if keep_mapped:
+            if keep == "mapped":
                 if not (flag & 0x4) and not (flag & 0x100):
                     if (
-                        min_per_identity is not None
-                        and identity_percentage >= min_per_identity
-                    ) or (min_per_identity is None):
+                        min_per_identity is None
+                        or identity_percentage >= min_per_identity
+                    ):
                         tmp_file.write(line)
             else:
                 # Condition for keeping unmapped reads or mapped reads below the
                 # identity threshold
-                keep_this_mapped = (
-                    min_per_identity is not None
-                    and identity_percentage < min_per_identity
-                )
-                if (flag & 0x4) or keep_this_mapped:
+                if (flag & 0x4) or (
+                    min_per_identity and identity_percentage < min_per_identity
+                ):
                     tmp_file.write(line)
 
     # Replaces the original SAM file with the filtered temporary file
-    shutil.move(temp_file_path, input_sam_file)
+    shutil.move(tmp_file.name, input_sam_file)
 
 
 # Generate samtools fasta convert command
@@ -136,29 +133,12 @@ def convert_to_fasta(_reads, n_threads, samfile_filepath):
     return convert_cmd
 
 
-def convert_to_fastq_single(_reads, n_threads, samfile_filepath):
-    convert_cmd = [
-        "samtools",
-        "fastq",
-        *_reads,
-        "-s",
-        "/dev/null",
-        "-@",
-        str(n_threads),
-        "-n",
-        str(samfile_filepath),
-    ]
+def convert_to_fastq(_reads, n_threads, samfile_filepath, kind):
+    convert_cmd = ["samtools", "fastq", *_reads]
+    if kind == "paired":
+        convert_cmd += ["-0", "/dev/null"]
 
-    return convert_cmd
-
-
-def convert_to_fastq_paired(_reads, n_threads, samfile_filepath):
-    convert_cmd = [
-        "samtools",
-        "fastq",
-        *_reads,
-        "-0",
-        "/dev/null",
+    convert_cmd += [
         "-s",
         "/dev/null",
         "-@",
@@ -171,7 +151,7 @@ def convert_to_fastq_paired(_reads, n_threads, samfile_filepath):
 
 
 # Generate Minimap2 mapping command
-def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads, samf_fp):
+def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads1, reads2, samf_fp):
     # align to reference with Minimap2
     minimap2_cmd = (
         [
@@ -186,8 +166,11 @@ def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads, samf_fp):
             str(samf_fp),
         ]
         + penalties
-        + [reads]
+        + [reads1]
     )
+
+    if reads2:
+        minimap2_cmd.append(reads2)
 
     return minimap2_cmd
 
@@ -235,7 +218,6 @@ def build_filtered_out_dir(input_reads, filtered_seqs):
 
 
 def collate_sam_inplace(input_sam_path):
-    input_sam_path = os.path.abspath(input_sam_path)
     # Temporary file prefix based on the input file name
     temp_prefix = os.path.splitext(input_sam_path)[0] + "_temp_collate"
     # Output file path in the same directory
@@ -265,7 +247,6 @@ def process_paired_sam_flags(input_sam_path):
     pairs in order to be recognized py the samtools fastq command for paired end reads
     """
     with tempfile.NamedTemporaryFile(delete=False, mode="w") as temp_file:
-        temp_path = temp_file.name
         with open(input_sam_path, "r") as infile:
             for line in infile:
                 if line.startswith("@"):
@@ -288,4 +269,4 @@ def process_paired_sam_flags(input_sam_path):
                 temp_file.write("\t".join(read1) + "\n")
                 temp_file.write("\t".join(read2) + "\n")
 
-    shutil.move(temp_path, input_sam_path)
+    shutil.move(temp_file.name, input_sam_path)

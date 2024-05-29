@@ -18,11 +18,9 @@ from q2_minimap2._filtering_utils import (
     calculate_identity,
     collate_sam_inplace,
     convert_to_fasta,
-    convert_to_fastq_paired,
-    convert_to_fastq_single,
+    convert_to_fastq,
     get_alignment_length,
     make_mn2_cmd,
-    make_mn2_paired_end_cmd,
     process_paired_sam_flags,
     process_sam_file,
     run_cmd,
@@ -244,7 +242,7 @@ class TestProcessSamFile(Minimap2TestsBase):
             # Copy the SAM file to the temporary location
             shutil.copy(self.samfile, tmpfile)
 
-            process_sam_file(tmpfile, True, None)
+            process_sam_file(tmpfile, "mapped", None)
 
             # Check each line for equality using splitlines()
             with open(tmpfile, "r") as tmpfile_content, open(
@@ -281,7 +279,7 @@ class TestProcessSamFile(Minimap2TestsBase):
             # Copy the SAM file to the temporary location
             shutil.copy(self.samfile, tmpfile)
 
-            process_sam_file(tmpfile, True, 0.3)
+            process_sam_file(tmpfile, "mapped", 0.3)
 
             # Check each line for equality using splitlines()
             with open(tmpfile, "r") as tmpfile_content, open(
@@ -318,7 +316,7 @@ class TestProcessSamFile(Minimap2TestsBase):
             # Copy the SAM file to the temporary location
             shutil.copy(self.samfile, tmpfile)
 
-            process_sam_file(tmpfile, False, None)
+            process_sam_file(tmpfile, "unmapped", None)
 
             # Check each line for equality using splitlines()
             with open(tmpfile, "r") as tmpfile_content, open(
@@ -396,7 +394,7 @@ class TestConvertToFastq(Minimap2TestsBase):
         ]
 
         # Call the function and compare the result with the expected command
-        actual_cmd = convert_to_fastq_single(_reads, n_threads, samfile_filepath)
+        actual_cmd = convert_to_fastq(_reads, n_threads, samfile_filepath, "single")
         self.assertEqual(actual_cmd, expected_cmd)
 
 
@@ -434,7 +432,7 @@ class TestMakeMn2Cmd(Minimap2TestsBase):
 
         # Call the function and compare the result with the expected command
         actual_cmd = make_mn2_cmd(
-            mapping_preset, index, n_threads, penalties, reads, samf_fp
+            mapping_preset, index, n_threads, penalties, reads, None, samf_fp
         )
         self.assertEqual(actual_cmd, expected_cmd)
 
@@ -459,7 +457,7 @@ class TestConvertToFastqPaired(Minimap2TestsBase):
             str(samfile_filepath),
         ]
 
-        result_cmd = convert_to_fastq_paired(_reads, n_threads, samfile_filepath)
+        result_cmd = convert_to_fastq(_reads, n_threads, samfile_filepath, "paired")
         self.assertEqual(
             result_cmd,
             expected_cmd,
@@ -469,7 +467,7 @@ class TestConvertToFastqPaired(Minimap2TestsBase):
 
 
 class TestMakeMn2PairedEndCmd(Minimap2TestsBase):
-    def test_make_mn2_paired_end_cmd(self):
+    def test_make_mn2_cmd_paired(self):
         mapping_preset = "map-preset"
         index = "/path/to/index"
         n_threads = 4
@@ -500,7 +498,7 @@ class TestMakeMn2PairedEndCmd(Minimap2TestsBase):
             reads2,
         ]
 
-        result_cmd = make_mn2_paired_end_cmd(
+        result_cmd = make_mn2_cmd(
             mapping_preset, index, n_threads, penalties, reads1, reads2, samf_fp
         )
         self.assertEqual(result_cmd, expected_cmd)
@@ -543,9 +541,8 @@ class TestCollateSamInplace(Minimap2TestsBase):
     @patch("shutil.move")
     def test_collate_sam_inplace(self, mock_shutil_move, mock_run_cmd):
         input_sam_path = "test_input.sam"
-        abs_input_sam_path = os.path.abspath(input_sam_path)
-        temp_prefix = os.path.splitext(abs_input_sam_path)[0] + "_temp_collate"
-        output_sam_path = os.path.splitext(abs_input_sam_path)[0] + "_collated.sam"
+        temp_prefix = os.path.splitext(input_sam_path)[0] + "_temp_collate"
+        output_sam_path = os.path.splitext(input_sam_path)[0] + "_collated.sam"
 
         collate_sam_inplace(input_sam_path)
 
@@ -558,12 +555,12 @@ class TestCollateSamInplace(Minimap2TestsBase):
             output_sam_path,
             "-T",
             temp_prefix,
-            abs_input_sam_path,
+            input_sam_path,
         ]
         mock_run_cmd.assert_called_once_with(expected_cmd, "Samtools collate")
 
         # Verify shutil.move was called with the correct arguments
-        mock_shutil_move.assert_called_once_with(output_sam_path, abs_input_sam_path)
+        mock_shutil_move.assert_called_once_with(output_sam_path, input_sam_path)
 
 
 class TestProcessPairedSamFlags(Minimap2TestsBase):

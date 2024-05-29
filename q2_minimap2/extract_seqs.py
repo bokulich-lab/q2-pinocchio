@@ -30,7 +30,7 @@ def _minimap2_extract_seqs(
     idx_path,
     n_threads,
     preset,
-    keep_mapped,
+    keep,
     min_per_identity,
     penalties,
 ):
@@ -38,12 +38,12 @@ def _minimap2_extract_seqs(
     with tempfile.NamedTemporaryFile() as sam_f:
         # Use Minimap2 to find mapped and unmapped reads
         mn2_cmd = make_mn2_cmd(
-            preset, idx_path, n_threads, penalties, reads, sam_f.name
+            preset, idx_path, n_threads, penalties, reads, None, sam_f.name
         )
         run_cmd(mn2_cmd, "Minimap2")
 
         # Filter sam file using samtools view
-        process_sam_file(sam_f.name, keep_mapped, min_per_identity)
+        process_sam_file(sam_f.name, keep, min_per_identity)
 
         # Convert to FASTA with samtools
         convert_to_fasta_cmd = convert_to_fasta(outdir.path, n_threads, sam_f.name)
@@ -87,11 +87,6 @@ def extract_seqs(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
     )
 
-    if extract == "mapped":
-        keep_mapped = True
-    else:
-        keep_mapped = False
-
     # Filter the read using minimap2 according to the specified parameters
     _minimap2_extract_seqs(
         str(sequences),
@@ -99,7 +94,7 @@ def extract_seqs(
         idx_ref_path,
         n_threads,
         mapping_preset,
-        keep_mapped,
+        extract,
         min_per_identity,
         penalties,
     )
