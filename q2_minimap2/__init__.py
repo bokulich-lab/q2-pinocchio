@@ -14,6 +14,7 @@ from .filter_paired_end_reads import filter_paired_end_reads
 from .filter_single_end_reads import filter_single_end_reads
 from .minimap2_search import minimap2_search
 from .nanoplot_stats import stats
+from .trim_long_reads import trim
 
 __version__ = get_versions()["version"]
 del get_versions
@@ -27,4 +28,5 @@ __all__ = [
     "_find_consensus_annotation",
     "extract_seqs",
     "stats",
+    "trim",
 ]

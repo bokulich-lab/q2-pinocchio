@@ -66,6 +66,13 @@ from q2_minimap2._action_params import (
     stats_dsc,
     stats_input_descriptions,
     stats_inputs,
+    trim_dsc,
+    trim_input_descriptions,
+    trim_inputs,
+    trim_output_descriptions,
+    trim_outputs,
+    trim_parameter_descriptions,
+    trim_parameters,
 )
 from q2_minimap2.types._format import (
     Minimap2IndexDBDirFmt,
@@ -217,6 +224,19 @@ plugin.visualizers.register_function(
     parameter_descriptions={},
     name="Quality control statistics of long sequences.",
     description=stats_dsc,
+    citations=[citations["Nanopack2"]],
+)
+
+plugin.methods.register_function(
+    function=q2_minimap2.trim,
+    inputs=trim_inputs,
+    outputs=trim_outputs,
+    parameters=trim_parameters,
+    input_descriptions=trim_input_descriptions,
+    output_descriptions=trim_output_descriptions,
+    parameter_descriptions=trim_parameter_descriptions,
+    name="Trim long sequences.",
+    description=trim_dsc,
     citations=[citations["Nanopack2"]],
 )
 
