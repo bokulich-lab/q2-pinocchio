@@ -96,10 +96,7 @@ def process_sam_file(input_sam_file, keep, min_per_identity):
             # identity percentage
             if keep == "mapped":
                 if not (flag & 0x4) and not (flag & 0x100):
-                    if (
-                        min_per_identity is None
-                        or identity_percentage >= min_per_identity
-                    ):
+                    if not min_per_identity or identity_percentage >= min_per_identity:
                         tmp_file.write(line)
             else:
                 # Condition for keeping unmapped reads or mapped reads below the
@@ -171,30 +168,6 @@ def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads1, reads2, sa
 
     if reads2:
         minimap2_cmd.append(reads2)
-
-    return minimap2_cmd
-
-
-# Generate Minimap2 paired-end mapping command
-def make_mn2_paired_end_cmd(
-    mapping_preset, index, n_threads, penalties, reads1, reads2, samf_fp
-):
-    # align to reference with Minimap2
-    minimap2_cmd = (
-        [
-            "minimap2",
-            "-a",
-            "-x",
-            mapping_preset,
-            str(index),
-            "-t",
-            str(n_threads),
-            "-o",
-            str(samf_fp),
-        ]
-        + penalties
-        + [reads1, reads2]
-    )
 
     return minimap2_cmd
 
