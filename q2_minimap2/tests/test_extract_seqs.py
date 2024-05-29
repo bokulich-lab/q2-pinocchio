@@ -51,41 +51,25 @@ class TestExtractSeqs(Minimap2TestsBase):
             self.get_data_path("extract_seqs/se-dna-sequences.fasta"), mode="r"
         )
 
-    # Exclude mapped
+    def _check_extracted_ids(self, extracted_sequences, included_ids, excluded_ids):
+        with open(str(extracted_sequences), "rt") as obs_fh:
+            self.assertNotEqual(len(obs_fh.readlines()), 0)
+            obs_fh.seek(0)
+            for records in itertools.zip_longest(*[obs_fh] * 4):
+                (obs_seq_h, obs_seq, _, obs_qual) = records
+                obs_id = obs_seq_h.strip(">/012\n")
+                self.assertTrue(obs_id in included_ids)
+                self.assertTrue(obs_id not in excluded_ids)
+
     def test_extract_unmapped(self):
         extracted_sequences = extract_seqs(
             self.query1_reads, self.minimap2_index, extract="unmapped"
         )
-        # Open and read the FASTA file
-        with open(str(extracted_sequences), "rt") as obs_fh:
-            # Ensure the file is not empty
-            self.assertNotEqual(len(obs_fh.readlines()), 0)
-            obs_fh.seek(0)
+        self._check_extracted_ids(extracted_sequences, seq_ids_unmapped, seq_ids_mapped)
 
-            # Iterate over expected and observed reads, side-by-side
-            for records in itertools.zip_longest(*[obs_fh] * 4):
-                (obs_seq_h, obs_seq, _, obs_qual) = records
-                # Extract sequence ID from header
-                obs_id = obs_seq_h.strip(">/012\n")
-                # Ensure sequences that map to the genome were removed
-                self.assertTrue(obs_id not in seq_ids_mapped)
-                self.assertTrue(obs_id in seq_ids_unmapped)
-
-    # Keep mapped
     def test_extract_mapped(self):
         extracted_sequences = extract_seqs(self.query1_reads, self.minimap2_index)
-        # Open and read the FASTA file
-        with open(str(extracted_sequences), "rt") as obs_fh:
-            # Ensure the file is not empty
-            self.assertNotEqual(len(obs_fh.readlines()), 0)
-            obs_fh.seek(0)
-            # Iterate over expected and observed reads, side-by-side
-            for records in itertools.zip_longest(*[obs_fh] * 4):
-                (obs_seq_h, obs_seq, _, obs_qual) = records
-                # Make sure seqs that do not map to genome were removed
-                obs_id = obs_seq_h.strip(">/012\n")
-                self.assertTrue(obs_id in seq_ids_mapped)
-                self.assertTrue(obs_id not in seq_ids_unmapped)
+        self._check_extracted_ids(extracted_sequences, seq_ids_mapped, seq_ids_unmapped)
 
     def test_extract_unmapped_with_perc_id(self):
         extracted_sequences = extract_seqs(
@@ -94,18 +78,7 @@ class TestExtractSeqs(Minimap2TestsBase):
             extract="unmapped",
             min_per_identity=0.99,
         )
-        # Open and read the FASTA file
-        with open(str(extracted_sequences), "rt") as obs_fh:
-            # Ensure the file is not empty
-            self.assertNotEqual(len(obs_fh.readlines()), 0)
-            obs_fh.seek(0)
-            # Iterate over expected and observed reads, side-by-side
-            for records in itertools.zip_longest(*[obs_fh] * 4):
-                (obs_seq_h, obs_seq, _, obs_qual) = records
-                # Make sure seqs that do not map to genome were removed
-                obs_id = obs_seq_h.strip(">/012\n")
-                self.assertTrue(obs_id in perc_id_unmapped)
-                self.assertTrue(obs_id not in perc_id_mapped)
+        self._check_extracted_ids(extracted_sequences, perc_id_unmapped, perc_id_mapped)
 
     def test_extract_mapped_with_perc_id(self):
         extracted_sequences = extract_seqs(
@@ -114,18 +87,7 @@ class TestExtractSeqs(Minimap2TestsBase):
             extract="mapped",
             min_per_identity=0.99,
         )
-        # Open and read the FASTA file
-        with open(str(extracted_sequences), "rt") as obs_fh:
-            # Ensure the file is not empty
-            self.assertNotEqual(len(obs_fh.readlines()), 0)
-            obs_fh.seek(0)
-            # Iterate over expected and observed reads, side-by-side
-            for records in itertools.zip_longest(*[obs_fh] * 4):
-                (obs_seq_h, obs_seq, _, obs_qual) = records
-                # Make sure seqs that do not map to genome were removed
-                obs_id = obs_seq_h.strip(">/012\n")
-                self.assertTrue(obs_id in perc_id_mapped)
-                self.assertTrue(obs_id not in perc_id_unmapped)
+        self._check_extracted_ids(extracted_sequences, perc_id_mapped, perc_id_unmapped)
 
     def test_extract_mapped_using_reference(self):
         extracted_sequences = extract_seqs(self.query2_reads, reference_reads=self.ref)
