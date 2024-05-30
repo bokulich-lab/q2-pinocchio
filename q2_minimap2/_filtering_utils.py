@@ -11,32 +11,22 @@ import shutil
 import subprocess
 import tempfile
 
-import qiime2.util
-import yaml
-from q2_types.per_sample_sequences import (
-    FastqManifestFormat,
-    SingleLanePerSamplePairedEndFastqDirFmt,
-    SingleLanePerSampleSingleEndFastqDirFmt,
-    YamlFormat,
-)
-from q2_types.per_sample_sequences._transformer import (
-    _parse_and_validate_manifest_partial,
-)
-
 from q2_minimap2._utils import run_command
 
 
 # Set Minimap2 alignment penalties based on provided parameters
-def set_penalties(match, mismatch, gap_o, gap_e):
+def set_penalties(
+    matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
+):
     options = []
-    if match is not None:
-        options += ["-A", str(match)]
-    if mismatch is not None:
-        options += ["-B", str(mismatch)]
-    if gap_o is not None:
-        options += ["-O", str(gap_o)]
-    if gap_e is not None:
-        options += ["-E", str(gap_e)]
+    if matching_score is not None:
+        options += ["-A", str(matching_score)]
+    if mismatching_penalty is not None:
+        options += ["-B", str(mismatching_penalty)]
+    if gap_open_penalty:
+        options += ["-O", str(gap_open_penalty)]
+    if gap_extension_penalty:
+        options += ["-E", str(gap_extension_penalty)]
 
     return options
 
@@ -76,61 +66,52 @@ def get_alignment_length(cigar):
 
 
 # Function to process a SAM file, filter based on mappings and identity percentage
-def process_sam_file(input_sam_file, keep_mapped, min_per_identity):
-    # Creates a temporary file to write filtered alignments to
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file:
-        temp_file_path = tmp_file.name
+def process_sam_file(input_sam_file, keep, min_per_identity):
+    # Creates a temporary file and opens the input SAM file for reading simultaneously
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_file, open(
+        input_sam_file, "r"
+    ) as infile:
 
-    # Opens the input SAM file and the temporary file for writing
-    with open(input_sam_file, "r") as infile, open(temp_file_path, "w") as outfile:
         for line in infile:
             # Writes header lines directly to the output file
             if line.startswith("@"):
-                outfile.write(line)
+                tmp_file.write(line)
                 continue
 
-            # Extract information from cigar
+            # Extract information from the line
             parts = line.split("\t")
             flag = int(parts[1])
             cigar = parts[5]
 
             # Calculates identity percentage for alignments with a valid CIGAR string
-            if min_per_identity is not None and cigar != "*":
+            if min_per_identity and cigar != "*":
                 total_length = get_alignment_length(cigar)
                 identity_percentage = calculate_identity(line, total_length)
             else:
-                # Defaults identity percentage to 1 (100%) if no CIGAR string or no
-                # min_per_identity is specified
+                # Defaults identity percentage to 100% if no CIGAR string or no
+                # min_per_identity specified
                 identity_percentage = 1
 
             # Logic for including or excluding reads based on mappings and
             # identity percentage
-            if keep_mapped:
-                # Keep reads if they are mapped
+            if keep == "mapped":
                 if not (flag & 0x4) and not (flag & 0x100):
-                    # If the minimum identity percentage is provided then accept the
-                    # mapped read if its identity percentage is equal or exceeds
-                    # the minimum identity percentage
-                    if (min_per_identity is None) or (
-                        identity_percentage >= min_per_identity
-                    ):
-                        outfile.write(line)
+                    if not min_per_identity or identity_percentage >= min_per_identity:
+                        tmp_file.write(line)
             else:
-                # Κeep the unmapped reads or if the minimum identity percentage
-                # is provided keep also the mapped reads below the identity threshold
-                # which are reclassified as unmapped reads
+                # Condition for keeping unmapped reads or mapped reads below the
+                # identity threshold
                 if (flag & 0x4) or (
-                    min_per_identity is not None
-                    and identity_percentage < min_per_identity
+                    min_per_identity and identity_percentage < min_per_identity
                 ):
-                    outfile.write(line)
+                    tmp_file.write(line)
 
     # Replaces the original SAM file with the filtered temporary file
-    shutil.move(temp_file_path, input_sam_file)
+    shutil.move(tmp_file.name, input_sam_file)
 
 
 # Generate samtools fasta convert command
-def convert_to_fasta(_reads, n_threads, bamfile_filepath):
+def convert_to_fasta(_reads, n_threads, samfile_filepath):
     # -s /dev/null excludes singletons
     # -n keeps samtools from altering header IDs
     convert_cmd = [
@@ -141,100 +122,52 @@ def convert_to_fasta(_reads, n_threads, bamfile_filepath):
         "-s",
         "/dev/null",
         "-@",
-        str(n_threads - 1),
+        str(n_threads),
         "-n",
-        str(bamfile_filepath),
-    ]
-
-    return convert_cmd
-
-
-def convert_to_fastq(_reads, n_threads, bamfile_filepath):
-    convert_cmd = [
-        "samtools",
-        "fastq",
-        *_reads,
-        "-s",
-        "/dev/null",
-        "-@",
-        str(n_threads - 1),
-        "-n",
-        str(bamfile_filepath),
-    ]
-
-    return convert_cmd
-
-
-def convert_to_fastq_paired(_reads, n_threads, bamfile_filepath):
-    convert_cmd = [
-        "samtools",
-        "fastq",
-        *_reads,
-        "-0",
-        "/dev/null",
-        "-s",
-        "/dev/null",
-        "-@",
-        str(n_threads - 1),
-        "-n",
-        str(bamfile_filepath),
-    ]
-
-    return convert_cmd
-
-
-# Generate samtools view filtering command
-def make_samt_cmd(samfile_filepath, bamfile_filepath, n_threads):
-    samtools_cmd = [
-        "samtools",
-        "view",
-        "-bS",
         str(samfile_filepath),
-        "-o",
-        str(bamfile_filepath),
-        "-@",
-        str(n_threads - 1),
     ]
 
-    return samtools_cmd
+    return convert_cmd
+
+
+def convert_to_fastq(_reads, n_threads, samfile_filepath, kind):
+    convert_cmd = ["samtools", "fastq", *_reads]
+    if kind == "paired":
+        convert_cmd += ["-0", "/dev/null"]
+
+    convert_cmd += [
+        "-s",
+        "/dev/null",
+        "-@",
+        str(n_threads),
+        "-n",
+        str(samfile_filepath),
+    ]
+
+    return convert_cmd
 
 
 # Generate Minimap2 mapping command
-def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads, samf_fp):
+def make_mn2_cmd(mapping_preset, index, n_threads, penalties, reads1, reads2, samf_fp):
     # align to reference with Minimap2
-    minimap2_cmd = [
-        "minimap2",
-        "-a",
-        "-x",
-        mapping_preset,
-        str(index),
-        "-t",
-        str(n_threads),
-    ] + penalties
+    minimap2_cmd = (
+        [
+            "minimap2",
+            "-a",
+            "-x",
+            mapping_preset,
+            str(index),
+            "-t",
+            str(n_threads),
+            "-o",
+            str(samf_fp),
+        ]
+        + penalties
+        + [reads1]
+    )
 
-    minimap2_cmd += [reads]
-    minimap2_cmd += ["-o", samf_fp]
-
-    return minimap2_cmd
-
-
-# Generate Minimap2 paired-end mapping command
-def make_mn2_paired_end_cmd(
-    mapping_preset, index, n_threads, penalties, reads1, reads2, samf_fp
-):
-    # align to reference with Minimap2
-    minimap2_cmd = [
-        "minimap2",
-        "-a",
-        "-x",
-        mapping_preset,
-        str(index),
-        "-t",
-        str(n_threads),
-    ] + penalties
-
-    minimap2_cmd += [reads1, reads2]
-    minimap2_cmd += ["-o", samf_fp]
+    if reads2:
+        minimap2_cmd.append(reads2)
 
     return minimap2_cmd
 
@@ -253,80 +186,15 @@ def run_cmd(cmd, str):
 
 
 def build_filtered_out_dir(input_reads, filtered_seqs):
-    # Parse the input manifest to get a DataFrame of reads
-    with input_reads.manifest.view(FastqManifestFormat).open() as fh:
-        input_manifest = _parse_and_validate_manifest_partial(
-            fh, single_end=True, absolute=False
-        )
-        # Filter the input manifest DataFrame for forward reads
-        output_df = input_manifest[input_manifest.direction == "forward"]
-
-    # Initialize the output manifest
-    output_manifest = FastqManifestFormat()
-    # Copy input manifest to output manifest
-    with output_manifest.open() as fh:
-        output_df.to_csv(fh, index=False)
-
-    # Initialize the result object to store filtered reads
-    result = SingleLanePerSampleSingleEndFastqDirFmt()
-    # Write the output manifest to the result object
-    result.manifest.write_data(output_manifest, FastqManifestFormat)
-    # Duplicate each filtered sequence file to the result object's directory
-    for _, _, filename, _ in output_df.itertuples():
-        qiime2.util.duplicate(
-            str(filtered_seqs.path / filename), str(result.path / filename)
-        )
-
-    # Create metadata about the phred offset
-    metadata = YamlFormat()
-    metadata.path.write_text(yaml.dump({"phred-offset": 33}))
-    # Attach metadata to the result
-    result.metadata.write_data(metadata, YamlFormat)
-
-    return result
+    for filename in os.listdir(filtered_seqs.path):
+        shutil.copy(os.path.join(filtered_seqs.path, filename), input_reads.path)
 
 
-def build_filtered_paired_end_out_dir(input_reads, filtered_seqs):
-    # Parse the input manifest to get a DataFrame of reads
-    with input_reads.manifest.view(FastqManifestFormat).open() as fh:
-        input_manifest = _parse_and_validate_manifest_partial(
-            fh, single_end=False, absolute=False
-        )
-        # Filter the input manifest DataFrame for forward reads
-        output_df = input_manifest
-
-    # Initialize the output manifest
-    output_manifest = FastqManifestFormat()
-    # Copy input manifest to output manifest
-    with output_manifest.open() as fh:
-        output_df.to_csv(fh, index=False)
-
-    # Initialize the result object to store filtered reads
-    result = SingleLanePerSamplePairedEndFastqDirFmt()
-    # Write the output manifest to the result object
-    result.manifest.write_data(output_manifest, FastqManifestFormat)
-    # Duplicate each filtered sequence file to the result object's directory
-
-    for _, _, filename, _ in output_df.itertuples():
-        qiime2.util.duplicate(
-            str(filtered_seqs.path / filename), str(result.path / filename)
-        )
-
-    # Create metadata about the phred offset
-    metadata = YamlFormat()
-    metadata.path.write_text(yaml.dump({"phred-offset": 33}))
-    # Attach metadata to the result
-    result.metadata.write_data(metadata, YamlFormat)
-
-    return result
-
-
-def collate_bam_inplace(input_bam_path):
-    input_bam_path = os.path.abspath(input_bam_path)
+def collate_sam_inplace(input_sam_path):
     # Temporary file prefix based on the input file name
-    temp_prefix = os.path.splitext(input_bam_path)[0] + "_temp_collate"
+    temp_prefix = os.path.splitext(input_sam_path)[0] + "_temp_collate"
     # Output file path in the same directory
-    output_bam_path = os.path.splitext(input_bam_path)[0] + "_collated.bam"
+    output_sam_path = os.path.splitext(input_sam_path)[0] + "_collated.sam"
 
     # Samtools collate command
     collate_cmd = [
@@ -334,86 +202,44 @@ def collate_bam_inplace(input_bam_path):
         "collate",
         "-u",
         "-o",
-        output_bam_path,
+        output_sam_path,
         "-T",
         temp_prefix,
-        input_bam_path,
+        input_sam_path,
     ]
 
     # Execute samtools collate command
     run_cmd(collate_cmd, "Samtools collate")
 
-    shutil.move(output_bam_path, input_bam_path)
+    shutil.move(output_sam_path, input_sam_path)
 
 
-def add_mapped_paired_read_flags(input_file):
-    temp_fd, temp_path = tempfile.mkstemp()
-    with os.fdopen(temp_fd, "w") as outfile, open(input_file, "r") as infile:
-        read_number = 1  # Start with the first read of a pair
-        for line in infile:
-            if line.startswith("@"):
-                outfile.write(line)  # Copy header lines directly
-            else:
-                parts = line.strip().split("\t")
-                flag = int(parts[1])
-
-                if int(parts[1]) == 4:
+def process_paired_sam_flags(input_sam_path):
+    """
+    Process a SAM file containing paired-end reads to set specific flags for the read
+    pairs in order to be recognized py the samtools fastq command for paired end reads
+    """
+    with tempfile.NamedTemporaryFile(delete=False, mode="w") as temp_file:
+        with open(input_sam_path, "r") as infile:
+            for line in infile:
+                if line.startswith("@"):
+                    temp_file.write(line)
                     continue
 
-                if read_number == 1:  # First read in a pair
-                    flag |= 0x40  # Add the READ1 flag
-                    read_number = (
-                        2  # Set up for the next read to be the second in a pair
-                    )
-                else:  # Second read in a pair
-                    flag |= 0x80  # Add the READ2 flag
-                    read_number = 1  # Reset for the next pair
+                read1 = line.strip().split("\t")
+                read2 = infile.readline().strip().split("\t")
 
-                parts[1] = str(flag)  # Update the flag in the line
-                outfile.write("\t".join(parts) + "\n")  # Write the modified line
-
-    # Replace the original file with the updated one
-    shutil.move(temp_path, input_file)
-
-
-def process_paired_unmapped_flags(input_sam_path):
-    # Create a temporary file
-    temp_path = tempfile.mktemp()
-    with open(temp_path, "w") as outfile, open(input_sam_path, "r") as infile:
-        read_pair_buffer = []  # Buffer to store consecutive reads
-
-        for line in infile:
-            if line.startswith("@"):
-                # Write header lines directly to the output
-                outfile.write(line)
-            else:
-                parts = line.strip().split("\t")
-                if int(parts[1]) == 4:
-                    read_pair_buffer.append(parts)
-
-                    if len(read_pair_buffer) == 2:
-                        # Process the pair
-                        read_pair_buffer[0][
-                            1
-                        ] = "69"  # Set flag for the first read in pair
-                        read_pair_buffer[1][
-                            1
-                        ] = "133"  # Set flag for the second read in pair
-
-                        # Write modified reads to file
-                        outfile.write("\t".join(read_pair_buffer[0]) + "\n")
-                        outfile.write("\t".join(read_pair_buffer[1]) + "\n")
-
-                        # Clear the buffer after processing the pair
-                        read_pair_buffer = []
+                if int(read1[1]) == 4 and int(read2[1]) == 4:  # Both reads are unmapped
+                    read1[1] = "69"  # 1 + 4 + 64: Read is first in pair and unmapped
+                    read2[1] = "133"  # 1 + 4 + 128: Read is second in pair and unmapped
                 else:
-                    # If not an unmapped read, write directly to the output
-                    # and clear the buffer (in case it's out of sync)
-                    if read_pair_buffer:
-                        for read in read_pair_buffer:
-                            outfile.write("\t".join(read) + "\n")
-                        read_pair_buffer = []
-                    outfile.write(line)
+                    # Ensure paired flags
+                    # Add 1 and 64 (first read in a pair)
+                    read1[1] = str(int(read1[1]) | 1 | 64)
+                    # Add 1 and 128 (first read in a pair)
+                    read2[1] = str(int(read2[1]) | 1 | 128)
 
-    # Replace the original file with the new file
-    shutil.move(temp_path, input_sam_path)
+                temp_file.write("\t".join(read1) + "\n")
+                temp_file.write("\t".join(read2) + "\n")
+
+    shutil.move(temp_file.name, input_sam_path)

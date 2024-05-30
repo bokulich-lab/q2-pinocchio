@@ -11,23 +11,43 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from q2_minimap2._filtering_utils import (
+    build_filtered_out_dir,
     calculate_identity,
+    collate_sam_inplace,
     convert_to_fasta,
     convert_to_fastq,
-    convert_to_fastq_paired,
     get_alignment_length,
     make_mn2_cmd,
-    make_mn2_paired_end_cmd,
-    make_samt_cmd,
+    process_paired_sam_flags,
     process_sam_file,
     run_cmd,
     set_penalties,
 )
 
 from .test_minimap2 import Minimap2TestsBase
+
+
+class TestBuildFilteredOutDir(Minimap2TestsBase):
+    @patch("os.listdir")
+    @patch("shutil.copy")
+    def test_copy_files(self, mock_copy, mock_listdir):
+        # Set up
+        input_reads = type("test", (object,), {"path": "fake_input_path"})
+        filtered_seqs = type("test", (object,), {"path": "fake_filtered_path"})
+        mock_listdir.return_value = ["file1.txt", "file2.txt"]
+
+        # Invoke
+        build_filtered_out_dir(input_reads, filtered_seqs)
+
+        # Assert
+        expected_calls = [
+            call(os.path.join("fake_filtered_path", "file1.txt"), "fake_input_path"),
+            call(os.path.join("fake_filtered_path", "file2.txt"), "fake_input_path"),
+        ]
+        mock_copy.assert_has_calls(expected_calls, any_order=True)
 
 
 class TestSetPenalties(Minimap2TestsBase):
@@ -222,7 +242,44 @@ class TestProcessSamFile(Minimap2TestsBase):
             # Copy the SAM file to the temporary location
             shutil.copy(self.samfile, tmpfile)
 
-            process_sam_file(tmpfile, True, None)
+            process_sam_file(tmpfile, "mapped", None)
+
+            # Check each line for equality using splitlines()
+            with open(tmpfile, "r") as tmpfile_content, open(
+                self.only_primary, "r"
+            ) as primary_content:
+                tmp_lines = tmpfile_content.read().splitlines()
+                primary_lines = primary_content.read().splitlines()
+
+                tmp_index = 0
+                primary_index = 0
+
+                while tmp_index < len(tmp_lines) and primary_index < len(primary_lines):
+                    tmp_line = tmp_lines[tmp_index]
+                    primary_line = primary_lines[primary_index]
+
+                    if tmp_line.startswith("@PG"):
+                        # Skip the line starting with '@PG' in tmp_lines
+                        tmp_index += 1
+                        primary_index += 1
+                        continue
+
+                    # Explicitly print the line
+                    self.assertEqual(tmp_line, primary_line)
+
+                    tmp_index += 1
+                    primary_index += 1
+
+    def test_keep_primary_mapped_with_perc_id(self):
+        # Create a temporary directory
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Concatenate the temporary directory path and the original file name
+            tmpfile = os.path.join(tmpdir, "initial_tmp.sam")
+
+            # Copy the SAM file to the temporary location
+            shutil.copy(self.samfile, tmpfile)
+
+            process_sam_file(tmpfile, "mapped", 0.3)
 
             # Check each line for equality using splitlines()
             with open(tmpfile, "r") as tmpfile_content, open(
@@ -259,7 +316,7 @@ class TestProcessSamFile(Minimap2TestsBase):
             # Copy the SAM file to the temporary location
             shutil.copy(self.samfile, tmpfile)
 
-            process_sam_file(tmpfile, False, None)
+            process_sam_file(tmpfile, "unmapped", None)
 
             # Check each line for equality using splitlines()
             with open(tmpfile, "r") as tmpfile_content, open(
@@ -290,12 +347,12 @@ class TestProcessSamFile(Minimap2TestsBase):
                     unmapped_index += 1
 
 
-class TestConvertToFasta(unittest.TestCase):
+class TestConvertToFasta(Minimap2TestsBase):
     def test_convert_to_fasta(self):
         # Mock input parameters
-        _reads = "read1.bam"
+        _reads = "read1.sam"
         n_threads = 4
-        bamfile_filepath = "output.bam"
+        samfile_filepath = "output.sam"
 
         # Expected command based on the provided inputs
         expected_cmd = [
@@ -306,22 +363,22 @@ class TestConvertToFasta(unittest.TestCase):
             "-s",
             "/dev/null",
             "-@",
-            str(n_threads - 1),
+            str(n_threads),
             "-n",
-            str(bamfile_filepath),
+            str(samfile_filepath),
         ]
 
         # Call the function and compare the result with the expected command
-        actual_cmd = convert_to_fasta(_reads, n_threads, bamfile_filepath)
+        actual_cmd = convert_to_fasta(_reads, n_threads, samfile_filepath)
         self.assertEqual(actual_cmd, expected_cmd)
 
 
-class TestConvertToFastq(unittest.TestCase):
+class TestConvertToFastq(Minimap2TestsBase):
     def test_convert_to_fasta(self):
         # Mock input parameters
-        _reads = "read1.bam"
+        _reads = "read1.sam"
         n_threads = 4
-        bamfile_filepath = "output.bam"
+        samfile_filepath = "output.sam"
 
         # Expected command based on the provided inputs
         expected_cmd = [
@@ -331,41 +388,17 @@ class TestConvertToFastq(unittest.TestCase):
             "-s",
             "/dev/null",
             "-@",
-            str(n_threads - 1),
+            str(n_threads),
             "-n",
-            str(bamfile_filepath),
-        ]
-
-        # Call the function and compare the result with the expected command
-        actual_cmd = convert_to_fastq(_reads, n_threads, bamfile_filepath)
-        self.assertEqual(actual_cmd, expected_cmd)
-
-
-class TestMakeSamtCmd(unittest.TestCase):
-    def test_make_samt_cmd(self):
-        # Mock input parameters
-        samfile_filepath = "input.sam"
-        bamfile_filepath = "output.bam"
-        n_threads = 4
-
-        # Expected command based on the provided inputs
-        expected_cmd = [
-            "samtools",
-            "view",
-            "-bS",
             str(samfile_filepath),
-            "-o",
-            str(bamfile_filepath),
-            "-@",
-            str(n_threads - 1),
         ]
 
         # Call the function and compare the result with the expected command
-        actual_cmd = make_samt_cmd(samfile_filepath, bamfile_filepath, n_threads)
+        actual_cmd = convert_to_fastq(_reads, n_threads, samfile_filepath, "single")
         self.assertEqual(actual_cmd, expected_cmd)
 
 
-class TestMakeMn2Cmd(unittest.TestCase):
+class TestMakeMn2Cmd(Minimap2TestsBase):
     def test_make_mn2_cmd(self):
         # Mock input parameters
         mapping_preset = "map-preset"
@@ -384,6 +417,8 @@ class TestMakeMn2Cmd(unittest.TestCase):
             "/path/to/index",
             "-t",
             str(n_threads),
+            "-o",
+            "output.sam",
             "-A",
             "1",
             "-B",
@@ -393,22 +428,20 @@ class TestMakeMn2Cmd(unittest.TestCase):
             "-E",
             "1",
             "input.fastq",
-            "-o",
-            "output.sam",
         ]
 
         # Call the function and compare the result with the expected command
         actual_cmd = make_mn2_cmd(
-            mapping_preset, index, n_threads, penalties, reads, samf_fp
+            mapping_preset, index, n_threads, penalties, reads, None, samf_fp
         )
         self.assertEqual(actual_cmd, expected_cmd)
 
 
-class TestConvertToFastqPaired(unittest.TestCase):
+class TestConvertToFastqPaired(Minimap2TestsBase):
     def test_convert_to_fastq_paired(self):
-        _reads = ["read1.bam", "read2.bam"]
+        _reads = ["read1.qc", "read2.fq"]
         n_threads = 4
-        bamfile_filepath = "output.fastq"
+        samfile_filepath = "output.sam"
 
         expected_cmd = [
             "samtools",
@@ -419,22 +452,22 @@ class TestConvertToFastqPaired(unittest.TestCase):
             "-s",
             "/dev/null",
             "-@",
-            str(n_threads - 1),
+            str(n_threads),
             "-n",
-            str(bamfile_filepath),
+            str(samfile_filepath),
         ]
 
-        result_cmd = convert_to_fastq_paired(_reads, n_threads, bamfile_filepath)
+        result_cmd = convert_to_fastq(_reads, n_threads, samfile_filepath, "paired")
         self.assertEqual(
             result_cmd,
             expected_cmd,
-            "The generated command for converting BAM to FastQ paired-end does not "
+            "The generated command for converting SAM to FastQ paired-end does not "
             "match the expected command.",
         )
 
 
-class TestMakeMn2PairedEndCmd(unittest.TestCase):
-    def test_make_mn2_paired_end_cmd(self):
+class TestMakeMn2PairedEndCmd(Minimap2TestsBase):
+    def test_make_mn2_cmd_paired(self):
         mapping_preset = "map-preset"
         index = "/path/to/index"
         n_threads = 4
@@ -451,6 +484,8 @@ class TestMakeMn2PairedEndCmd(unittest.TestCase):
             str(index),
             "-t",
             str(n_threads),
+            "-o",
+            samf_fp,
             "-A",
             "1",
             "-B",
@@ -461,20 +496,18 @@ class TestMakeMn2PairedEndCmd(unittest.TestCase):
             "1",
             reads1,
             reads2,
-            "-o",
-            samf_fp,
         ]
 
-        result_cmd = make_mn2_paired_end_cmd(
+        result_cmd = make_mn2_cmd(
             mapping_preset, index, n_threads, penalties, reads1, reads2, samf_fp
         )
         self.assertEqual(result_cmd, expected_cmd)
 
 
-class TestRunCmd(unittest.TestCase):
+class TestRunCmd(Minimap2TestsBase):
     @patch("subprocess.run")
     def test_run_cmd_success(self, mock_run):
-        cmd = "samtools fastq -o output.fastq input.bam"
+        cmd = "samtools fastq -o output.fastq input.sam"
         description = "samtools command"
         mock_run.return_value = MagicMock(returncode=0)  # Simulate successful run
 
@@ -487,7 +520,7 @@ class TestRunCmd(unittest.TestCase):
     @patch("subprocess.run")
     def test_run_cmd_exception(self, mock_run):
         """Test that run_cmd raises the correct exception when subprocess.run fails."""
-        cmd = "samtools fastq -o output.fastq input.bam"
+        cmd = "samtools fastq -o output.fastq input.sam"
         description = "samtools command"
         mock_run.side_effect = subprocess.CalledProcessError(
             1, cmd
@@ -501,6 +534,76 @@ class TestRunCmd(unittest.TestCase):
             "(return code 1), please inspect stdout and stderr to learn more."
         )
         self.assertEqual(str(context.exception), expected_message)
+
+
+class TestCollateSamInplace(Minimap2TestsBase):
+    @patch("q2_minimap2._filtering_utils.run_cmd")
+    @patch("shutil.move")
+    def test_collate_sam_inplace(self, mock_shutil_move, mock_run_cmd):
+        input_sam_path = "test_input.sam"
+        temp_prefix = os.path.splitext(input_sam_path)[0] + "_temp_collate"
+        output_sam_path = os.path.splitext(input_sam_path)[0] + "_collated.sam"
+
+        collate_sam_inplace(input_sam_path)
+
+        # Verify run_cmd was called with the correct command
+        expected_cmd = [
+            "samtools",
+            "collate",
+            "-u",
+            "-o",
+            output_sam_path,
+            "-T",
+            temp_prefix,
+            input_sam_path,
+        ]
+        mock_run_cmd.assert_called_once_with(expected_cmd, "Samtools collate")
+
+        # Verify shutil.move was called with the correct arguments
+        mock_shutil_move.assert_called_once_with(output_sam_path, input_sam_path)
+
+
+class TestProcessPairedSamFlags(Minimap2TestsBase):
+    def setUp(self):
+        # Create a temporary SAM file for testing
+        self.temp_dir = tempfile.mkdtemp()
+        self.sam_file = os.path.join(self.temp_dir, "test.sam")
+        self.create_sam_file()
+
+    def tearDown(self):
+        # Remove the temporary directory and file
+        shutil.rmtree(self.temp_dir)
+
+    def create_sam_file(self):
+        content = (
+            "@HD\tVN:1.0\tSO:unsorted\n"
+            "@SQ\tSN:chr1\tLN:248956422\n"
+            "read1\t4\tchr1\t100\t255\t50M\t*\t0\t0\t*\t*\n"
+            "read2\t4\tchr1\t150\t255\t50M\t*\t0\t0\t*\t*\n"
+            "read3\t0\tchr1\t200\t255\t50M\t*\t0\t0\t*\t*\n"
+            "read4\t0\tchr1\t250\t255\t50M\t*\t0\t0\t*\t*\n"
+        )
+        with open(self.sam_file, "w") as f:
+            f.write(content)
+
+    def read_sam_file(self):
+        with open(self.sam_file, "r") as f:
+            return f.readlines()
+
+    def test_process_paired_sam_flags(self):
+        process_paired_sam_flags(self.sam_file)
+        result = self.read_sam_file()
+
+        expected = [
+            "@HD\tVN:1.0\tSO:unsorted\n",
+            "@SQ\tSN:chr1\tLN:248956422\n",
+            "read1\t69\tchr1\t100\t255\t50M\t*\t0\t0\t*\t*\n",
+            "read2\t133\tchr1\t150\t255\t50M\t*\t0\t0\t*\t*\n",
+            "read3\t65\tchr1\t200\t255\t50M\t*\t0\t0\t*\t*\n",
+            "read4\t129\tchr1\t250\t255\t50M\t*\t0\t0\t*\t*\n",
+        ]
+
+        self.assertEqual(result, expected)
 
 
 if __name__ == "__main__":
