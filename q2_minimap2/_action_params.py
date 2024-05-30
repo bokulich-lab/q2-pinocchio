@@ -180,8 +180,20 @@ build_index_inputs_dsc = {
     "sequences": "Reference sequences used to build Minimap2 index database."
 }
 build_index_outputs_dsc = {"index_database": "Minimap2 index database."}
-build_index_params = {"kmer_length": Int % Range(1, 28)}
-build_index_param_dsc = {"kmer_length": "Minimizer k-mer length."}
+build_index_params = {
+    "preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
+    "kmer_length": Int % Range(1, 28),
+}
+build_index_param_dsc = {
+    "kmer_length": "Minimizer k-mer length.",
+    "preset": "This option applies multiple settings at the same time during "
+    "the indexing process. This value should match the mapping preset value "
+    "that is intended to be used in other actions utilizing the created index. "
+    "The available presets are: "
+    "1) map-ont: Align noisy long reads of ~10% error rate to a reference genome. "
+    "2) map-hifi: Align PacBio high-fidelity (HiFi) reads to a reference genome. "
+    "3) map-pb: Align older PacBio continuous long (CLR) reads to a reference genome.",
+}
 build_index_dsc = "Build Minimap2 index database from reference sequences."
 
 
