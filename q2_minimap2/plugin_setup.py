@@ -35,20 +35,13 @@ from q2_minimap2._action_params import (
     extract_seqs_outputs_dsc,
     extract_seqs_param_dsc,
     extract_seqs_params,
-    filter_paired_end_reads_dsc,
-    filter_paired_end_reads_inputs,
-    filter_paired_end_reads_inputs_dsc,
-    filter_paired_end_reads_outputs,
-    filter_paired_end_reads_outputs_dsc,
-    filter_paired_end_reads_param_dsc,
-    filter_paired_end_reads_params,
-    filter_single_end_reads_dsc,
-    filter_single_end_reads_inputs,
-    filter_single_end_reads_inputs_dsc,
-    filter_single_end_reads_outputs,
-    filter_single_end_reads_outputs_dsc,
-    filter_single_end_reads_param_dsc,
-    filter_single_end_reads_params,
+    filter_reads_dsc,
+    filter_reads_inputs,
+    filter_reads_inputs_dsc,
+    filter_reads_outputs,
+    filter_reads_outputs_dsc,
+    filter_reads_param_dsc,
+    filter_reads_params,
     find_consensus_annotation_dsc,
     find_consensus_annotation_inputs,
     find_consensus_annotation_inputs_dsc,
@@ -63,6 +56,13 @@ from q2_minimap2._action_params import (
     minimap2_search_outputs_dsc,
     minimap2_search_param_dsc,
     minimap2_search_params,
+    trim_dsc,
+    trim_input_descriptions,
+    trim_inputs,
+    trim_output_descriptions,
+    trim_outputs,
+    trim_parameter_descriptions,
+    trim_parameters,
 )
 from q2_minimap2.types._format import (
     Minimap2IndexDBDirFmt,
@@ -128,30 +128,15 @@ plugin.methods.register_function(
 )
 
 plugin.methods.register_function(
-    function=q2_minimap2.filter_single_end_reads,
-    inputs=filter_single_end_reads_inputs,
-    parameters=filter_single_end_reads_params,
-    outputs=filter_single_end_reads_outputs,
-    input_descriptions=filter_single_end_reads_inputs_dsc,
-    parameter_descriptions=filter_single_end_reads_param_dsc,
-    output_descriptions=filter_single_end_reads_outputs_dsc,
-    name="Filter demultiplexed single-end long sequences "
-    "(fastq format) using Minimap2.",
-    description=filter_single_end_reads_dsc,
-    citations=[citations["Minimap2"]],
-)
-
-plugin.methods.register_function(
-    function=q2_minimap2.filter_paired_end_reads,
-    inputs=filter_paired_end_reads_inputs,
-    parameters=filter_paired_end_reads_params,
-    outputs=filter_paired_end_reads_outputs,
-    input_descriptions=filter_paired_end_reads_inputs_dsc,
-    parameter_descriptions=filter_paired_end_reads_param_dsc,
-    output_descriptions=filter_paired_end_reads_outputs_dsc,
-    name="Filter demultiplexed paired-end long sequences "
-    "(fastq format) using Minimap2.",
-    description=filter_paired_end_reads_dsc,
+    function=q2_minimap2.filter_reads,
+    inputs=filter_reads_inputs,
+    parameters=filter_reads_params,
+    outputs=filter_reads_outputs,
+    input_descriptions=filter_reads_inputs_dsc,
+    parameter_descriptions=filter_reads_param_dsc,
+    output_descriptions=filter_reads_outputs_dsc,
+    name="Filter demultiplexed long sequences " " using Minimap2.",
+    description=filter_reads_dsc,
     citations=[citations["Minimap2"]],
 )
 
@@ -204,6 +189,19 @@ plugin.methods.register_function(
     output_descriptions=find_consensus_annotation_outputs_dsc,
     name="Find consensus among multiple annotations.",
     description=find_consensus_annotation_dsc,
+)
+
+plugin.methods.register_function(
+    function=q2_minimap2.trim,
+    inputs=trim_inputs,
+    outputs=trim_outputs,
+    parameters=trim_parameters,
+    input_descriptions=trim_input_descriptions,
+    output_descriptions=trim_output_descriptions,
+    parameter_descriptions=trim_parameter_descriptions,
+    name="Trim long sequences.",
+    description=trim_dsc,
+    citations=[citations["Nanopack2"]],
 )
 
 importlib.import_module("q2_minimap2.types._transformer")

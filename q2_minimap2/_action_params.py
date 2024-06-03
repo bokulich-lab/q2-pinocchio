@@ -12,28 +12,27 @@ from q2_types.per_sample_sequences import (
     SequencesWithQuality,
 )
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Bool, Choices, Float, Int, Range, Str
+from qiime2.plugin import Bool, Choices, Float, Int, Range, Str, TypeMatch
 
 from q2_minimap2.types._type import Minimap2IndexDB, PairwiseAlignmentMN2
 
-# filter-single-end-reads
-filter_single_end_reads_inputs = {
-    "query_reads": SampleData[SequencesWithQuality],
+T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
+# filter_reads
+filter_reads_inputs = {
+    "query_reads": SampleData[T],
     "index_database": Minimap2IndexDB,
     "reference_reads": FeatureData[Sequence],
 }
-filter_single_end_reads_outputs = [
-    ("filtered_query_reads", SampleData[SequencesWithQuality])
-]
-filter_single_end_reads_inputs_dsc = {
-    "query_reads": "Single-end reads to be filtered.",
+filter_reads_outputs = [("filtered_query_reads", SampleData[T])]
+filter_reads_inputs_dsc = {
+    "query_reads": "Reads to be filtered.",
     "index_database": "Minimap2 index database. Incompatible with reference-reads.",
     "reference_reads": "Reference sequences. Incompatible with index-database.",
 }
-filter_single_end_reads_outputs_dsc = {
+filter_reads_outputs_dsc = {
     "filtered_query_reads": "The resulting filtered sequences.",
 }
-filter_single_end_reads_params = {
+filter_reads_params = {
     "n_threads": Int % Range(1, None),
     "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
     "keep": Str % Choices(["mapped", "unmapped"]),
@@ -43,7 +42,7 @@ filter_single_end_reads_params = {
     "gap_open_penalty": Int % Range(1, None),
     "gap_extension_penalty": Int % Range(1, None),
 }
-filter_single_end_reads_param_dsc = {
+filter_reads_param_dsc = {
     "n_threads": "Number of threads to use.",
     "mapping_preset": "Specifies the type of input sequences that will be "
     "used during the mapping process. 1) map-ont: Align noisy long reads "
@@ -61,67 +60,13 @@ filter_single_end_reads_param_dsc = {
     "gap_open_penalty": "Gap open penalty.",
     "gap_extension_penalty": "Gap extension penalty.",
 }
-filter_single_end_reads_dsc = (
+filter_reads_dsc = (
     "Filter demultiplexed single-end sequences based on "
     "alignment to a reference database using Minimap2 and samtools. "
     "This versatile command allows for the exclusion of long sequences "
     "or, when exclude_mapped is set to False, selectively retains only "
     "those sequences aligning to the reference."
 )
-
-# filter-paired-end-reads
-filter_paired_end_reads_inputs = {
-    "query_reads": SampleData[PairedEndSequencesWithQuality],
-    "index_database": Minimap2IndexDB,
-    "reference_reads": FeatureData[Sequence],
-}
-filter_paired_end_reads_outputs = [
-    ("filtered_query_reads", SampleData[PairedEndSequencesWithQuality])
-]
-filter_paired_end_reads_inputs_dsc = {
-    "query_reads": "Paired-end reads to be filtered.",
-    "index_database": "Minimap2 index database. Incompatible with reference-reads.",
-    "reference_reads": "Reference sequences. Incompatible with index-database.",
-}
-filter_paired_end_reads_outputs_dsc = {
-    "filtered_query_reads": "The resulting filtered sequences.",
-}
-filter_paired_end_reads_params = {
-    "n_threads": Int % Range(1, None),
-    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
-    "keep": Str % Choices(["mapped", "unmapped"]),
-    "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
-    "matching_score": Int,
-    "mismatching_penalty": Int,
-    "gap_open_penalty": Int % Range(1, None),
-    "gap_extension_penalty": Int % Range(1, None),
-}
-filter_paired_end_reads_param_dsc = {
-    "n_threads": "Number of threads to use.",
-    "mapping_preset": "Specifies the type of input sequences that will be "
-    "used during the mapping process. 1) map-ont: Align noisy long reads "
-    "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
-    "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-    "older PacBio continuous long (CLR) reads to a reference genome.",
-    "keep": "Keep the sequences that align to reference. When "
-    "set to unmapped it keeps sequences that do not align to the reference "
-    "database.",
-    "min_per_identity": "After the alignment step, mapped reads will be "
-    "reclassified as unmapped if their identity percentage falls below this "
-    "value. If not set there is no reclassification.",
-    "matching_score": "Matching score.",
-    "mismatching_penalty": "Mismatching penalty.",
-    "gap_open_penalty": "Gap open penalty.",
-    "gap_extension_penalty": "Gap extension penalty.",
-}
-filter_paired_end_reads_dsc = (
-    "Filter demultiplexed paired-end sequences based on "
-    "alignment to a reference database using Minimap2 and samtools. "
-    "This versatile command allows for the exclusion of long sequences "
-    "or, when exclude_mapped is set to False, selectively retains only "
-    "those sequences aligning to the reference."
-)
-
 
 # extract-seqs
 extract_seqs_inputs = {
@@ -309,3 +254,29 @@ find_consensus_annotation_dsc = (
     "annotations. Note that the annotation hierarchy is assumed "
     "to have an even number of ranks."
 )
+
+# trim
+T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
+trim_inputs = {"query_reads": SampleData[T]}
+trim_outputs = [("filtered_query_reads", SampleData[T])]
+trim_parameters = {
+    "threads": Int % Range(1, None),
+    "quality": Int % Range(0, None),
+    "maxqual": Int % Range(0, None),
+    "minlength": Int % Range(1, None),
+    "maxlength": Int % Range(1, None),
+    "headcrop": Int % Range(0, None),
+    "tailcrop": Int % Range(0, None),
+}
+trim_input_descriptions = {"query_reads": "Sequences to be trimmed."}
+trim_output_descriptions = {"filtered_query_reads": "The resulting trimmed sequences."}
+trim_parameter_descriptions = {
+    "threads": "Number of threads.",
+    "quality": "Sets a minimum Phred average quality score.",
+    "maxqual": "Sets a maximum Phred average quality score.",
+    "minlength": "Sets a minimum read length.",
+    "maxlength": "Sets a maximum read length.",
+    "headcrop": "Trim N nucleotides from the start of a read.",
+    "tailcrop": "Trim N nucleotides from the end of a read.",
+}
+trim_dsc = "Trim long demultiplexed sequences using Chopper tool."
