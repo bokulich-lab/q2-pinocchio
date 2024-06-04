@@ -14,7 +14,7 @@ from q2_types.feature_data import DNAFASTAFormat
 from q2_minimap2.extract_seqs import extract_seqs
 from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 
-from .test_minimap2 import Minimap2TestsBase
+from qiime2.plugin.testing import TestPluginBase
 
 seq_ids_mapped = [
     "SARS2:6:73:941:1973#",
