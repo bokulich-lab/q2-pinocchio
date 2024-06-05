@@ -53,10 +53,12 @@ def filter_by_perc_identity(df, perc_identity, output_no_hits):
 
 # Construct the command list for the Minimap2 alignment search
 def construct_command(
-    idx_ref_path, query_reads, n_threads, paf_file_fp, output_no_hits
+    idx_ref_path, query_reads, n_threads, mapping_preset, paf_file_fp, output_no_hits
 ):
     cmd = [
         "minimap2",
+        "-x",
+        mapping_preset,
         "-c",
         str(idx_ref_path),
         str(query_reads),
@@ -77,6 +79,7 @@ def minimap2_search(
     index_database: Minimap2IndexDBDirFmt = None,
     reference_reads: DNAFASTAFormat = None,
     n_threads: int = 3,
+    mapping_preset: str = "map-ont",
     maxaccepts: int = 1,
     perc_identity: float = None,
     output_no_hits: bool = True,
@@ -106,7 +109,12 @@ def minimap2_search(
 
     # Construct the command
     cmd = construct_command(
-        idx_ref_path, query_reads, n_threads, paf_file_fp, output_no_hits
+        idx_ref_path,
+        query_reads,
+        n_threads,
+        mapping_preset,
+        paf_file_fp,
+        output_no_hits,
     )
 
     # Execute the Minimap2 alignment command

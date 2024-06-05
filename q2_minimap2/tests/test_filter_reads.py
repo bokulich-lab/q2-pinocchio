@@ -95,6 +95,15 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
         obs_seqs = obs.sequences.iter_views(FastqGzFormat)
         self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
 
+    def test_filter_single_end_keep_mapped_sr(self):
+        (obs_art,) = self.plugin.methods["filter_reads"](
+            self.query_reads_single, self.minimap2_index, mapping_preset="sr"
+        )
+
+        obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
+        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
+        self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
+
     def test_filter_single_end_keep_mapped_using_ref(self):
         (obs_art,) = self.plugin.methods["filter_reads"](
             self.query_reads_single, reference_reads=self.reference_reads
