@@ -39,7 +39,7 @@ class TestMinimap2Build(Minimap2TestsBase):
         mocked_run_command.assert_called_once()
 
     @patch("subprocess.run")
-    def test_build_map_pb_preset(self, mocked_run_command):
+    def test_build_sr_preset(self, mocked_run_command):
         build_index(self.genome, preset="sr")
         mocked_run_command.assert_called_once()
 
