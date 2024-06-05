@@ -181,7 +181,7 @@ build_index_inputs_dsc = {
 }
 build_index_outputs_dsc = {"index_database": "Minimap2 index database."}
 build_index_params = {
-    "preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
+    "preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
     "kmer_length": Int % Range(1, 28),
 }
 build_index_param_dsc = {
@@ -192,7 +192,8 @@ build_index_param_dsc = {
     "The available presets are: "
     "1) map-ont: Align noisy long reads of ~10% error rate to a reference genome. "
     "2) map-hifi: Align PacBio high-fidelity (HiFi) reads to a reference genome. "
-    "3) map-pb: Align older PacBio continuous long (CLR) reads to a reference genome.",
+    "3) map-pb: Align older PacBio continuous long (CLR) reads to a reference genome. "
+    "4) sr: Align short single-end reads.",
 }
 build_index_dsc = "Build Minimap2 index database from reference sequences."
 
