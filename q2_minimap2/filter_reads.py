@@ -118,8 +118,6 @@ def filter_reads(
 
     # Process each read, filtering according to the specified parameters
     for _, fwd, rev in query_reads.manifest.itertuples():
-        print("fwd:", fwd)
-        print("rev:", rev)
         _minimap2_filter_reads(
             fwd,
             rev,
