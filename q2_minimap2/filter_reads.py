@@ -9,15 +9,14 @@
 import os
 import tempfile
 
-import pandas as pd
 from q2_types.feature_data import DNAFASTAFormat
-from q2_types.per_sample_sequences import SingleLanePerSampleSingleEndFastqDirFmt
+from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
 from q2_minimap2._filtering_utils import (
-    build_filtered_out_dir,
+    collate_sam_inplace,
     convert_to_fastq,
     make_mn2_cmd,
-    make_samt_cmd,
+    process_paired_sam_flags,
     process_sam_file,
     run_cmd,
     set_penalties,
@@ -29,47 +28,58 @@ from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 # filters the alignments, and converts the filtered alignments
 # to FASTQ format, storing the output in a given directory
 def _minimap2_filter_reads(
-    reads,  # Input reads file path
+    reads1,
+    reads2,
     outdir,  # Output directory for filtered reads in FASTQ format
     idx_path,  # Path to the Minimap2 index file
     n_threads,  # Number of threads for Minimap2 and samtools
     preset,  # Preset options for Minimap2 alignment
-    keep_mapped,  # Flag to exclude mapped reads, keeping only unmapped
+    keep,  # Flag to exclude mapped reads, keeping only unmapped
     min_per_identity,  # Minimum percentage identity for a read to be included
     penalties,  # Scoring penalties for Minimap2 alignment
 ):
     # Create a temporary file for SAM output from Minimap2
     with tempfile.NamedTemporaryFile() as sam_f:
-        samf_fp = sam_f.name
-        # Create a temporary file for BAM output from samtools view
-        with tempfile.NamedTemporaryFile() as bam_f:
-            bamf_fp = bam_f.name
+        # Construct and execute Minimap2 command for alignment
+        mn2_cmd = make_mn2_cmd(
+            preset, idx_path, n_threads, penalties, reads1, reads2, sam_f.name
+        )
 
-            # Construct and execute Minimap2 command for alignment
-            mn2_cmd = make_mn2_cmd(
-                preset, idx_path, n_threads, penalties, reads, samf_fp
-            )
-            run_cmd(mn2_cmd, "Minimap2")
+        run_cmd(mn2_cmd, "Minimap2")
 
-            # Process the SAM file to filter alignments based on criteria
-            process_sam_file(samf_fp, keep_mapped, min_per_identity)
-            # Construct and execute samtools view command to convert SAM to BAM
-            samtools_view_cmd = make_samt_cmd(samf_fp, bamf_fp, n_threads)
-            run_cmd(samtools_view_cmd, "samtools view")
+        # Filter the SAM file using samtools based on the include/exclude criteria
+        process_sam_file(sam_f.name, keep, min_per_identity)
 
-            # Construct and execute command to convert BAM to FASTQ
+        if reads2:
+            # Ensuring proper read grouping of paired reads
+            collate_sam_inplace(sam_f.name)
+            # Making flags suitable for samtools fastq command
+            process_paired_sam_flags(sam_f.name)
+
+            # Construct and execute command to convert SAM to FASTQ
             # using samtools fastq, directing output to the specified output directory
-            fwd = str(outdir.path / os.path.basename(reads))
+            file1 = str(outdir.path / os.path.basename(reads1))
+            file2 = str(outdir.path / os.path.basename(reads2))
+            _reads = ["-1", file1, "-2", file2]
+            convert_to_fastq_cmd = convert_to_fastq(
+                _reads, n_threads, sam_f.name, "paired"
+            )
+        else:
+            # Convert SAM to FASTQ
+            fwd = str(outdir.path / os.path.basename(reads1))
             _reads = ["-0", fwd]
-            convert_to_fastq_cmd = convert_to_fastq(_reads, n_threads, bamf_fp)
-            run_cmd(convert_to_fastq_cmd, "samtools fastq")
+            convert_to_fastq_cmd = convert_to_fastq(
+                _reads, n_threads, sam_f.name, "single"
+            )
+
+        run_cmd(convert_to_fastq_cmd, "samtools fastq")
 
 
-def filter_single_end_reads(
-    query_reads: SingleLanePerSampleSingleEndFastqDirFmt,
+def filter_reads(
+    query_reads: CasavaOneEightSingleLanePerSampleDirFmt,
     index_database: Minimap2IndexDBDirFmt = None,  # Optional pre-built Minimap2 index
     reference_reads: DNAFASTAFormat = None,  # Optional reference sequences
-    n_threads: int = 1,  # Number of threads for Minimap2
+    n_threads: int = 3,  # Number of threads for Minimap2
     mapping_preset: str = "map-ont",  # Minimap2 mapping preset
     keep: str = "mapped",  # Keep 'mapped' or 'unmapped' reads
     min_per_identity: float = None,  # Minimum percentage identity to keep a read
@@ -77,7 +87,7 @@ def filter_single_end_reads(
     mismatching_penalty: int = None,  # Penalty for mismatched bases
     gap_open_penalty: int = None,  # Penalty for opening a gap
     gap_extension_penalty: int = None,  # Penalty for extending a gap
-) -> SingleLanePerSampleSingleEndFastqDirFmt:
+) -> CasavaOneEightSingleLanePerSampleDirFmt:
 
     # Ensure that only one of reference_reads or index_database is provided
     if reference_reads and index_database:
@@ -94,38 +104,30 @@ def filter_single_end_reads(
 
     # Determine the reference path from the provided index_database or reference_reads
     if index_database:
-        idx_ref_path = str(index_database.path) + "/index.mmi"
+        idx_ref_path = str(index_database) + "/index.mmi"  # Path to index file
     elif reference_reads:
-        idx_ref_path = str(reference_reads.path)
+        idx_ref_path = str(reference_reads)  # Path to the reference file
 
     # Initialize directory format for filtered sequences
-    filtered_seqs = SingleLanePerSampleSingleEndFastqDirFmt()
-
-    # Import data from the manifest file to a df
-    input_df = query_reads.manifest.view(pd.DataFrame)
+    filtered_seqs = CasavaOneEightSingleLanePerSampleDirFmt()
 
     # Set penalties for alignment based on function parameters
     penalties = set_penalties(
         matching_score, mismatching_penalty, gap_open_penalty, gap_extension_penalty
     )
 
-    # Determine whether to exclude mapped reads based on the 'keep' parameter
-    keep_mapped = keep == "mapped"
-
     # Process each read, filtering according to the specified parameters
-    for _, fwd in input_df.itertuples():
+    for _, fwd, rev in query_reads.manifest.itertuples():
         _minimap2_filter_reads(
             fwd,
+            rev,
             filtered_seqs,
             idx_ref_path,
             n_threads,
             mapping_preset,
-            keep_mapped,
+            keep,
             min_per_identity,
             penalties,
         )
 
-    # Build and return the directory of filtered output reads
-    result = build_filtered_out_dir(query_reads, filtered_seqs)
-
-    return result
+    return filtered_seqs
