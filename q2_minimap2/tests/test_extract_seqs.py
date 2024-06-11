@@ -14,7 +14,7 @@ from q2_types.feature_data import DNAFASTAFormat
 from q2_minimap2.extract_seqs import extract_seqs
 from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 
-from qiime2.plugin.testing import TestPluginBase
+from .test_minimap2 import Minimap2TestsBase
 
 seq_ids_mapped = [
     "SARS2:6:73:941:1973#",
@@ -35,7 +35,7 @@ perc_id_mapped = [
 perc_id_unmapped = ["SARS2:6:73:941:1973#", "SARS2:6:73:356:9806#"]
 
 
-class TestExtractSeqs(TestPluginBase):
+class TestExtractSeqs(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
         self.query1_reads = DNAFASTAFormat(
