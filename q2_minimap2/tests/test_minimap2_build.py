@@ -8,8 +8,9 @@
 import subprocess
 from unittest.mock import patch
 
-from q2_types.feature_data import FeatureData, Sequence
-from qiime2 import Artifact
+from q2_types.feature_data import DNAFASTAFormat
+
+from q2_minimap2.build_index import build_index
 
 from .test_minimap2 import Minimap2TestsBase
 
@@ -17,13 +18,13 @@ from .test_minimap2 import Minimap2TestsBase
 class TestMinimap2Build(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
-        # Retrieve the file path for the test DNA sequences in FASTA format
-        fasta_path = self.get_data_path("minimap2_build/dna-sequences.fasta")
-        # Import the DNA sequences from the FASTA file into a QIIME 2 Artifact
-        self.genome = Artifact.import_data(FeatureData[Sequence], fasta_path)
+        # Retrieve the file path for the test DNA sequences
+        self.genome = DNAFASTAFormat(
+            self.get_data_path("minimap2_build/dna-sequences.fasta"), mode="r"
+        )
 
     def test_build(self):
-        self.plugin.methods["build_index"](self.genome)
+        build_index(self.genome)
 
     def test_build_index_subprocess_failure(self):
         # Patch the subprocess.run or the internal function that calls subprocess.run
@@ -35,7 +36,7 @@ class TestMinimap2Build(Minimap2TestsBase):
 
             # Calling the method under test
             with self.assertRaises(Exception) as context:
-                self.plugin.methods["build_index"](self.genome)
+                build_index(self.genome)
 
             # Checking if the raised exception is as expected
             self.assertTrue(

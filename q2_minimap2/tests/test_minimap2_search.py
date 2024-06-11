@@ -6,20 +6,18 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import os
-import tempfile
 import unittest
 
 import pandas as pd
-import pandas.testing as pdt
 from pandas.testing import assert_frame_equal
-from qiime2 import Artifact
+from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
 from q2_minimap2.minimap2_search import (
     filter_by_maxaccepts,
     filter_by_perc_identity,
     minimap2_search,
 )
+from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 
 from .test_minimap2 import Minimap2TestsBase
 
@@ -105,77 +103,71 @@ class TestMinimap2(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 
-        self.query_reads = Artifact.load(
-            self.get_data_path("minimap2_search/query-seqs.qza")
+        self.query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
+            self.get_data_path("minimap2_search/query_seqs.fasta"), mode="r"
         )
-        self.index_database = Artifact.load(
-            self.get_data_path("minimap2_search/minimap2_test_index.qza")
+        self.index_database = Minimap2IndexDBDirFmt(
+            self.get_data_path("minimap2_search/minimap2_test_index/"), mode="r"
         )
-        self.ref = Artifact.load(
-            self.get_data_path("minimap2_search/se-dna-sequences.qza")
-        )
-        self.paf_true = Artifact.load(
-            self.get_data_path("minimap2_search/minimap2_test_paf.qza")
-        )
-        self.paf_true_only_hits = Artifact.load(
-            self.get_data_path("minimap2_search/minimap2_only_hits_test_paf.qza")
+        self.ref = CasavaOneEightSingleLanePerSampleDirFmt(
+            self.get_data_path("minimap2_search/se-dna-sequences.fasta"), mode="r"
         )
 
     def test_minimap2(self):
-        (output_artifact,) = self.plugin.methods["minimap2_search"](
-            self.query_reads, self.index_database
+        # Perform the minimap2 search and store the result in a DataFrame
+        search_results_df = minimap2_search(self.query_reads, self.index_database)
+
+        # Define the path to the expected output file
+        expected_output_path = self.get_data_path(
+            "minimap2_search/minimap2_test_paf.paf"
         )
 
-        # Create a temporary directory to hold the extracted sequences
-        with tempfile.TemporaryDirectory() as temp_dir:
-            output_artifact.export_data(temp_dir)
-            output_fp = os.path.join(temp_dir, "output.paf")
+        # Read the expected output content from the file
+        with open(expected_output_path, "r") as file:
+            expected_output_content = file.read().strip()
 
-            with tempfile.TemporaryDirectory() as temp_dir2:
+        # Convert the DataFrame to a tab-separated string without index and header
+        results_content = search_results_df.to_csv(
+            sep="\t", index=False, header=False
+        ).strip()
+        # Clean the extra tabs
+        results_content_cleaned = "\n".join(
+            [
+                "\t".join(line.split()).rstrip("\t")
+                for line in results_content.split("\n")
+            ]
+        )
 
-                self.paf_true.export_data(temp_dir2)
-                true_paf_fp = os.path.join(temp_dir2, "output.paf")
-
-                # Compare the contents of the files
-                with open(true_paf_fp, "r") as file1, open(output_fp, "r") as file2:
-                    true_paf_content = file1.read()
-                    output_paf_content = file2.read()
-
-                    self.assertEqual(true_paf_content, output_paf_content)
+        # Assert that the search results match the expected output
+        self.assertEqual(expected_output_content, results_content_cleaned)
 
     def test_minimap2_only_hits(self):
-        (output_artifact,) = self.plugin.methods["minimap2_search"](
-            self.query_reads,
-            self.index_database,
-            output_no_hits=False,
+        search_results_df = minimap2_search(
+            self.query_reads, self.index_database, output_no_hits=False
+        )
+        expected_output_path = self.get_data_path(
+            "minimap2_search/minimap2_only_hits_test_paf.paf"
         )
 
-        # Create a temporary directory to hold the extracted sequences
-        with tempfile.TemporaryDirectory() as temp_dir:
-            output_artifact.export_data(temp_dir)
-            output_fp = os.path.join(temp_dir, "output.paf")
-
-            with tempfile.TemporaryDirectory() as temp_dir2:
-
-                self.paf_true_only_hits.export_data(temp_dir2)
-                true_paf_fp = os.path.join(temp_dir2, "output.paf")
-
-                # Compare the contents of the files
-                with open(true_paf_fp, "r") as file1, open(output_fp, "r") as file2:
-                    true_paf_content = file1.read()
-                    output_paf_content = file2.read()
-
-                    self.assertEqual(true_paf_content, output_paf_content)
+        with open(expected_output_path, "r") as file:
+            expected_output_content = file.read()
+            results_content = search_results_df.to_csv(
+                sep="\t", index=False, header=False
+            )
+            # Assert that the search results match the expected output
+            self.assertEqual(expected_output_content, results_content)
 
     def test_minimap2_output_consistency(self):
-        (result1,) = self.plugin.methods["minimap2_search"](
-            self.query_reads, index_database=self.index_database
+        result1 = minimap2_search(
+            self.query_reads, self.index_database, output_no_hits=False
         )
-
-        (result2,) = self.plugin.methods["minimap2_search"](
-            self.query_reads, reference_reads=self.ref
+        result2 = minimap2_search(
+            self.query_reads, reference_reads=self.ref, output_no_hits=False
         )
-        pdt.assert_frame_equal(result1.view(pd.DataFrame), result2.view(pd.DataFrame))
+        self.assertEqual(
+            result1.to_csv(sep="\t", index=False, header=False),
+            result2.to_csv(sep="\t", index=False, header=False),
+        )
 
     def test_minimap2_both_ref_and_index(self):
         with self.assertRaisesRegex(ValueError, "Only one.*can be provided.*"):
