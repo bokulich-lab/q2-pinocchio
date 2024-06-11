@@ -268,8 +268,13 @@ find_consensus_annotation_dsc = (
     "to have an even number of ranks."
 )
 
-# trim
+# stats
 T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
+stats_inputs = {"sequences": SampleData[T]}
+stats_input_descriptions = {"sequences": "Sequences to be analyzed."}
+stats_dsc = "Quality control statistics of long sequences using NanoPlot."
+
+# trim
 trim_inputs = {"query_reads": SampleData[T]}
 trim_outputs = [("filtered_query_reads", SampleData[T])]
 trim_parameters = {
