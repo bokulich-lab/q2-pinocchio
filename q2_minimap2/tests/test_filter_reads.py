@@ -8,20 +8,14 @@
 
 import gzip
 import itertools
+import os
 import unittest
 
-from q2_types.feature_data import FeatureData, Sequence
-from q2_types.per_sample_sequences import (
-    FastqGzFormat,
-    PairedEndSequencesWithQuality,
-    SequencesWithQuality,
-    SingleLanePerSamplePairedEndFastqDirFmt,
-    SingleLanePerSampleSingleEndFastqDirFmt,
-)
-from q2_types.sample_data import SampleData
-from qiime2 import Artifact
+from q2_types.feature_data import DNAFASTAFormat
+from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
-from q2_minimap2.types._type import Minimap2IndexDB
+from q2_minimap2.filter_reads import filter_reads
+from q2_minimap2.types._format import Minimap2IndexDBDirFmt
 
 from .test_minimap2 import Minimap2TestsBase
 
@@ -48,51 +42,52 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
     def setUp(self):
         super().setUp()
 
-        minimap2_index_path = self.get_data_path("filter_reads/index.mmi")
-        query_reads_single_path = self.get_data_path("filter_reads/single_end/")
-        query_reads_paired_path = self.get_data_path("filter_reads/paired_end/")
-        reference_reads_path = self.get_data_path("filter_reads/dna-sequences.fasta")
-
-        self.query_reads_single = Artifact.import_data(
-            SampleData[SequencesWithQuality], query_reads_single_path
+        self.query_single_reads = CasavaOneEightSingleLanePerSampleDirFmt(
+            self.get_data_path("filter_reads/single_end/"), mode="r"
         )
-        self.query_reads_paired = Artifact.import_data(
-            SampleData[PairedEndSequencesWithQuality], query_reads_paired_path
+        self.query_paired_reads = CasavaOneEightSingleLanePerSampleDirFmt(
+            self.get_data_path("filter_reads/paired_end/"), mode="r"
         )
-        self.minimap2_index = Artifact.import_data(Minimap2IndexDB, minimap2_index_path)
-        self.reference_reads = Artifact.import_data(
-            FeatureData[Sequence], reference_reads_path
+        self.minimap2_index = Minimap2IndexDBDirFmt(
+            self.get_data_path("filter_reads/index/"), mode="r"
+        )
+        self.reference_reads = DNAFASTAFormat(
+            self.get_data_path("filter_reads/dna-sequences.fasta"), mode="r"
         )
 
     def _check_ids(self, obs_seqs, included_ids, excluded_ids):
-        for _, obs_fp in obs_seqs:
-            with gzip.open(str(obs_fp), "rt") as obs_fh:
+
+        fastq_files = [f for f in os.listdir(str(obs_seqs)) if f.endswith(".fastq.gz")]
+
+        # Process each FASTQ.GZ file
+        for obs_fp in fastq_files:
+            file_path = os.path.join(str(obs_seqs), obs_fp)
+            with gzip.open(file_path, "rt") as obs_fh:
+                # Ensure the file is not empty
                 self.assertNotEqual(len(obs_fh.readlines()), 0)
                 obs_fh.seek(0)
                 # Iterate over expected and observed reads, side-by-side
                 for records in itertools.zip_longest(*[obs_fh] * 4):
                     (obs_seq_h, obs_seq, _, obs_qual) = records
-                    # Make sure seqs that do not map to genome were removed
+                    # Make sure seqs that map to genome were removed
                     obs_id = obs_seq_h.strip("@/012\n")
                     self.assertTrue(obs_id in included_ids)
                     self.assertTrue(obs_id not in excluded_ids)
 
     def test_filter_single_end_keep_unmapped(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
-            self.query_reads_single, self.minimap2_index, keep="unmapped"
+        obs_seqs = filter_reads(
+            query_reads=self.query_single_reads,
+            index_database=self.minimap2_index,
+            keep="unmapped",
         )
 
-        obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
-        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
         self._check_ids(obs_seqs, seq_ids_unmapped, seq_ids_mapped)
 
     def test_filter_single_end_keep_mapped(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
-            self.query_reads_single, self.minimap2_index
+        obs_seqs = filter_reads(
+            query_reads=self.query_single_reads,
+            index_database=self.minimap2_index,
         )
-
-        obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
-        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
         self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
 
     def test_filter_single_end_keep_mapped_sr(self):
@@ -105,43 +100,34 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
         self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
 
     def test_filter_single_end_keep_mapped_using_ref(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
-            self.query_reads_single, reference_reads=self.reference_reads
+        obs_seqs = filter_reads(
+            query_reads=self.query_single_reads,
+            reference_reads=self.reference_reads,
         )
-
-        obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
-        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
         self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
 
     def test_filter_single_end_keep_unmapped_with_perc_id(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
-            self.query_reads_single,
-            self.minimap2_index,
+        obs_seqs = filter_reads(
+            query_reads=self.query_single_reads,
+            index_database=self.minimap2_index,
             keep="unmapped",
             min_per_identity=0.99,
         )
-
-        obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
-        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
         self._check_ids(obs_seqs, perc_id_unmapped, perc_id_mapped)
 
     def test_filter_single_end_keep_mapped_with_perc_id(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
-            self.query_reads_single,
-            self.minimap2_index,
+        obs_seqs = filter_reads(
+            query_reads=self.query_single_reads,
+            index_database=self.minimap2_index,
             keep="mapped",
             min_per_identity=0.99,
         )
-
-        obs = obs_art.view(SingleLanePerSampleSingleEndFastqDirFmt)
-        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
-
         self._check_ids(obs_seqs, perc_id_mapped, perc_id_unmapped)
 
     def test_both_reference_and_index_provided(self):
         with self.assertRaises(ValueError) as context:
-            self.plugin.methods["filter_reads"](
-                self.query_reads_single,
+            filter_reads(
+                query_reads=self.query_single_reads,
                 index_database=self.minimap2_index,
                 reference_reads=self.reference_reads,
             )
@@ -152,8 +138,10 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
 
     def test_neither_reference_nor_index_provided(self):
         with self.assertRaises(ValueError) as context:
-            self.plugin.methods["filter_reads"](
-                self.query_reads_single, index_database=None, reference_reads=None
+            filter_reads(
+                query_reads=self.query_single_reads,
+                index_database=None,
+                reference_reads=None,
             )
         self.assertIn(
             "Either reference_reads or index_database must be provided",
@@ -161,23 +149,18 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
         )
 
     def test_filter_paired_end_keep_unmapped(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
-            self.query_reads_paired, self.minimap2_index, keep="unmapped"
+        obs_seqs = filter_reads(
+            query_reads=self.query_paired_reads,
+            index_database=self.minimap2_index,
+            keep="unmapped",
         )
-
-        obs = obs_art.view(SingleLanePerSamplePairedEndFastqDirFmt)
-        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
-
         self._check_ids(obs_seqs, seq_ids_unmapped, seq_ids_mapped)
 
     def test_filter_paired_end_keep_mapped(self):
-        (obs_art,) = self.plugin.methods["filter_reads"](
-            self.query_reads_paired, self.minimap2_index
+        obs_seqs = filter_reads(
+            query_reads=self.query_paired_reads,
+            index_database=self.minimap2_index,
         )
-
-        obs = obs_art.view(SingleLanePerSamplePairedEndFastqDirFmt)
-        obs_seqs = obs.sequences.iter_views(FastqGzFormat)
-
         self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
 
 

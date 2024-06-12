@@ -23,7 +23,10 @@ setup(
     url="https://github.com/bokulich-lab/q2-minimap2",
     entry_points={"qiime2.plugins": ["q2-minimap2=q2_minimap2.plugin_setup:plugin"]},
     package_data={
-        "q2_minimap2": ["citations.bib"],
+        "q2_minimap2": [
+            "citations.bib",
+            "assets/*/*",
+        ],
         "q2_minimap2.tests": [
             "data/*",
             "data/*/*",
