@@ -65,7 +65,6 @@ class TestMinimap2Build(Minimap2TestsBase):
 
         mock_sequences = "/mock/path/to/sequences.fasta"
         preset = "map-ont"
-        kmer_length = 15
 
         expected_cmd = [
             "minimap2",
@@ -74,12 +73,10 @@ class TestMinimap2Build(Minimap2TestsBase):
             "-d",
             "/mock/path/to/database/index.mmi",
             mock_sequences,
-            "-k",
-            str(kmer_length),
         ]
 
         # Call the function
-        cmd = create_idx_build_cmd(mock_database, mock_sequences, preset, kmer_length)
+        cmd = create_idx_build_cmd(mock_database, mock_sequences, preset)
 
         # Assert the command matches the expected command
         self.assertEqual(cmd, expected_cmd)

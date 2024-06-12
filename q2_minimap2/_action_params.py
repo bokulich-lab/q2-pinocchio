@@ -17,6 +17,7 @@ from qiime2.plugin import Bool, Choices, Float, Int, Range, Str, TypeMatch
 from q2_minimap2.types._type import Minimap2IndexDB, PairwiseAlignmentMN2
 
 T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
+
 # filter_reads
 filter_reads_inputs = {
     "query_reads": SampleData[T],
@@ -34,7 +35,7 @@ filter_reads_outputs_dsc = {
 }
 filter_reads_params = {
     "n_threads": Int % Range(1, None),
-    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
+    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
     "keep": Str % Choices(["mapped", "unmapped"]),
     "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "matching_score": Int,
@@ -48,7 +49,8 @@ filter_reads_param_dsc = {
     "used during the mapping process. 1) map-ont: Align noisy long reads "
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-    "older PacBio continuous long (CLR) reads to a reference genome.",
+    "older PacBio continuous long (CLR) reads to a reference genome. "
+    "4) sr: Align short single-end reads.",
     "keep": "Keep the sequences that align to reference. When "
     "set to unmapped it keeps sequences that do not align to the reference "
     "database.",
@@ -85,7 +87,7 @@ extract_seqs_outputs_dsc = {
 }
 extract_seqs_params = {
     "n_threads": Int % Range(1, None),
-    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb"]),
+    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
     "extract": Str % Choices(["mapped", "unmapped"]),
     "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "matching_score": Int,
@@ -99,7 +101,8 @@ extract_seqs_param_dsc = {
     "used during the mapping process. 1) map-ont: Align noisy long reads "
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-    "older PacBio continuous long (CLR) reads to a reference genome.",
+    "older PacBio continuous long (CLR) reads to a reference genome."
+    "4) sr: Align short single-end reads.",
     "extract": "Extract sequences that map to reference. When "
     "set to unmapped it extracts sequences that do not map to the reference "
     "database.",
@@ -127,10 +130,8 @@ build_index_inputs_dsc = {
 build_index_outputs_dsc = {"index_database": "Minimap2 index database."}
 build_index_params = {
     "preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
-    "kmer_length": Int % Range(1, 28),
 }
 build_index_param_dsc = {
-    "kmer_length": "Minimizer k-mer length.",
     "preset": "This option applies multiple settings at the same time during "
     "the indexing process. This value should match the mapping preset value "
     "that is intended to be used in other actions utilizing the created index. "
@@ -162,6 +163,12 @@ minimap2_search_param_dsc = {
     "n_threads": "Number of threads to use.",
     "maxaccepts": "Maximum number of hits to keep for each query. Minimap2 will "
     "choose the first N hits in the reference database.",
+    "mapping_preset": "Specifies the type of input sequences that will be "
+    "used during the mapping process. 1) map-ont: Align noisy long reads "
+    "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
+    "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
+    "older PacBio continuous long (CLR) reads to a reference genome."
+    "4) sr: Align short single-end reads.",
     "perc_identity": "Optionally reject match if percent identity to query is "
     "lower.",
     "output_no_hits": "Report both matching and non-matching queries. "
@@ -176,6 +183,7 @@ minimap2_search_param_dsc = {
 minimap2_search_params = {
     "n_threads": Int % Range(1, None),
     "maxaccepts": Int % Range(1, None),
+    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
     "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "output_no_hits": Bool,
 }
@@ -210,6 +218,7 @@ classify_consensus_minimap2_outputs_dsc = {
 }
 classify_consensus_minimap2_params = {
     "maxaccepts": Int % Range(1, None),
+    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
     "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "output_no_hits": Bool,
     "num_threads": Int % Range(1, None),
@@ -222,6 +231,12 @@ classify_consensus_minimap2_param_dsc = {
         "choose the first N hits in the reference database that "
         "exceed perc_identity similarity to query."
     ),
+    "mapping_preset": "Specifies the type of input sequences that will be "
+    "used during the mapping process. 1) map-ont: Align noisy long reads "
+    "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
+    "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
+    "older PacBio continuous long (CLR) reads to a reference genome."
+    "4) sr: Align short single-end reads.",
     "perc_identity": ("Reject match if percent identity to query is lower."),
     "output_no_hits": "Report both matching and non-matching queries. ",
     "num_threads": "Number of threads (CPUs) to use in the Minimap2 search. "

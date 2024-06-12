@@ -92,6 +92,7 @@ def classify_consensus_minimap2(
     index_database=None,  # Optional pre-built index of the reference database
     reference_reads=None,  # Optional reference sequences for on-the-fly indexing
     maxaccepts=10,  # Maximum number of alignments to accept per query
+    mapping_preset="map-ont",  # Minimap2 mapping preset
     perc_identity=0.8,  # Min percentage identity for an alignment to be accepted
     output_no_hits=True,  # Include queries with no hits in the output
     min_consensus=0.51,  # Threshold for consensus in classification
@@ -110,6 +111,7 @@ def classify_consensus_minimap2(
         index_database=index_database,
         reference_reads=reference_reads,
         maxaccepts=maxaccepts,
+        mapping_preset=mapping_preset,
         perc_identity=perc_identity,
         output_no_hits=output_no_hits,
         n_threads=num_threads,

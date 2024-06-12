@@ -90,6 +90,14 @@ class TestFilterSingleEndReads(Minimap2TestsBase):
         )
         self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
 
+    def test_filter_single_end_keep_mapped_sr(self):
+        obs_seqs = filter_reads(
+            query_reads=self.query_single_reads,
+            index_database=self.minimap2_index,
+            mapping_preset="sr",
+        )
+        self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
+
     def test_filter_single_end_keep_mapped_using_ref(self):
         obs_seqs = filter_reads(
             query_reads=self.query_single_reads,
