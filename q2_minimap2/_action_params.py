@@ -8,43 +8,23 @@
 
 from q2_types.feature_data import FeatureData, Sequence, Taxonomy
 from q2_types.per_sample_sequences import (
-    JoinedSequencesWithQuality,
     PairedEndSequencesWithQuality,
     SequencesWithQuality,
 )
 from q2_types.sample_data import SampleData
-from qiime2.plugin import Bool, Choices, Float, Int, Range, Str, TypeMap, TypeMatch
+from qiime2.plugin import Bool, Choices, Float, Int, Range, Str, TypeMatch
 
 from q2_minimap2.types._type import Minimap2IndexDB, PairwiseAlignmentMN2
 
 T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
 
-Filter_reads_in, Filter_reads_preset, Filter_reads_out = TypeMap(
-    {
-        (
-            SampleData[PairedEndSequencesWithQuality],
-            Str % Choices(["map-ont", "map-hifi", "map-pb"]),
-        ): (SampleData[PairedEndSequencesWithQuality]),
-        (
-            SampleData[SequencesWithQuality],
-            Str % Choices(["map-ont", "map-hifi", "map-pb"]),
-        ): (SampleData[SequencesWithQuality]),
-        (SampleData[SequencesWithQuality], Str % Choices("sr")): (
-            SampleData[SequencesWithQuality]
-        ),
-        (SampleData[JoinedSequencesWithQuality], Str % Choices("sr")): (
-            SampleData[JoinedSequencesWithQuality]
-        ),
-    }
-)
-
 # filter_reads
 filter_reads_inputs = {
-    "query_reads": Filter_reads_in,
+    "query_reads": SampleData[T],
     "index_database": Minimap2IndexDB,
     "reference_reads": FeatureData[Sequence],
 }
-filter_reads_outputs = [("filtered_query_reads", Filter_reads_out)]
+filter_reads_outputs = [("filtered_query_reads", SampleData[T])]
 filter_reads_inputs_dsc = {
     "query_reads": "Reads to be filtered.",
     "index_database": "Minimap2 index database. Incompatible with reference-reads.",
@@ -55,7 +35,7 @@ filter_reads_outputs_dsc = {
 }
 filter_reads_params = {
     "n_threads": Int % Range(1, None),
-    "mapping_preset": Filter_reads_preset,
+    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
     "keep": Str % Choices(["mapped", "unmapped"]),
     "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "matching_score": Int,
@@ -150,10 +130,8 @@ build_index_inputs_dsc = {
 build_index_outputs_dsc = {"index_database": "Minimap2 index database."}
 build_index_params = {
     "preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
-    "kmer_length": Int % Range(1, 28),
 }
 build_index_param_dsc = {
-    "kmer_length": "Minimizer k-mer length.",
     "preset": "This option applies multiple settings at the same time during "
     "the indexing process. This value should match the mapping preset value "
     "that is intended to be used in other actions utilizing the created index. "
