@@ -1,2 +1,2 @@
 include versioneer.py
-include q2_minimap2/_version.py
+include q2_pinocchio/_version.py

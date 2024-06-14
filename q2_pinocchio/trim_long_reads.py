@@ -10,7 +10,7 @@ import subprocess
 
 from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
-from q2_minimap2._utils import run_commands_with_pipe
+from q2_pinocchio._utils import run_commands_with_pipe
 
 
 # Generates a command list for the 'chopper' tool

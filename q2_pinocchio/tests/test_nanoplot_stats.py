@@ -13,11 +13,11 @@ from unittest.mock import patch
 
 from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
-from q2_minimap2.nanoplot_stats import _create_visualization, _run_nanoplot, stats
-from q2_minimap2.tests.test_minimap2 import Minimap2TestsBase
+from q2_pinocchio.nanoplot_stats import _create_visualization, _run_nanoplot, stats
+from q2_pinocchio.tests.test_pinocchio import PinocchioTestsBase
 
 
-class TestRunNanoPlot(Minimap2TestsBase):
+class TestRunNanoPlot(PinocchioTestsBase):
     @patch("q2_minimap2.nanoplot_stats.run_command")
     def test_run_nanoplot_success(self, mock_run_command):
         """Test that _run_nanoplot runs successfully."""
@@ -56,7 +56,7 @@ class TestRunNanoPlot(Minimap2TestsBase):
             )
 
 
-class TestCreateVisualization(Minimap2TestsBase):
+class TestCreateVisualization(PinocchioTestsBase):
     @patch("q2_minimap2.nanoplot_stats.q2templates.render")
     @patch("q2_minimap2.nanoplot_stats.copy_tree")
     @patch("q2_minimap2.nanoplot_stats.pkg_resources.resource_filename")
@@ -90,7 +90,7 @@ class TestCreateVisualization(Minimap2TestsBase):
         )
 
 
-class TestStats(Minimap2TestsBase):
+class TestStats(PinocchioTestsBase):
     @patch("q2_minimap2.nanoplot_stats._create_visualization")
     @patch("q2_minimap2.nanoplot_stats._run_nanoplot")
     def test_stats(self, mock_run_nanoplot, mock_create_visualization):

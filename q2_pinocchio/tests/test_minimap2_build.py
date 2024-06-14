@@ -10,12 +10,12 @@ from unittest.mock import MagicMock, patch
 
 from q2_types.feature_data import DNAFASTAFormat
 
-from q2_minimap2.build_index import build_index, create_idx_build_cmd
+from q2_pinocchio.build_index import build_index, create_idx_build_cmd
 
-from .test_minimap2 import Minimap2TestsBase
+from .test_pinocchio import PinocchioTestsBase
 
 
-class TestMinimap2Build(Minimap2TestsBase):
+class TestMinimap2Build(PinocchioTestsBase):
     def setUp(self):
         super().setUp()
         # Retrieve the file path for the test DNA sequences

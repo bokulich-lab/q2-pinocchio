@@ -14,7 +14,7 @@ import pkg_resources
 import q2templates
 from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
-from q2_minimap2._utils import run_command
+from q2_pinocchio._utils import run_command
 
 
 # Run NanoPlot on sequence files in the specified directory

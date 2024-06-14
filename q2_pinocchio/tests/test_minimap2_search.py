@@ -12,17 +12,17 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
-from q2_minimap2.minimap2_search import (
+from q2_pinocchio.minimap2_search import (
     filter_by_maxaccepts,
     filter_by_perc_identity,
     minimap2_search,
 )
-from q2_minimap2.types._format import Minimap2IndexDBDirFmt
+from q2_pinocchio.types._format import Minimap2IndexDBDirFmt
 
-from .test_minimap2 import Minimap2TestsBase
+from .test_pinocchio import PinocchioTestsBase
 
 
-class TestFilterByMaxAccepts(Minimap2TestsBase):
+class TestFilterByMaxAccepts(PinocchioTestsBase):
     def setUp(self):
         super().setUp()
         # Retrieve the paths to test data files
@@ -63,7 +63,7 @@ class TestFilterByMaxAccepts(Minimap2TestsBase):
         assert_frame_equal(result_df, expected_df)
 
 
-class TestFilterByPercIdentity(Minimap2TestsBase):
+class TestFilterByPercIdentity(PinocchioTestsBase):
     def setUp(self):
         super().setUp()
         self.PairwiseAlignmentMN2_file = self.get_data_path(
@@ -99,7 +99,7 @@ class TestFilterByPercIdentity(Minimap2TestsBase):
         assert_frame_equal(result_df, expected_df)
 
 
-class TestMinimap2(Minimap2TestsBase):
+class TestMinimap2(PinocchioTestsBase):
     def setUp(self):
         super().setUp()
 

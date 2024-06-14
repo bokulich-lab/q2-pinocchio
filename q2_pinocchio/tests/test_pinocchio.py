@@ -8,8 +8,8 @@
 from qiime2.plugin.testing import TestPluginBase
 
 
-class Minimap2TestsBase(TestPluginBase):
-    package = "q2_minimap2.tests"
+class PinocchioTestsBase(TestPluginBase):
+    package = "q2_pinocchio.tests"
 
     def setUp(self):
         super().setUp()

@@ -13,7 +13,7 @@ import unittest
 
 import bs4
 
-from q2_minimap2._utils import (
+from q2_pinocchio._utils import (
     _construct_param,
     _get_sample_from_path,
     _modify_links,
