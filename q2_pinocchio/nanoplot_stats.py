@@ -38,7 +38,7 @@ def _run_nanoplot(sequences_path, nanoplot_output):
 
 def _create_visualization(output_dir, nanoplot_output):
     # Copy Nanoplot templates to the output directory
-    TEMPLATES = pkg_resources.resource_filename("q2_minimap2", "assets")
+    TEMPLATES = pkg_resources.resource_filename("q2_pinocchio", "assets")
     copy_tree(os.path.join(TEMPLATES, "nanoplot"), output_dir)
 
     # Copy Nanoplot data from the temporary directory to the output directory
