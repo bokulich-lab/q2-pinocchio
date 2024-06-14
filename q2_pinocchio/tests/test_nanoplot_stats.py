@@ -18,7 +18,7 @@ from q2_pinocchio.tests.test_pinocchio import PinocchioTestsBase
 
 
 class TestRunNanoPlot(PinocchioTestsBase):
-    @patch("q2_minimap2.nanoplot_stats.run_command")
+    @patch("q2_pinocchio.nanoplot_stats.run_command")
     def test_run_nanoplot_success(self, mock_run_command):
         """Test that _run_nanoplot runs successfully."""
         sequences_path = self.get_data_path("nanoplot/")
@@ -39,7 +39,7 @@ class TestRunNanoPlot(PinocchioTestsBase):
             nanoplot_cmd = ["NanoPlot", "--fastq", *fastq_files, "-o", output_dir]
             mock_run_command.assert_called_once_with(nanoplot_cmd, verbose=True)
 
-    @patch("q2_minimap2.nanoplot_stats.run_command")
+    @patch("q2_pinocchio.nanoplot_stats.run_command")
     def test_run_nanoplot_exception(self, mock_run_command):
         """Test that _run_nanoplot raises an exception when NanoPlot fails."""
         sequences_path = self.get_data_path("nanoplot/")
@@ -57,9 +57,9 @@ class TestRunNanoPlot(PinocchioTestsBase):
 
 
 class TestCreateVisualization(PinocchioTestsBase):
-    @patch("q2_minimap2.nanoplot_stats.q2templates.render")
-    @patch("q2_minimap2.nanoplot_stats.copy_tree")
-    @patch("q2_minimap2.nanoplot_stats.pkg_resources.resource_filename")
+    @patch("q2_pinocchio.nanoplot_stats.q2templates.render")
+    @patch("q2_pinocchio.nanoplot_stats.copy_tree")
+    @patch("q2_pinocchio.nanoplot_stats.pkg_resources.resource_filename")
     def test_create_visualization(
         self, mock_resource_filename, mock_copy_tree, mock_render
     ):
@@ -74,7 +74,7 @@ class TestCreateVisualization(PinocchioTestsBase):
         _create_visualization(output_dir, nanoplot_output)
 
         # Check that resource_filename was called correctly
-        mock_resource_filename.assert_called_once_with("q2_minimap2", "assets")
+        mock_resource_filename.assert_called_once_with("q2_pinocchio", "assets")
 
         # Check that copy_tree was called correctly for templates and nanoplot data
         mock_copy_tree.assert_any_call("/fake/templates/dir/nanoplot", output_dir)
@@ -91,8 +91,8 @@ class TestCreateVisualization(PinocchioTestsBase):
 
 
 class TestStats(PinocchioTestsBase):
-    @patch("q2_minimap2.nanoplot_stats._create_visualization")
-    @patch("q2_minimap2.nanoplot_stats._run_nanoplot")
+    @patch("q2_pinocchio.nanoplot_stats._create_visualization")
+    @patch("q2_pinocchio.nanoplot_stats._run_nanoplot")
     def test_stats(self, mock_run_nanoplot, mock_create_visualization):
         """Test the stats function."""
         # Create the necessary objects

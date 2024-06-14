@@ -201,7 +201,7 @@ class TestConstructChopperCommand(PinocchioTestsBase):
 
 
 class TestProcessAndRezip(PinocchioTestsBase):
-    @patch("q2_minimap2.trim_long_reads.run_commands_with_pipe")
+    @patch("q2_pinocchio.trim_long_reads.run_commands_with_pipe")
     def test_process_and_rezip_success(self, mock_run_commands_with_pipe):
         """Test that process_and_rezip runs successfully."""
         input_file = "/fake/input/file.fastq.gz"
@@ -222,7 +222,7 @@ class TestProcessAndRezip(PinocchioTestsBase):
             str(filtered_seqs_path),
         )
 
-    @patch("q2_minimap2.trim_long_reads.run_commands_with_pipe")
+    @patch("q2_pinocchio.trim_long_reads.run_commands_with_pipe")
     def test_process_and_rezip_exception(self, mock_run_commands_with_pipe):
         """Test that process_and_rezip raises an exception when chopper fails."""
         input_file = "/fake/input/file.fastq.gz"

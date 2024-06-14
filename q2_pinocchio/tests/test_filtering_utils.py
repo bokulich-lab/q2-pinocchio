@@ -537,7 +537,7 @@ class TestRunCmd(PinocchioTestsBase):
 
 
 class TestCollateSamInplace(PinocchioTestsBase):
-    @patch("q2_minimap2._filtering_utils.run_cmd")
+    @patch("q2_pinocchio._filtering_utils.run_cmd")
     @patch("shutil.move")
     def test_collate_sam_inplace(self, mock_shutil_move, mock_run_cmd):
         input_sam_path = "test_input.sam"
