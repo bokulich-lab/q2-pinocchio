@@ -1,17 +1,17 @@
-# q2-minimap2
+# q2-pinocchio: PaIrwise alignment of long-read NucleOtide sequence data for Classification and quality Control in HIgh-thrOughput
 
-## QIIME 2 Plugin for quality control and taxonomic classification of long sequences using Minimap2
+## QIIME 2 Plugin for quality control and taxonomic classification of long sequences
 
 
 
-### Step 1: Create q2-minimap2 environment
+### Step 1: Create q2-pinocchio environment
 ```shell
-mamba create -n q2-minimap2 -c conda-forge -c bioconda -c https://packages.qiime2.org/qiime2/2024.2/shotgun/passed/ -c defaults q2cli q2-types q2-feature-classifier minimap2 bs4 samtools gzip chopper nanoplot
+mamba create -n q2-pinocchio -c conda-forge -c bioconda -c https://packages.qiime2.org/qiime2/2024.2/shotgun/passed/ -c defaults q2cli q2-types q2-feature-classifier minimap2 bs4 samtools gzip chopper nanoplot
 ```
 
-### Step 2: Activate q2-minimap2 environment
+### Step 2: Activate q2-pinocchio environment
 ```shell
-conda activate q2-minimap2
+conda activate q2-pinocchio
 ```
 
 ### Step 3: Installing python package
@@ -23,6 +23,7 @@ qiime dev refresh-cache
 ### Step 4: Download input data
 [Datasets](https://polybox.ethz.ch/index.php/s/Y81jl4JAtPjuKH6)
 
+<!--
 ### Step 5: Execution
 
 * build-index
@@ -89,3 +90,4 @@ qiime dev refresh-cache
   ```shell
   qiime minimap2 classify-consensus-minimap2 --i-index-database classification_input/index.qza --i-query classification_input/n1K_initial_reads_SILVA132.fna.qza --i-reference-taxonomy classification_input/raw_taxonomy.qza --p-num-threads 6 --output-dir outDir --verbose
   ```
+-->

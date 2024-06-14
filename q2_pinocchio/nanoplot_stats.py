@@ -14,7 +14,7 @@ import pkg_resources
 import q2templates
 from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
-from q2_minimap2._utils import run_command
+from q2_pinocchio._utils import run_command
 
 
 # Run NanoPlot on sequence files in the specified directory
@@ -38,7 +38,7 @@ def _run_nanoplot(sequences_path, nanoplot_output):
 
 def _create_visualization(output_dir, nanoplot_output):
     # Copy Nanoplot templates to the output directory
-    TEMPLATES = pkg_resources.resource_filename("q2_minimap2", "assets")
+    TEMPLATES = pkg_resources.resource_filename("q2_pinocchio", "assets")
     copy_tree(os.path.join(TEMPLATES, "nanoplot"), output_dir)
 
     # Copy Nanoplot data from the temporary directory to the output directory

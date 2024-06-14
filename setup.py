@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 import versioneer
 
 setup(
-    name="q2-minimap2",
+    name="q2-pinocchio",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     license="BSD-3-Clause",
@@ -19,20 +19,20 @@ setup(
     author="Christos Matzoros",
     author_email="christosmatzoros@gmail.com",
     description="QIIME 2 Plugin for quality control and taxonomic "
-    "classification of long read sequences using Minimap2.",
-    url="https://github.com/bokulich-lab/q2-minimap2",
-    entry_points={"qiime2.plugins": ["q2-minimap2=q2_minimap2.plugin_setup:plugin"]},
+    "classification of long read sequences.",
+    url="https://github.com/bokulich-lab/q2-pinocchio",
+    entry_points={"qiime2.plugins": ["q2-pinocchio=q2_pinocchio.plugin_setup:plugin"]},
     package_data={
-        "q2_minimap2": [
+        "q2_pinocchio": [
             "citations.bib",
             "assets/*/*",
         ],
-        "q2_minimap2.tests": [
+        "q2_pinocchio.tests": [
             "data/*",
             "data/*/*",
             "data/*/*/*",
         ],
-        "q2_minimap2.types": ["data/*"],
+        "q2_pinocchio.types": ["data/*"],
     },
     zip_safe=False,
 )

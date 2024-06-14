@@ -8,16 +8,16 @@
 
 import pandas as pd
 
-from q2_minimap2.types._format import (
+from q2_pinocchio.types._format import (
     Minimap2IndexDBFmt,
     PairwiseAlignmentMN2DirectoryFormat,
     PairwiseAlignmentMN2Format,
 )
 
-from .test_minimap2 import Minimap2TestsBase
+from .test_pinocchio import PinocchioTestsBase
 
 
-class TestPaf(Minimap2TestsBase):
+class TestPaf(PinocchioTestsBase):
     def test_PairwiseAlignmentMN2_Format_validate(self):
         filepath = self.get_data_path("type/paf_file.paf")
         format = PairwiseAlignmentMN2Format(filepath, mode="r")
@@ -41,7 +41,7 @@ class TestPaf(Minimap2TestsBase):
         self.assertIsInstance(paf_format, PairwiseAlignmentMN2DirectoryFormat)
 
 
-class TestIndex(Minimap2TestsBase):
+class TestIndex(PinocchioTestsBase):
     def test_Minimap2IndexDBFmt_Format_validate(self):
         filepath = self.get_data_path("type/index.mmi")
         format = Minimap2IndexDBFmt(filepath, mode="r")

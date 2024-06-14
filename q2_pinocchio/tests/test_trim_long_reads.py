@@ -14,8 +14,8 @@ from unittest.mock import patch
 
 from q2_types.per_sample_sequences import CasavaOneEightSingleLanePerSampleDirFmt
 
-from q2_minimap2.tests.test_minimap2 import Minimap2TestsBase
-from q2_minimap2.trim_long_reads import (
+from q2_pinocchio.tests.test_pinocchio import PinocchioTestsBase
+from q2_pinocchio.trim_long_reads import (
     construct_chopper_command,
     process_and_rezip,
     trim,
@@ -50,7 +50,7 @@ seq_ids_pe_minq_20 = [
 ]
 
 
-class TestChopperUtilities(Minimap2TestsBase):
+class TestChopperUtilities(PinocchioTestsBase):
     def test_construct_chopper_command(self):
         expected_command = [
             "chopper",
@@ -81,7 +81,7 @@ class TestChopperUtilities(Minimap2TestsBase):
         self.assertEqual(result, expected_command)
 
 
-class TestTrim(Minimap2TestsBase):
+class TestTrim(PinocchioTestsBase):
     def setUp(self):
         super().setUp()
 
@@ -161,7 +161,7 @@ class TestTrim(Minimap2TestsBase):
                     self.assertTrue(obs_id in seq_ids_pe_minq_20)
 
 
-class TestConstructChopperCommand(Minimap2TestsBase):
+class TestConstructChopperCommand(PinocchioTestsBase):
     def test_construct_chopper_command(self):
         # Define the inputs
         quality = 20
@@ -200,8 +200,8 @@ class TestConstructChopperCommand(Minimap2TestsBase):
         self.assertEqual(result, expected_command)
 
 
-class TestProcessAndRezip(Minimap2TestsBase):
-    @patch("q2_minimap2.trim_long_reads.run_commands_with_pipe")
+class TestProcessAndRezip(PinocchioTestsBase):
+    @patch("q2_pinocchio.trim_long_reads.run_commands_with_pipe")
     def test_process_and_rezip_success(self, mock_run_commands_with_pipe):
         """Test that process_and_rezip runs successfully."""
         input_file = "/fake/input/file.fastq.gz"
@@ -222,7 +222,7 @@ class TestProcessAndRezip(Minimap2TestsBase):
             str(filtered_seqs_path),
         )
 
-    @patch("q2_minimap2.trim_long_reads.run_commands_with_pipe")
+    @patch("q2_pinocchio.trim_long_reads.run_commands_with_pipe")
     def test_process_and_rezip_exception(self, mock_run_commands_with_pipe):
         """Test that process_and_rezip raises an exception when chopper fails."""
         input_file = "/fake/input/file.fastq.gz"
@@ -235,8 +235,7 @@ class TestProcessAndRezip(Minimap2TestsBase):
         )
 
         with self.assertRaisesRegex(
-            Exception,
-            "An error was encountered while using chopper"
+            Exception, "An error was encountered while using chopper"
         ):
             process_and_rezip(input_file, chopper_cmd, filtered_seqs_path)
 

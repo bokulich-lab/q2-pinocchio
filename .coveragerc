@@ -1,10 +1,10 @@
 [run]
-source=q2_minimap2
+source=q2_pinocchio
 branch = True
 omit =
     */tests*
     */__init__.py
-    minimap2/_version.py
+    pinocchio/_version.py
     versioneer.py
 
 [report]
@@ -12,5 +12,5 @@ fail_under = 90
 omit =
     */tests*
     */__init__.py
-    minimap2/_version.py
+    pinocchio/_version.py
     versioneer.py
