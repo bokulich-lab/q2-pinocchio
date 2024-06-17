@@ -19,11 +19,11 @@ conda activate q2-pinocchio
 make dev
 qiime dev refresh-cache
 ```
-
+<!--
 ### Step 4: Download input data
 [Datasets](https://polybox.ethz.ch/index.php/s/Y81jl4JAtPjuKH6)
 
-<!--
+
 ### Step 5: Execution
 
 * build-index
