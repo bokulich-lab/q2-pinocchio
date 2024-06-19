@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -162,7 +162,7 @@ class TestMinimap2(PinocchioTestsBase):
             self.query_reads, self.index_database, output_no_hits=False
         )
         result2 = minimap2_search(
-            self.query_reads, reference_reads=self.ref, output_no_hits=False
+            self.query_reads, reference=self.ref, output_no_hits=False
         )
         self.assertEqual(
             result1.to_csv(sep="\t", index=False, header=False),
@@ -173,8 +173,8 @@ class TestMinimap2(PinocchioTestsBase):
         with self.assertRaisesRegex(ValueError, "Only one.*can be provided.*"):
             minimap2_search(
                 self.query_reads,
-                reference_reads=self.ref,
-                index_database=self.index_database,
+                reference=self.ref,
+                index=self.index_database,
             )
         with self.assertRaisesRegex(ValueError, "Either.*must be provided.*"):
             minimap2_search(self.query_reads)

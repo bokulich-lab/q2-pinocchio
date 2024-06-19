@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -50,12 +50,12 @@ def _minimap2_extract_seqs(
         run_cmd(convert_to_fasta_cmd, "samtools fasta")
 
 
-def extract_seqs(
+def extract_reads(
     sequences: DNAFASTAFormat,
-    index_database: Minimap2IndexDBDirFmt = None,
-    reference_reads: DNAFASTAFormat = None,
+    index: Minimap2IndexDBDirFmt = None,
+    reference: DNAFASTAFormat = None,
     n_threads: int = 3,
-    mapping_preset: str = "map-ont",
+    preset: str = "map-ont",
     extract: str = "mapped",
     min_per_identity: float = None,
     matching_score: int = None,
@@ -64,7 +64,7 @@ def extract_seqs(
     gap_extension_penalty: int = None,
 ) -> DNAFASTAFormat:
 
-    if reference_reads and index_database:
+    if reference and index:
         raise ValueError(
             "Only one reference_reads or index_database artifact "
             "can be provided as input. Choose one and try again."
@@ -74,10 +74,10 @@ def extract_seqs(
     filtered_seqs = DNAFASTAFormat()
 
     # Get the path of index database or reference
-    if index_database:
-        idx_ref_path = str(index_database.path) + "/index.mmi"
-    elif reference_reads:
-        idx_ref_path = str(reference_reads.path)
+    if index:
+        idx_ref_path = str(index.path) + "/index.mmi"
+    elif reference:
+        idx_ref_path = str(reference.path)
     else:
         raise ValueError(
             "Either reference_reads or a minimap2_index must be provided as input."
@@ -93,7 +93,7 @@ def extract_seqs(
         filtered_seqs,
         idx_ref_path,
         n_threads,
-        mapping_preset,
+        preset,
         extract,
         min_per_identity,
         penalties,

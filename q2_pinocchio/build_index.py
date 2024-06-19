@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -28,14 +28,14 @@ def create_idx_build_cmd(database, sequences, preset):
 
 
 def build_index(
-    sequences: DNAFASTAFormat,
+    reference: DNAFASTAFormat,
     preset: str = "map-ont",  # Preset to apply multiple options
 ) -> Minimap2IndexDBDirFmt:
     # Initialize a directory format object to store the Minimap2 index
     database = Minimap2IndexDBDirFmt()
 
     # Construct the command to build the Minimap2 index file
-    build_cmd = create_idx_build_cmd(database, sequences, preset)
+    build_cmd = create_idx_build_cmd(database, reference, preset)
 
     try:
         # Execute the command to create the Minimap2 index database

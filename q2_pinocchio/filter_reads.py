@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -76,11 +76,11 @@ def _minimap2_filter_reads(
 
 
 def filter_reads(
-    query_reads: CasavaOneEightSingleLanePerSampleDirFmt,
-    index_database: Minimap2IndexDBDirFmt = None,  # Optional pre-built Minimap2 index
-    reference_reads: DNAFASTAFormat = None,  # Optional reference sequences
+    query: CasavaOneEightSingleLanePerSampleDirFmt,
+    index: Minimap2IndexDBDirFmt = None,  # Optional pre-built Minimap2 index
+    reference: DNAFASTAFormat = None,  # Optional reference sequences
     n_threads: int = 3,  # Number of threads for Minimap2
-    mapping_preset: str = "map-ont",  # Minimap2 mapping preset
+    preset: str = "map-ont",  # Minimap2 mapping preset
     keep: str = "mapped",  # Keep 'mapped' or 'unmapped' reads
     min_per_identity: float = None,  # Minimum percentage identity to keep a read
     matching_score: int = None,  # Score for matching bases
@@ -89,24 +89,22 @@ def filter_reads(
     gap_extension_penalty: int = None,  # Penalty for extending a gap
 ) -> CasavaOneEightSingleLanePerSampleDirFmt:
 
-    # Ensure that only one of reference_reads or index_database is provided
-    if reference_reads and index_database:
+    # Ensure that only one of reference or index is provided
+    if reference and index:
         raise ValueError(
-            "Only one of reference_reads or index_database can be provided as input. "
+            "Only one of reference or index can be provided as input. "
             "Choose one and try again."
         )
 
-    # Ensure that at least one of reference_reads and index_database is provided
-    if not reference_reads and not index_database:
-        raise ValueError(
-            "Either reference_reads or index_database must be provided as input."
-        )
+    # Ensure that at least one of reference and index is provided
+    if not reference and not index:
+        raise ValueError("Either reference or index must be provided as input.")
 
-    # Determine the reference path from the provided index_database or reference_reads
-    if index_database:
-        idx_ref_path = str(index_database) + "/index.mmi"  # Path to index file
-    elif reference_reads:
-        idx_ref_path = str(reference_reads)  # Path to the reference file
+    # Determine the reference path from the provided index or reference
+    if index:
+        idx_ref_path = str(index) + "/index.mmi"  # Path to index file
+    elif reference:
+        idx_ref_path = str(reference)  # Path to the reference file
 
     # Initialize directory format for filtered sequences
     filtered_seqs = CasavaOneEightSingleLanePerSampleDirFmt()
@@ -117,14 +115,14 @@ def filter_reads(
     )
 
     # Process each read, filtering according to the specified parameters
-    for _, fwd, rev in query_reads.manifest.itertuples():
+    for _, fwd, rev in query.manifest.itertuples():
         _minimap2_filter_reads(
             fwd,
             rev,
             filtered_seqs,
             idx_ref_path,
             n_threads,
-            mapping_preset,
+            preset,
             keep,
             min_per_identity,
             penalties,

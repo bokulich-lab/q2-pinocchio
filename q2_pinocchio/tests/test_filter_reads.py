@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -76,8 +76,8 @@ class TestFilterSingleEndReads(PinocchioTestsBase):
 
     def test_filter_single_end_keep_unmapped(self):
         obs_seqs = filter_reads(
-            query_reads=self.query_single_reads,
-            index_database=self.minimap2_index,
+            query=self.query_single_reads,
+            index=self.minimap2_index,
             keep="unmapped",
         )
 
@@ -85,30 +85,30 @@ class TestFilterSingleEndReads(PinocchioTestsBase):
 
     def test_filter_single_end_keep_mapped(self):
         obs_seqs = filter_reads(
-            query_reads=self.query_single_reads,
-            index_database=self.minimap2_index,
+            query=self.query_single_reads,
+            index=self.minimap2_index,
         )
         self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
 
     def test_filter_single_end_keep_mapped_sr(self):
         obs_seqs = filter_reads(
-            query_reads=self.query_single_reads,
-            index_database=self.minimap2_index,
-            mapping_preset="sr",
+            query=self.query_single_reads,
+            index=self.minimap2_index,
+            preset="sr",
         )
         self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
 
     def test_filter_single_end_keep_mapped_using_ref(self):
         obs_seqs = filter_reads(
-            query_reads=self.query_single_reads,
-            reference_reads=self.reference_reads,
+            query=self.query_single_reads,
+            reference=self.reference_reads,
         )
         self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
 
     def test_filter_single_end_keep_unmapped_with_perc_id(self):
         obs_seqs = filter_reads(
-            query_reads=self.query_single_reads,
-            index_database=self.minimap2_index,
+            query=self.query_single_reads,
+            index=self.minimap2_index,
             keep="unmapped",
             min_per_identity=0.99,
         )
@@ -116,8 +116,8 @@ class TestFilterSingleEndReads(PinocchioTestsBase):
 
     def test_filter_single_end_keep_mapped_with_perc_id(self):
         obs_seqs = filter_reads(
-            query_reads=self.query_single_reads,
-            index_database=self.minimap2_index,
+            query=self.query_single_reads,
+            index=self.minimap2_index,
             keep="mapped",
             min_per_identity=0.99,
         )
@@ -126,39 +126,39 @@ class TestFilterSingleEndReads(PinocchioTestsBase):
     def test_both_reference_and_index_provided(self):
         with self.assertRaises(ValueError) as context:
             filter_reads(
-                query_reads=self.query_single_reads,
-                index_database=self.minimap2_index,
-                reference_reads=self.reference_reads,
+                query=self.query_single_reads,
+                index=self.minimap2_index,
+                reference=self.reference_reads,
             )
         self.assertIn(
-            "Only one of reference_reads or index_database can be provided",
+            "Only one of reference or index can be provided",
             str(context.exception),
         )
 
     def test_neither_reference_nor_index_provided(self):
         with self.assertRaises(ValueError) as context:
             filter_reads(
-                query_reads=self.query_single_reads,
-                index_database=None,
-                reference_reads=None,
+                query=self.query_single_reads,
+                index=None,
+                reference=None,
             )
         self.assertIn(
-            "Either reference_reads or index_database must be provided",
+            "Either reference or index must be provided",
             str(context.exception),
         )
 
     def test_filter_paired_end_keep_unmapped(self):
         obs_seqs = filter_reads(
-            query_reads=self.query_paired_reads,
-            index_database=self.minimap2_index,
+            query=self.query_paired_reads,
+            index=self.minimap2_index,
             keep="unmapped",
         )
         self._check_ids(obs_seqs, seq_ids_unmapped, seq_ids_mapped)
 
     def test_filter_paired_end_keep_mapped(self):
         obs_seqs = filter_reads(
-            query_reads=self.query_paired_reads,
-            index_database=self.minimap2_index,
+            query=self.query_paired_reads,
+            index=self.minimap2_index,
         )
         self._check_ids(obs_seqs, seq_ids_mapped, seq_ids_unmapped)
 

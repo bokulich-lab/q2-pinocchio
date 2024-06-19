@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -11,7 +11,7 @@ import unittest
 
 from q2_types.feature_data import DNAFASTAFormat
 
-from q2_pinocchio.extract_seqs import extract_seqs
+from q2_pinocchio.extract_reads import extract_reads
 from q2_pinocchio.types._format import Minimap2IndexDBDirFmt
 
 from .test_pinocchio import PinocchioTestsBase
@@ -35,20 +35,20 @@ perc_id_mapped = [
 perc_id_unmapped = ["SARS2:6:73:941:1973#", "SARS2:6:73:356:9806#"]
 
 
-class TestExtractSeqs(PinocchioTestsBase):
+class TestExtractreads(PinocchioTestsBase):
     def setUp(self):
         super().setUp()
         self.query1_reads = DNAFASTAFormat(
-            self.get_data_path("extract_seqs/extract_seqs_test_input.fasta"), mode="r"
+            self.get_data_path("extract_reads/extract_reads_test_input.fasta"), mode="r"
         )
         self.query2_reads = DNAFASTAFormat(
-            self.get_data_path("extract_seqs/query-seqs.fasta"), mode="r"
+            self.get_data_path("extract_reads/query-reads.fasta"), mode="r"
         )
         self.minimap2_index = Minimap2IndexDBDirFmt(
-            self.get_data_path("extract_seqs/index/"), mode="r"
+            self.get_data_path("extract_reads/index/"), mode="r"
         )
         self.ref = DNAFASTAFormat(
-            self.get_data_path("extract_seqs/se-dna-sequences.fasta"), mode="r"
+            self.get_data_path("extract_reads/se-dna-sequences.fasta"), mode="r"
         )
 
     def _check_extracted_ids(self, extracted_sequences, included_ids, excluded_ids):
@@ -62,17 +62,17 @@ class TestExtractSeqs(PinocchioTestsBase):
                 self.assertTrue(obs_id not in excluded_ids)
 
     def test_extract_unmapped(self):
-        extracted_sequences = extract_seqs(
+        extracted_sequences = extract_reads(
             self.query1_reads, self.minimap2_index, extract="unmapped"
         )
         self._check_extracted_ids(extracted_sequences, seq_ids_unmapped, seq_ids_mapped)
 
     def test_extract_mapped(self):
-        extracted_sequences = extract_seqs(self.query1_reads, self.minimap2_index)
+        extracted_sequences = extract_reads(self.query1_reads, self.minimap2_index)
         self._check_extracted_ids(extracted_sequences, seq_ids_mapped, seq_ids_unmapped)
 
     def test_extract_unmapped_with_perc_id(self):
-        extracted_sequences = extract_seqs(
+        extracted_sequences = extract_reads(
             self.query1_reads,
             self.minimap2_index,
             extract="unmapped",
@@ -81,7 +81,7 @@ class TestExtractSeqs(PinocchioTestsBase):
         self._check_extracted_ids(extracted_sequences, perc_id_unmapped, perc_id_mapped)
 
     def test_extract_mapped_with_perc_id(self):
-        extracted_sequences = extract_seqs(
+        extracted_sequences = extract_reads(
             self.query1_reads,
             self.minimap2_index,
             extract="mapped",
@@ -90,23 +90,23 @@ class TestExtractSeqs(PinocchioTestsBase):
         self._check_extracted_ids(extracted_sequences, perc_id_mapped, perc_id_unmapped)
 
     def test_extract_mapped_using_reference(self):
-        extracted_sequences = extract_seqs(self.query2_reads, reference_reads=self.ref)
+        extracted_sequences = extract_reads(self.query2_reads, reference=self.ref)
         obs_fp = str(extracted_sequences)
-        correct_output_fp = self.get_data_path("extract_seqs/extracted_mapped.fasta")
+        correct_output_fp = self.get_data_path("extract_reads/extracted_mapped.fasta")
         with open(correct_output_fp, "r") as file1, open(obs_fp, "r") as file2:
             true_fasta_content = file1.read()
             output_fasta_content = file2.read()
             self.assertEqual(true_fasta_content, output_fasta_content)
 
-    def test_extract_seqs_both_ref_and_index(self):
+    def test_extract_reads_both_ref_and_index(self):
         with self.assertRaisesRegex(ValueError, "Only one.*can be provided.*"):
-            extract_seqs(
+            extract_reads(
                 self.query2_reads,
-                reference_reads=self.ref,
-                index_database=self.minimap2_index,
+                reference=self.ref,
+                index=self.minimap2_index,
             )
         with self.assertRaisesRegex(ValueError, "Either.*must be provided.*"):
-            extract_seqs(self.query2_reads)
+            extract_reads(self.query2_reads)
 
 
 if __name__ == "__main__":

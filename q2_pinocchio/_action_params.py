@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -20,22 +20,22 @@ T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
 
 # filter_reads
 filter_reads_inputs = {
-    "query_reads": SampleData[T],
-    "index_database": Minimap2IndexDB,
-    "reference_reads": FeatureData[Sequence],
+    "query": SampleData[T],
+    "index": Minimap2IndexDB,
+    "reference": FeatureData[Sequence],
 }
-filter_reads_outputs = [("filtered_query_reads", SampleData[T])]
+filter_reads_outputs = [("filtered_query", SampleData[T])]
 filter_reads_inputs_dsc = {
-    "query_reads": "Reads to be filtered.",
-    "index_database": "Minimap2 index database. Incompatible with reference-reads.",
-    "reference_reads": "Reference sequences. Incompatible with index-database.",
+    "query": "Sequences to be filtered.",
+    "index": "Minimap2 index database. Incompatible with reference.",
+    "reference": "Reference sequences. Incompatible with index.",
 }
 filter_reads_outputs_dsc = {
-    "filtered_query_reads": "The resulting filtered sequences.",
+    "filtered_query": "The resulting filtered sequences.",
 }
 filter_reads_params = {
     "n_threads": Int % Range(1, None),
-    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
+    "preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
     "keep": Str % Choices(["mapped", "unmapped"]),
     "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "matching_score": Int,
@@ -45,8 +45,8 @@ filter_reads_params = {
 }
 filter_reads_param_dsc = {
     "n_threads": "Number of threads to use.",
-    "mapping_preset": "Specifies the type of input sequences that will be "
-    "used during the mapping process. 1) map-ont: Align noisy long reads "
+    "preset": "The preset parameter applies multiple options at the same time "
+    "during the mapping process of Minimap2. 1) map-ont: Align noisy long reads "
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
     "older PacBio continuous long (CLR) reads to a reference genome. "
@@ -63,31 +63,28 @@ filter_reads_param_dsc = {
     "gap_extension_penalty": "Gap extension penalty.",
 }
 filter_reads_dsc = (
-    "Filter demultiplexed single-end sequences based on "
-    "alignment to a reference database using Minimap2 and samtools. "
-    "This versatile command allows for the exclusion of long sequences "
-    "or, when exclude_mapped is set to False, selectively retains only "
-    "those sequences aligning to the reference."
+    "Filter demultiplexed long sequences based on their "
+    "alignment to a reference database using Minimap2 and SAMtools."
 )
 
-# extract-seqs
-extract_seqs_inputs = {
+# extract-reads
+extract_reads_inputs = {
     "sequences": FeatureData[Sequence],
-    "index_database": Minimap2IndexDB,
-    "reference_reads": FeatureData[Sequence],
+    "index": Minimap2IndexDB,
+    "reference": FeatureData[Sequence],
 }
-extract_seqs_inputs_dsc = {
+extract_reads_inputs_dsc = {
     "sequences": "Feature sequences to be filtered.",
-    "index_database": "Minimap2 index database. Incompatible with reference-reads.",
-    "reference_reads": "Reference sequences. Incompatible with index-database.",
+    "index": "Minimap2 index database. Incompatible with reference.",
+    "reference": "Reference sequences. Incompatible with index.",
 }
-extract_seqs_outputs = [("extracted_seqs", FeatureData[Sequence])]
-extract_seqs_outputs_dsc = {
-    "extracted_seqs": "Subset of initial feature sequences that we keep.",
+extract_reads_outputs = [("extracted_reads", FeatureData[Sequence])]
+extract_reads_outputs_dsc = {
+    "extracted_reads": "Subset of initial feature sequences that we extract.",
 }
-extract_seqs_params = {
+extract_reads_params = {
     "n_threads": Int % Range(1, None),
-    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
+    "preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
     "extract": Str % Choices(["mapped", "unmapped"]),
     "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "matching_score": Int,
@@ -95,13 +92,13 @@ extract_seqs_params = {
     "gap_open_penalty": Int % Range(1, None),
     "gap_extension_penalty": Int % Range(1, None),
 }
-extract_seqs_param_dsc = {
+extract_reads_param_dsc = {
     "n_threads": "Number of threads to use.",
-    "mapping_preset": "Specifies the type of input sequences that will be "
-    "used during the mapping process. 1) map-ont: Align noisy long reads "
+    "preset": "The preset parameter applies multiple options at the same time "
+    "during the mapping process of Minimap2. 1) map-ont: Align noisy long reads "
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-    "older PacBio continuous long (CLR) reads to a reference genome."
+    "older PacBio continuous long (CLR) reads to a reference genome. "
     "4) sr: Align short single-end reads.",
     "extract": "Extract sequences that map to reference. When "
     "set to unmapped it extracts sequences that do not map to the reference "
@@ -114,20 +111,19 @@ extract_seqs_param_dsc = {
     "gap_open_penalty": "Gap open penalty.",
     "gap_extension_penalty": "Gap extension penalty.",
 }
-extract_seqs_dsc = (
-    "This method aligns feature sequences to a set of reference sequences to "
+extract_reads_dsc = (
+    "This method aligns long feature sequences to a set of reference sequences to "
     "identify sequences that hit/miss the reference within a specified "
-    "perc_identity. This method could be used to define a positive filter "
-    "or a negative filter."
+    "identity percentage."
 )
 
 # build-index
-build_index_inputs = {"sequences": FeatureData[Sequence]}
-build_index_outputs = [("index_database", Minimap2IndexDB)]
+build_index_inputs = {"reference": FeatureData[Sequence]}
+build_index_outputs = [("index", Minimap2IndexDB)]
 build_index_inputs_dsc = {
-    "sequences": "Reference sequences used to build Minimap2 index database."
+    "reference": "Reference sequences used to build Minimap2 index database."
 }
-build_index_outputs_dsc = {"index_database": "Minimap2 index database."}
+build_index_outputs_dsc = {"index": "Minimap2 index database."}
 build_index_params = {
     "preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
 }
@@ -146,15 +142,15 @@ build_index_dsc = "Build Minimap2 index database from reference sequences."
 
 # minimap2-search
 minimap2_search_inputs = {
-    "query_reads": FeatureData[Sequence],
-    "index_database": Minimap2IndexDB,
-    "reference_reads": FeatureData[Sequence],
+    "query": FeatureData[Sequence],
+    "index": Minimap2IndexDB,
+    "reference": FeatureData[Sequence],
 }
 minimap2_search_outputs = [("search_results", FeatureData[PairwiseAlignmentMN2])]
 minimap2_search_inputs_dsc = {
-    "query_reads": "Query reads.",
-    "index_database": "Minimap2 index database. Incompatible with reference-reads.",
-    "reference_reads": "Reference sequences. Incompatible with index-database.",
+    "query": "Query sequences to align.",
+    "index": "Minimap2 index database. Incompatible with reference.",
+    "reference": "Reference sequences. Incompatible with index.",
 }
 minimap2_search_outputs_dsc = {
     "search_results": "Top hits for each query.",
@@ -163,14 +159,15 @@ minimap2_search_param_dsc = {
     "n_threads": "Number of threads to use.",
     "maxaccepts": "Maximum number of hits to keep for each query. Minimap2 will "
     "choose the first N hits in the reference database.",
-    "mapping_preset": "Specifies the type of input sequences that will be "
-    "used during the mapping process. 1) map-ont: Align noisy long reads "
+    "preset": "The preset parameter applies multiple options at the same time "
+    "during the mapping process of Minimap2. 1) map-ont: Align noisy long reads "
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-    "older PacBio continuous long (CLR) reads to a reference genome."
+    "older PacBio continuous long (CLR) reads to a reference genome. "
     "4) sr: Align short single-end reads.",
-    "perc_identity": "Optionally reject match if percent identity to query is "
-    "lower.",
+    "min_per_identity": "After the alignment step, mapped reads will be "
+    "reclassified as unmapped if their identity percentage falls below this "
+    "value. If not set there is no reclassification.",
     "output_no_hits": "Report both matching and non-matching queries. "
     "WARNING: always use the default setting for this "
     "option unless if you know what you are doing! If "
@@ -183,8 +180,8 @@ minimap2_search_param_dsc = {
 minimap2_search_params = {
     "n_threads": Int % Range(1, None),
     "maxaccepts": Int % Range(1, None),
-    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
-    "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),
+    "preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
+    "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "output_no_hits": Bool,
 }
 minimap2_search_dsc = (
@@ -196,8 +193,8 @@ minimap2_search_dsc = (
 # classify-consensus-minimap2
 classify_consensus_minimap2_inputs = {
     "query": FeatureData[Sequence],
-    "index_database": Minimap2IndexDB,
-    "reference_reads": FeatureData[Sequence],
+    "index": Minimap2IndexDB,
+    "reference": FeatureData[Sequence],
     "reference_taxonomy": FeatureData[Taxonomy],
 }
 classify_consensus_minimap2_outputs = [
@@ -206,9 +203,8 @@ classify_consensus_minimap2_outputs = [
 ]
 classify_consensus_minimap2_inputs_dsc = {
     "query": "Query sequences.",
-    "index_database": "Minimap2 indexed database. "
-    "Incompatible with reference-reads.",
-    "reference_reads": "Reference sequences. Incompatible with index-database.",
+    "index": "Minimap2 indexed database. " "Incompatible with reference.",
+    "reference": "Reference sequences. Incompatible with index.",
     "reference_taxonomy": "Reference taxonomy labels.",
 }
 
@@ -218,29 +214,29 @@ classify_consensus_minimap2_outputs_dsc = {
 }
 classify_consensus_minimap2_params = {
     "maxaccepts": Int % Range(1, None),
-    "mapping_preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
-    "perc_identity": Float % Range(0.0, 1.0, inclusive_end=True),
+    "preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
+    "min_per_identity": Float % Range(0.0, 1.0, inclusive_end=True),
     "output_no_hits": Bool,
-    "num_threads": Int % Range(1, None),
+    "n_threads": Int % Range(1, None),
     "min_consensus": Float % Range(0.5, 1.0, inclusive_end=True, inclusive_start=False),
     "unassignable_label": Str,
 }
 classify_consensus_minimap2_param_dsc = {
+    "n_threads": "Number of threads to use.",
     "maxaccepts": (
         "Maximum number of hits to keep for each query. Minimap2 will "
         "choose the first N hits in the reference database that "
         "exceed perc_identity similarity to query."
     ),
-    "mapping_preset": "Specifies the type of input sequences that will be "
-    "used during the mapping process. 1) map-ont: Align noisy long reads "
+    "preset": "The preset parameter applies multiple options at the same time "
+    "during the mapping process of Minimap2. 1) map-ont: Align noisy long reads "
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-    "older PacBio continuous long (CLR) reads to a reference genome."
+    "older PacBio continuous long (CLR) reads to a reference genome. "
     "4) sr: Align short single-end reads.",
-    "perc_identity": ("Reject match if percent identity to query is lower."),
-    "output_no_hits": "Report both matching and non-matching queries. ",
-    "num_threads": "Number of threads (CPUs) to use in the Minimap2 search. "
-    "Pass 0 to use all available CPUs.",
+    "min_per_identity": "After the alignment step, mapped reads will be "
+    "reclassified as unmapped if their identity percentage falls below this "
+    "value. If not set there is no reclassification.",
     "min_consensus": "Minimum fraction of assignments must match top "
     "hit to be accepted as consensus assignment.",
     "unassignable_label": "Annotation given to sequences without any hits.",
@@ -290,25 +286,25 @@ stats_input_descriptions = {"sequences": "Sequences to be analyzed."}
 stats_dsc = "Quality control statistics of long sequences using NanoPlot."
 
 # trim
-trim_inputs = {"query_reads": SampleData[T]}
-trim_outputs = [("filtered_query_reads", SampleData[T])]
+trim_inputs = {"query": SampleData[T]}
+trim_outputs = [("filtered_query", SampleData[T])]
 trim_parameters = {
-    "threads": Int % Range(1, None),
-    "quality": Int % Range(0, None),
-    "maxqual": Int % Range(0, None),
-    "minlength": Int % Range(1, None),
-    "maxlength": Int % Range(1, None),
+    "n_threads": Int % Range(1, None),
+    "min_quality": Int % Range(0, None),
+    "max_quality": Int % Range(0, None),
+    "min_length": Int % Range(1, None),
+    "max_length": Int % Range(1, None),
     "headcrop": Int % Range(0, None),
     "tailcrop": Int % Range(0, None),
 }
-trim_input_descriptions = {"query_reads": "Sequences to be trimmed."}
-trim_output_descriptions = {"filtered_query_reads": "The resulting trimmed sequences."}
+trim_input_descriptions = {"query": "Sequences to be trimmed."}
+trim_output_descriptions = {"filtered_query": "The resulting trimmed sequences."}
 trim_parameter_descriptions = {
-    "threads": "Number of threads.",
-    "quality": "Sets a minimum Phred average quality score.",
-    "maxqual": "Sets a maximum Phred average quality score.",
-    "minlength": "Sets a minimum read length.",
-    "maxlength": "Sets a maximum read length.",
+    "n_threads": "Number of threads.",
+    "min_quality": "Sets a minimum Phred average quality score.",
+    "max_quality": "Sets a maximum Phred average quality score.",
+    "min_length": "Sets a minimum read length.",
+    "max_length": "Sets a maximum read length.",
     "headcrop": "Trim N nucleotides from the start of a read.",
     "tailcrop": "Trim N nucleotides from the end of a read.",
 }
