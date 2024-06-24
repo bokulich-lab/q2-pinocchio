@@ -18,7 +18,7 @@ setup(
     packages=find_packages(),
     author="Christos Matzoros",
     author_email="christosmatzoros@gmail.com",
-    description="QIIME 2 Plugin for quality control and taxonomic "
+    description="Plugin for quality control and taxonomic "
     "classification of long sequences.",
     url="https://github.com/bokulich-lab/q2-pinocchio",
     entry_points={"qiime2.plugins": ["q2-pinocchio=q2_pinocchio.plugin_setup:plugin"]},

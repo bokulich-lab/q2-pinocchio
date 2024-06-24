@@ -63,8 +63,10 @@ filter_reads_param_dsc = {
     "gap_extension_penalty": "Gap extension penalty.",
 }
 filter_reads_dsc = (
-    "Filter demultiplexed long sequences based on their "
-    "alignment to a reference database using Minimap2 and SAMtools."
+    "This method aligns long sequence data (from a FASTQ file) to a set of reference "
+    "sequences, identifying sequences that match or do not match the reference within "
+    "a specified identity percentage. The alignment is performed using Minimap2, and "
+    "the results are processed using Samtools."
 )
 
 # extract-reads
@@ -74,13 +76,13 @@ extract_reads_inputs = {
     "reference": FeatureData[Sequence],
 }
 extract_reads_inputs_dsc = {
-    "sequences": "Feature sequences to be filtered.",
+    "sequences": "Sequences to be filtered.",
     "index": "Minimap2 index database. Incompatible with reference.",
     "reference": "Reference sequences. Incompatible with index.",
 }
 extract_reads_outputs = [("extracted_reads", FeatureData[Sequence])]
 extract_reads_outputs_dsc = {
-    "extracted_reads": "Subset of initial feature sequences that we extract.",
+    "extracted_reads": "Subset of sequences that are extracted.",
 }
 extract_reads_params = {
     "n_threads": Int % Range(1, None),
@@ -112,17 +114,16 @@ extract_reads_param_dsc = {
     "gap_extension_penalty": "Gap extension penalty.",
 }
 extract_reads_dsc = (
-    "This method aligns long feature sequences to a set of reference sequences to "
-    "identify sequences that hit/miss the reference within a specified "
-    "identity percentage."
+    "This method aligns long sequence data (from a FASTA file) to a set of reference "
+    "sequences, identifying sequences that match or do not match the reference within "
+    "a specified identity percentage. The alignment is performed using Minimap2, and "
+    "the results are processed using Samtools."
 )
 
 # build-index
 build_index_inputs = {"reference": FeatureData[Sequence]}
 build_index_outputs = [("index", Minimap2IndexDB)]
-build_index_inputs_dsc = {
-    "reference": "Reference sequences used to build Minimap2 index database."
-}
+build_index_inputs_dsc = {"reference": "Reference sequences."}
 build_index_outputs_dsc = {"index": "Minimap2 index database."}
 build_index_params = {
     "preset": Str % Choices(["map-ont", "map-hifi", "map-pb", "sr"]),
@@ -137,7 +138,7 @@ build_index_param_dsc = {
     "3) map-pb: Align older PacBio continuous long (CLR) reads to a reference genome. "
     "4) sr: Align short single-end reads.",
 }
-build_index_dsc = "Build Minimap2 index database from reference sequences."
+build_index_dsc = "Build a Minimap2 index database from reference sequences."
 
 
 # minimap2-search
@@ -148,7 +149,7 @@ minimap2_search_inputs = {
 }
 minimap2_search_outputs = [("search_results", FeatureData[PairwiseAlignmentMN2])]
 minimap2_search_inputs_dsc = {
-    "query": "Query sequences to align.",
+    "query": "Query sequences.",
     "index": "Minimap2 index database. Incompatible with reference.",
     "reference": "Reference sequences. Incompatible with index.",
 }
@@ -243,10 +244,8 @@ classify_consensus_minimap2_param_dsc = {
 }
 classify_consensus_minimap2_dsc = (
     "Assign taxonomy to query sequences using Minimap2. Performs "
-    "alignment between query and reference_reads, then "
-    "assigns consensus taxonomy to each query sequence from "
-    "among maxaccepts hits, min_consensus of which share "
-    "that taxonomic assignment."
+    "alignment between query and reference reads, then "
+    "assigns consensus taxonomy to each query sequence."
 )
 
 # find-consensus-annotation
@@ -298,7 +297,7 @@ trim_parameters = {
     "tailcrop": Int % Range(0, None),
 }
 trim_input_descriptions = {"query": "Sequences to be trimmed."}
-trim_output_descriptions = {"filtered_query": "The resulting trimmed sequences."}
+trim_output_descriptions = {"filtered_query": "Trimmed sequences."}
 trim_parameter_descriptions = {
     "n_threads": "Number of threads.",
     "min_quality": "Sets a minimum Phred average quality score.",
