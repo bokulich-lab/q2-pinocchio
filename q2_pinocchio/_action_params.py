@@ -62,7 +62,12 @@ filter_reads_param_dsc = {
     "gap_open_penalty": "Gap open penalty.",
     "gap_extension_penalty": "Gap extension penalty.",
 }
-filter_reads_dsc = ()
+filter_reads_dsc = (
+    "This method aligns long-read sequencing data (from a FASTQ file) to a set "
+    "of reference sequences, identifying sequences that match or do not match "
+    "the reference within a specified identity percentage. The alignment is "
+    "performed using Minimap2, and the results are processed using Samtools."
+)
 
 # extract-reads
 extract_reads_inputs = {
