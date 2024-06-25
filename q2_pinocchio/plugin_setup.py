@@ -83,7 +83,7 @@ plugin = Plugin(
     website="https://github.com/bokulich-lab/q2-pinocchio",
     package="q2_pinocchio",
     description="Plugin for quality control and taxonomic "
-    "classification of long sequences.",
+    "classification of long-read sequencing data.",
     short_description="",
 )
 
@@ -125,7 +125,7 @@ plugin.methods.register_function(
     input_descriptions=extract_reads_inputs_dsc,
     parameter_descriptions=extract_reads_param_dsc,
     output_descriptions=extract_reads_outputs_dsc,
-    name="Filter long sequences (FeatureData).",
+    name="Filter long-read sequencing data (FeatureData).",
     description=extract_reads_dsc,
     citations=[citations["Minimap2"]],
 )
@@ -138,7 +138,7 @@ plugin.methods.register_function(
     input_descriptions=filter_reads_inputs_dsc,
     parameter_descriptions=filter_reads_param_dsc,
     output_descriptions=filter_reads_outputs_dsc,
-    name="Filter long sequences (SampleData).",
+    name="Filter long-read sequencing data (SampleData).",
     description=filter_reads_dsc,
     citations=[citations["Minimap2"]],
 )
@@ -200,7 +200,7 @@ plugin.visualizers.register_function(
     parameters="",
     input_descriptions=stats_input_descriptions,
     parameter_descriptions={},
-    name="Quality control statistics for long sequences.",
+    name="Quality control statistics for long-read sequencing data.",
     description=stats_dsc,
     citations=[citations["Nanopack2"]],
 )
@@ -213,7 +213,7 @@ plugin.methods.register_function(
     input_descriptions=trim_input_descriptions,
     output_descriptions=trim_output_descriptions,
     parameter_descriptions=trim_parameter_descriptions,
-    name="Trim long sequences.",
+    name="Trim long-read sequencing data.",
     description=trim_dsc,
     citations=[citations["Nanopack2"]],
 )

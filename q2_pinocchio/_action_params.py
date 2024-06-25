@@ -49,25 +49,20 @@ filter_reads_param_dsc = {
     "during the mapping process of Minimap2. 1) map-ont: Align noisy long reads "
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-    "older PacBio continuous long (CLR) reads to a reference genome. "
+    "older PacBio continuous long reads (CLR) to a reference genome. "
     "4) sr: Align short single-end reads.",
     "keep": "Keep the sequences that align to reference. When "
     "set to unmapped it keeps sequences that do not align to the reference "
     "database.",
     "min_per_identity": "After the alignment step, mapped reads will be "
     "reclassified as unmapped if their identity percentage falls below this "
-    "value. If not set there is no reclassification.",
+    "value. If not set, there is no reclassification.",
     "matching_score": "Matching score.",
     "mismatching_penalty": "Mismatching penalty.",
     "gap_open_penalty": "Gap open penalty.",
     "gap_extension_penalty": "Gap extension penalty.",
 }
-filter_reads_dsc = (
-    "This method aligns long sequence data (from a FASTQ file) to a set of reference "
-    "sequences, identifying sequences that match or do not match the reference within "
-    "a specified identity percentage. The alignment is performed using Minimap2, and "
-    "the results are processed using Samtools."
-)
+filter_reads_dsc = ()
 
 # extract-reads
 extract_reads_inputs = {
@@ -100,24 +95,24 @@ extract_reads_param_dsc = {
     "during the mapping process of Minimap2. 1) map-ont: Align noisy long reads "
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-    "older PacBio continuous long (CLR) reads to a reference genome. "
+    "older PacBio continuous long reads (CLR) to a reference genome. "
     "4) sr: Align short single-end reads.",
     "extract": "Extract sequences that map to reference. When "
     "set to unmapped it extracts sequences that do not map to the reference "
     "database.",
     "min_per_identity": "After the alignment step, mapped reads will be "
     "reclassified as unmapped if their identity percentage falls below this "
-    "value. If not set there is no reclassification.",
+    "value. If not set, there is no reclassification.",
     "matching_score": "Matching score.",
     "mismatching_penalty": "Mismatching penalty.",
     "gap_open_penalty": "Gap open penalty.",
     "gap_extension_penalty": "Gap extension penalty.",
 }
 extract_reads_dsc = (
-    "This method aligns long sequence data (from a FASTA file) to a set of reference "
-    "sequences, identifying sequences that match or do not match the reference within "
-    "a specified identity percentage. The alignment is performed using Minimap2, and "
-    "the results are processed using Samtools."
+    "This method aligns long-read sequencing data (from a FASTA file) to a set of "
+    "reference sequences, identifying sequences that match or do not match the "
+    "reference within a specified identity percentage. The alignment is performed "
+    "using Minimap2, and the results are processed using Samtools."
 )
 
 # build-index
@@ -164,11 +159,11 @@ minimap2_search_param_dsc = {
     "during the mapping process of Minimap2. 1) map-ont: Align noisy long reads "
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-    "older PacBio continuous long (CLR) reads to a reference genome. "
+    "older PacBio continuous long reads (CLR) to a reference genome. "
     "4) sr: Align short single-end reads.",
     "min_per_identity": "After the alignment step, mapped reads will be "
     "reclassified as unmapped if their identity percentage falls below this "
-    "value. If not set there is no reclassification.",
+    "value. If not set, there is no reclassification.",
     "output_no_hits": "Report both matching and non-matching queries. "
     "WARNING: always use the default setting for this "
     "option unless if you know what you are doing! If "
@@ -233,11 +228,11 @@ classify_consensus_minimap2_param_dsc = {
     "during the mapping process of Minimap2. 1) map-ont: Align noisy long reads "
     "of ~10% error rate to a reference genome. 2) map-hifi: Align PacBio "
     "high-fidelity (HiFi) reads to a reference genome. 3) map-pb: Align "
-    "older PacBio continuous long (CLR) reads to a reference genome. "
+    "older PacBio continuous long reads (CLR) to a reference genome. "
     "4) sr: Align short single-end reads.",
     "min_per_identity": "After the alignment step, mapped reads will be "
     "reclassified as unmapped if their identity percentage falls below this "
-    "value. If not set there is no reclassification.",
+    "value. If not set, there is no reclassification.",
     "min_consensus": "Minimum fraction of assignments must match top "
     "hit to be accepted as consensus assignment.",
     "unassignable_label": "Annotation given to sequences without any hits.",
@@ -282,7 +277,7 @@ find_consensus_annotation_dsc = (
 T = TypeMatch([SequencesWithQuality, PairedEndSequencesWithQuality])
 stats_inputs = {"sequences": SampleData[T]}
 stats_input_descriptions = {"sequences": "Sequences to be analyzed."}
-stats_dsc = "Quality control statistics of long sequences using NanoPlot."
+stats_dsc = "Quality control statistics of long-read sequencing data using NanoPlot."
 
 # trim
 trim_inputs = {"query": SampleData[T]}
