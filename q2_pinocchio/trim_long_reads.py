@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -16,10 +16,10 @@ from q2_pinocchio._utils import run_commands_with_pipe
 # Generates a command list for the 'chopper' tool
 # incorporating provided parameters for sequence quality trimming
 def construct_chopper_command(
-    quality: int,
-    maxqual: int,
-    minlength: int,
-    maxlength: int,
+    min_quality: int,
+    max_quality: int,
+    min_length: int,
+    max_length: int,
     headcrop: int,
     tailcrop: int,
     threads: int,
@@ -27,13 +27,13 @@ def construct_chopper_command(
     return [
         "chopper",
         "--quality",
-        str(quality),
+        str(min_quality),
         "--maxqual",
-        str(maxqual),
+        str(max_quality),
         "--minlength",
-        str(minlength),
+        str(min_length),
         "--maxlength",
-        str(maxlength),
+        str(max_length),
         "--headcrop",
         str(headcrop),
         "--tailcrop",
@@ -63,12 +63,12 @@ def process_and_rezip(input_file, chopper_cmd, filtered_seqs_path):
 
 # Trims paired-end read FASTQ files using specified quality control parameter
 def trim(
-    query_reads: CasavaOneEightSingleLanePerSampleDirFmt,
-    threads: int = 4,
-    quality: int = 0,
-    maxqual: int = 1000,
-    minlength: int = 1,
-    maxlength: int = 2147483647,
+    query: CasavaOneEightSingleLanePerSampleDirFmt,
+    n_threads: int = 4,
+    min_quality: int = 0,
+    max_quality: int = 1000,
+    min_length: int = 1,
+    max_length: int = 2147483647,
     headcrop: int = 0,
     tailcrop: int = 0,
 ) -> CasavaOneEightSingleLanePerSampleDirFmt:
@@ -78,10 +78,16 @@ def trim(
 
     # Iterate over the FASTQ paired-end files in the DataFrame
     # and exececute chopper command
-    for _, fwd, rev in query_reads.manifest.itertuples():
+    for _, fwd, rev in query.manifest.itertuples():
         filtered_seqs_path_fwd = filtered_seqs.path / os.path.basename(fwd)
         chopper_cmd = construct_chopper_command(
-            quality, maxqual, minlength, maxlength, headcrop, tailcrop, threads
+            min_quality,
+            max_quality,
+            min_length,
+            max_length,
+            headcrop,
+            tailcrop,
+            n_threads,
         )
         process_and_rezip(fwd, chopper_cmd, str(filtered_seqs_path_fwd))
 

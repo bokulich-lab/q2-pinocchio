@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -18,8 +18,8 @@ setup(
     packages=find_packages(),
     author="Christos Matzoros",
     author_email="christosmatzoros@gmail.com",
-    description="QIIME 2 Plugin for quality control and taxonomic "
-    "classification of long read sequences.",
+    description="Plugin for quality control and taxonomic "
+    "classification of long-read sequencing data.",
     url="https://github.com/bokulich-lab/q2-pinocchio",
     entry_points={"qiime2.plugins": ["q2-pinocchio=q2_pinocchio.plugin_setup:plugin"]},
     package_data={

@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -89,15 +89,15 @@ def classify_consensus_minimap2(
     ctx,
     query,  # Query sequences for classification
     reference_taxonomy,  # Taxonomy mappings for reference sequences
-    index_database=None,  # Optional pre-built index of the reference database
-    reference_reads=None,  # Optional reference sequences for on-the-fly indexing
+    index=None,  # Optional pre-built index of the reference database
+    reference=None,  # Optional reference sequences for on-the-fly indexing
     maxaccepts=10,  # Maximum number of alignments to accept per query
-    mapping_preset="map-ont",  # Minimap2 mapping preset
-    perc_identity=0.8,  # Min percentage identity for an alignment to be accepted
+    preset="map-ont",  # Minimap2 mapping preset
+    min_per_identity=0.8,  # Min percentage identity for an alignment to be accepted
     output_no_hits=True,  # Include queries with no hits in the output
     min_consensus=0.51,  # Threshold for consensus in classification
     unassignable_label="Unassigned",  # Label for unclassifiable queries
-    num_threads=3,  # Number of threads for the alignment process
+    n_threads=3,  # Number of threads for the alignment process
 ):
     # Retrieve the necessary actions from the context to perform
     # sequence mapping and consensus annotation
@@ -107,14 +107,14 @@ def classify_consensus_minimap2(
     # Execute the search against a reference database or reads using Minimap2,
     # adhering to specified parameters like maxaccepts and perc_identity
     (result,) = search_db(
-        query_reads=query,
-        index_database=index_database,
-        reference_reads=reference_reads,
+        query=query,
+        index=index,
+        reference=reference,
         maxaccepts=maxaccepts,
-        mapping_preset=mapping_preset,
-        perc_identity=perc_identity,
+        preset=preset,
+        min_per_identity=min_per_identity,
         output_no_hits=output_no_hits,
-        n_threads=num_threads,
+        n_threads=n_threads,
     )
 
     # Utilize the search results to find consensus annotations for each query sequence,

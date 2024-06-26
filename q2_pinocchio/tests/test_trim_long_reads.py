@@ -1,10 +1,11 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
+
 import gzip
 import itertools
 import os
@@ -70,10 +71,10 @@ class TestChopperUtilities(PinocchioTestsBase):
             "4",
         ]
         result = construct_chopper_command(
-            quality=20,
-            maxqual=35,
-            minlength=100,
-            maxlength=500,
+            min_quality=20,
+            max_quality=35,
+            min_length=100,
+            max_length=500,
             headcrop=5,
             tailcrop=5,
             threads=4,
@@ -94,7 +95,7 @@ class TestTrim(PinocchioTestsBase):
             self.source_dir_se, mode="r"
         )
 
-        trimmed_se_maxlen_10000 = trim(query_reads, maxlength=10000)
+        trimmed_se_maxlen_10000 = trim(query_reads, max_length=10000)
         fastq_files = [
             os.path.join(str(trimmed_se_maxlen_10000), f)
             for f in os.listdir(str(trimmed_se_maxlen_10000))
@@ -117,7 +118,7 @@ class TestTrim(PinocchioTestsBase):
         query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
             self.source_dir_se, mode="r"
         )
-        trimmed_se_minlen_10000 = trim(query_reads, minlength=10000)
+        trimmed_se_minlen_10000 = trim(query_reads, min_length=10000)
 
         fastq_files = [
             os.path.join(str(trimmed_se_minlen_10000), f)
@@ -142,7 +143,7 @@ class TestTrim(PinocchioTestsBase):
         query_reads = CasavaOneEightSingleLanePerSampleDirFmt(
             self.source_dir_pe, mode="r"
         )
-        trimmed_pe_minlen_10000 = trim(query_reads, quality=20)
+        trimmed_pe_minlen_10000 = trim(query_reads, min_quality=20)
 
         fastq_files = [
             os.path.join(str(trimmed_pe_minlen_10000), f)
@@ -164,10 +165,10 @@ class TestTrim(PinocchioTestsBase):
 class TestConstructChopperCommand(PinocchioTestsBase):
     def test_construct_chopper_command(self):
         # Define the inputs
-        quality = 20
-        maxqual = 40
-        minlength = 100
-        maxlength = 1000
+        min_quality = 20
+        max_quality = 40
+        min_length = 100
+        max_length = 1000
         headcrop = 10
         tailcrop = 20
         threads = 4
@@ -193,7 +194,13 @@ class TestConstructChopperCommand(PinocchioTestsBase):
 
         # Call the function
         result = construct_chopper_command(
-            quality, maxqual, minlength, maxlength, headcrop, tailcrop, threads
+            min_quality,
+            max_quality,
+            min_length,
+            max_length,
+            headcrop,
+            tailcrop,
+            threads,
         )
 
         # Assert the result matches the expected output

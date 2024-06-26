@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -37,7 +37,7 @@ class TestConsensusAssignment(PinocchioTestsBase):
     def test_classify_consensus_minimap2(self):
         (paf, taxonomy) = self.plugin.pipelines["classify_consensus_minimap2"](
             query=self.reads,
-            reference_reads=self.reads,
+            reference=self.reads,
             reference_taxonomy=self.taxonomy,
         )
 

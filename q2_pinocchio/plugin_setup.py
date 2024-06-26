@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -28,13 +28,13 @@ from q2_pinocchio._action_params import (
     classify_consensus_minimap2_outputs_dsc,
     classify_consensus_minimap2_param_dsc,
     classify_consensus_minimap2_params,
-    extract_seqs_dsc,
-    extract_seqs_inputs,
-    extract_seqs_inputs_dsc,
-    extract_seqs_outputs,
-    extract_seqs_outputs_dsc,
-    extract_seqs_param_dsc,
-    extract_seqs_params,
+    extract_reads_dsc,
+    extract_reads_inputs,
+    extract_reads_inputs_dsc,
+    extract_reads_outputs,
+    extract_reads_outputs_dsc,
+    extract_reads_param_dsc,
+    extract_reads_params,
     filter_reads_dsc,
     filter_reads_inputs,
     filter_reads_inputs_dsc,
@@ -82,8 +82,8 @@ plugin = Plugin(
     version=__version__,
     website="https://github.com/bokulich-lab/q2-pinocchio",
     package="q2_pinocchio",
-    description="QIIME 2 Plugin for quality control and taxonomic "
-    "classification of long read sequences.",
+    description="Plugin for quality control and taxonomic "
+    "classification of long-read sequencing data.",
     short_description="",
 )
 
@@ -101,7 +101,7 @@ plugin.register_artifact_class(
     description=(
         "Represents a Minimap2 index database used for efficient sequence "
         "alignment by storing pre-processed genome or reference data. "
-        "Ideal when we have repeated use of the same reference file."
+        "Ideal when we have repeated use of the same reference sequences."
     ),
 )
 
@@ -118,15 +118,15 @@ plugin.register_artifact_class(
 )
 
 plugin.methods.register_function(
-    function=q2_pinocchio.extract_seqs,
-    inputs=extract_seqs_inputs,
-    parameters=extract_seqs_params,
-    outputs=extract_seqs_outputs,
-    input_descriptions=extract_seqs_inputs_dsc,
-    parameter_descriptions=extract_seqs_param_dsc,
-    output_descriptions=extract_seqs_outputs_dsc,
-    name="Extract feature sequences (fasta format) using Minimap2.",
-    description=extract_seqs_dsc,
+    function=q2_pinocchio.extract_reads,
+    inputs=extract_reads_inputs,
+    parameters=extract_reads_params,
+    outputs=extract_reads_outputs,
+    input_descriptions=extract_reads_inputs_dsc,
+    parameter_descriptions=extract_reads_param_dsc,
+    output_descriptions=extract_reads_outputs_dsc,
+    name="Filter long-read sequencing data (FeatureData).",
+    description=extract_reads_dsc,
     citations=[citations["Minimap2"]],
 )
 
@@ -138,7 +138,7 @@ plugin.methods.register_function(
     input_descriptions=filter_reads_inputs_dsc,
     parameter_descriptions=filter_reads_param_dsc,
     output_descriptions=filter_reads_outputs_dsc,
-    name="Filter demultiplexed long sequences " " using Minimap2.",
+    name="Filter long-read sequencing data (SampleData).",
     description=filter_reads_dsc,
     citations=[citations["Minimap2"]],
 )
@@ -151,7 +151,7 @@ plugin.methods.register_function(
     input_descriptions=build_index_inputs_dsc,
     parameter_descriptions=build_index_param_dsc,
     output_descriptions=build_index_outputs_dsc,
-    name="Build Minimap2 index database from reference sequences.",
+    name="Build Minimap2 index database.",
     description=build_index_dsc,
     citations=[citations["Minimap2"]],
 )
@@ -200,7 +200,7 @@ plugin.visualizers.register_function(
     parameters="",
     input_descriptions=stats_input_descriptions,
     parameter_descriptions={},
-    name="Quality control statistics of long sequences.",
+    name="Quality control statistics for long-read sequencing data.",
     description=stats_dsc,
     citations=[citations["Nanopack2"]],
 )
@@ -213,7 +213,7 @@ plugin.methods.register_function(
     input_descriptions=trim_input_descriptions,
     output_descriptions=trim_output_descriptions,
     parameter_descriptions=trim_parameter_descriptions,
-    name="Trim long sequences.",
+    name="Trim long-read sequencing data.",
     description=trim_dsc,
     citations=[citations["Nanopack2"]],
 )

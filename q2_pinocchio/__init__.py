@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -9,7 +9,7 @@
 from ._version import get_versions
 from .build_index import build_index
 from .classify_consensus import _find_consensus_annotation, classify_consensus_minimap2
-from .extract_seqs import extract_seqs
+from .extract_reads import extract_reads
 from .filter_reads import filter_reads
 from .minimap2_search import minimap2_search
 from .nanoplot_stats import stats
@@ -24,7 +24,7 @@ __all__ = [
     "minimap2_search",
     "classify_consensus_minimap2",
     "_find_consensus_annotation",
-    "extract_seqs",
+    "extract_reads",
     "stats",
     "trim",
 ]

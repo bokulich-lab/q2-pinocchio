@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# Copyright (c) 2024, QIIME 2 development team.
+# Copyright (c) 2024, Bokulich Lab.
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -75,34 +75,28 @@ def construct_command(
 # Performs sequence alignment using Minimap2 and outputs results in
 # PairwiseAlignmentMN2 format.
 def minimap2_search(
-    query_reads: DNAFASTAFormat,
-    index_database: Minimap2IndexDBDirFmt = None,
-    reference_reads: DNAFASTAFormat = None,
+    query: DNAFASTAFormat,
+    index: Minimap2IndexDBDirFmt = None,
+    reference: DNAFASTAFormat = None,
     n_threads: int = 3,
-    mapping_preset: str = "map-ont",
+    preset: str = "map-ont",
     maxaccepts: int = 1,
-    perc_identity: float = None,
+    min_per_identity: float = None,
     output_no_hits: bool = True,
 ) -> pd.DataFrame:
-    # Ensure that only one of reference_reads or index_database is provided
-    if reference_reads and index_database:
+    # Ensure that only one of reference or index is provided
+    if reference and index:
         raise ValueError(
-            "Only one of reference_reads or index_database can be provided as input. "
+            "Only one of reference or index can be provided as input. "
             "Choose one and try again."
         )
 
-    # Ensure that at least one of reference_reads and index_database is provided
-    if not reference_reads and not index_database:
-        raise ValueError(
-            "Either reference_reads or index_database must be provided as input."
-        )
+    # Ensure that at least one of reference and index is provided
+    if not reference and not index:
+        raise ValueError("Either reference or index must be provided as input.")
 
     # Determine the reference or index path based on input
-    idx_ref_path = (
-        str(index_database.path / "index.mmi")
-        if index_database
-        else str(reference_reads.path)
-    )
+    idx_ref_path = str(index.path / "index.mmi") if index else str(reference.path)
 
     # Create a reference to a file with PAF format
     paf_file_fp = PairwiseAlignmentMN2Format()
@@ -110,9 +104,9 @@ def minimap2_search(
     # Construct the command
     cmd = construct_command(
         idx_ref_path,
-        query_reads,
+        query,
         n_threads,
-        mapping_preset,
+        preset,
         paf_file_fp,
         output_no_hits,
     )
@@ -127,8 +121,8 @@ def minimap2_search(
     df = filter_by_maxaccepts(df, maxaccepts)
 
     # Optionally filter by perc_identity
-    if perc_identity is not None:
-        df = filter_by_perc_identity(df, perc_identity, output_no_hits)
+    if min_per_identity is not None:
+        df = filter_by_perc_identity(df, min_per_identity, output_no_hits)
 
     df.reset_index(drop=True, inplace=True)
 
