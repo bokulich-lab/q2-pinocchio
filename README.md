@@ -54,13 +54,10 @@ pip install .
     Quality control statistics of long-read sequencing data using NanoPlot.
 <br>
 
-## How to use it
-### Download input data
-[Datasets]()
-
 
 
 ### Examples
+#### Download the input [datasets](https://polybox.ethz.ch/index.php/s/hnRGi1JkxG1nUmK)
 
 * build-index
   - Build Minimap2 index database
