@@ -157,7 +157,7 @@ pip install .
   ```shell
   qiime pinocchio stats --i-sequences single-end-reads.qza --o-visualization stats.qzv
   ```
-  To open:
+ - To open:
   ```shell
   qiime tools view stats.qzv
   ```
