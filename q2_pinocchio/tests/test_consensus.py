@@ -68,12 +68,15 @@ class TestConsensusAssignment(PinocchioTestsBase):
         assert exp.tolist() == obs.tolist(), "Contents of the Series are not equal."
 
     # should fail when hit IDs are missing from reference taxonomy
-    def test_PAF_format_df_to_series_of_lists_fail_on_missing_ids(
-        self,
-    ):
-        paf = self.paf.view(pd.DataFrame)
+    def test_PAF_format_df_to_series_of_lists_fail_on_missing_ids(self):
+        paf = self.paf.view(pd.DataFrame).astype(
+            object
+        )  # Cast the DataFrame to object dtype
         taxonomy = self.taxonomy.view(pd.Series)
+
+        # Assign values, ensuring the DataFrame can handle mixed types
         paf.loc[3] = ["junk", "", "", "", "", "lost-id"] + [""] * 17
+
         with self.assertRaisesRegex(KeyError, "results do not match.*lost-id"):
             _PAF_format_df_to_series_of_lists(paf, taxonomy)
 
