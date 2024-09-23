@@ -82,9 +82,8 @@ plugin = Plugin(
     version=__version__,
     website="https://github.com/bokulich-lab/q2-pinocchio",
     package="q2_pinocchio",
-    description="Plugin for quality control and taxonomic "
-    "classification of long-read sequencing data.",
-    short_description="",
+    description="Plugin for processing of long-read sequencing data.",
+    short_description="Plugin for processing of long-read sequencing data.",
 )
 
 plugin.register_formats(
