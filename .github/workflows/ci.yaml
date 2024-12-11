@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: actions/download-artifact@v3
-        name: 'Fetch coverage from builds blub'
+        name: 'Fetch coverage from builds'
         with:
           name: ${{ needs.ci.outputs.additional-reports-name }}
           path: ${{ needs.ci.outputs.additional-reports-path }}
