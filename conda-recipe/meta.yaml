@@ -1,23 +1,21 @@
-{% set data = load_setup_py_data() %}
-{% set version = data.get('version') or 'placehold' %}
-
 package:
   name: q2-pinocchio
-  version: {{ version }}
+  version: {{ PLUGIN_VERSION }}
 
 source:
-  path: ../..
+  path: ..
 
 build:
   script: make install
 
 requirements:
   host:
-    - python {{ python }}
-    - setuptools
+  - python {{ python }}
+  - setuptools
+  - versioningit
+  - wheel
 
   run:
-    - python {{ python }}
     - qiime2 {{ qiime2_epoch }}.*
     - q2-types {{ qiime2_epoch }}.*
     - q2-feature-classifier {{ qiime2_epoch }}.*
@@ -28,15 +26,18 @@ requirements:
     - chopper
     - gzip
 
+  build:
+  - setuptools
+  - versioningit
+
 test:
   requires:
-    - coverage
-    - pytest-cov
+    - parameterized
   imports:
     - q2_pinocchio
     - qiime2.plugins.pinocchio
   commands:
-    - pytest --cov q2_pinocchio --cov-report xml:coverage.xml --pyargs q2_pinocchio
+    - pytest --pyargs q2_pinocchio
 
 about:
   home: https://github.com/bokulich-lab/q2-pinocchio
