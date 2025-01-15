@@ -16,7 +16,6 @@ requirements:
   - wheel
 
   run:
-    - python {{ python }}
     - qiime2 {{ qiime2_epoch }}.*
     - q2-types {{ qiime2_epoch }}.*
     - q2-feature-classifier {{ qiime2_epoch }}.*
