@@ -29,6 +29,7 @@ requirements:
   build:
   - setuptools
   - versioningit
+  - python {{ python }}
 
 test:
   requires:
